@@ -18,8 +18,7 @@ export const Keypad: React.FC<KeypadProps> = ({
   value,
   onChange,
   onEnter,
-  onClear,
-  onBackspace
+  onClear, 
 }) => {
   // 数字ボタンクリック時のハンドラー
   const handleNumberClick = (num: string) => {
