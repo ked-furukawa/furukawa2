@@ -1,4 +1,4 @@
-// src/components/ProductList.tsx の完全な再構築
+// src/components/ProductList.tsx
 import React from 'react';
 import { 
   Paper, 
@@ -43,8 +43,8 @@ export const ProductList: React.FC<ProductListProps> = ({
 
   return (
     <Paper elevation={2}>
-      <TableContainer>
-        <Table>
+      <TableContainer sx={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
+        <Table stickyHeader>
           <TableHead>
             <TableRow>
               <TableCell>商品名</TableCell>

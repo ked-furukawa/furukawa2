@@ -149,14 +149,6 @@ export const Keypad: React.FC<KeypadProps> = ({
           </Button>
           <Button
             variant="contained"
-            color="secondary"
-            sx={{ flex: 1, height: 50 }}
-            onClick={onBackspace}
-          >
-            修正
-          </Button>
-          <Button
-            variant="contained"
             color="primary"
             sx={{ flex: 1, height: 50 }}
             onClick={onEnter}

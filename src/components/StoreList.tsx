@@ -33,7 +33,7 @@ const StoreList = ({ selectedStoreId, onSelectStore }: StoreListProps) => {
     <Box 
       sx={{ 
         width: '200px', 
-        height: '100%', 
+        height: '60%', 
         borderRight: '1px solid #ddd',
         overflowY: 'auto',
         bgcolor: '#f5f5f5'
