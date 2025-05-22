@@ -14,38 +14,67 @@ export const fetchStores = async (): Promise<Store[]> => {
           id: 'store-001',
           storeNumber: '123',
           storeName: '東京中央店',
-          address: '東京都中央区日本橋1-1-1',
-          phone: '03-1234-5678',
           updatedAt: new Date()
         },
         {
           id: 'store-002',
           storeNumber: '456',
           storeName: '大阪中之島店',
-          address: '大阪府大阪市北区中之島1-1-1',
-          phone: '06-1234-5678',
           updatedAt: new Date()
         },
         {
           id: 'store-003',
           storeNumber: '789',
           storeName: '名古屋栄店',
-          address: '愛知県名古屋市中区栄3-1-1',
-          phone: '052-123-4567',
           updatedAt: new Date()
         },
         {
           id: 'store-004',
           storeNumber: '321',
           storeName: '福岡天神店',
-          address: '福岡県福岡市中央区天神2-2-2',
-          phone: '092-345-6789',
+          updatedAt: new Date()
+        },
+        {
+          id: 'store-005',
+          storeNumber: '555',
+          storeName: '札幌大通店',
+          updatedAt: new Date()
+        },
+        {
+          id: 'store-006',
+          storeNumber: '666',
+          storeName: '仙台一番町店',
+          updatedAt: new Date()
+        },
+        {
+          id: 'store-007',
+          storeNumber: '777',
+          storeName: '広島本通店',
+          updatedAt: new Date()
+        },
+        {
+          id: 'store-008',
+          storeNumber: '888',
+          storeName: '京都四条店',
+          updatedAt: new Date()
+        },
+        {
+          id: 'store-009',
+          storeNumber: '999',
+          storeName: '神戸三宮店',
+          updatedAt: new Date()
+        },
+        {
+          id: 'store-010',
+          storeNumber: '101',
+          storeName: '横浜みなとみらい店',
           updatedAt: new Date()
         }
       ]);
     }, 500);
   });
 };
+
 /**
  * 店舗データを取得する
  * @param storeId 店舗ID (省略時はデフォルト店舗)
@@ -61,32 +90,60 @@ export const fetchStoreData = async (storeId: string = 'store-001'): Promise<Sto
           id: 'store-001',
           storeNumber: '123',
           storeName: '東京中央店',
-          address: '東京都中央区日本橋1-1-1',
-          phone: '03-1234-5678',
           updatedAt: new Date()
         },
         'store-002': {
           id: 'store-002',
           storeNumber: '456',
           storeName: '大阪中之島店',
-          address: '大阪府大阪市北区中之島1-1-1',
-          phone: '06-1234-5678',
           updatedAt: new Date()
         },
         'store-003': {
           id: 'store-003',
           storeNumber: '789',
           storeName: '名古屋栄店',
-          address: '愛知県名古屋市中区栄3-1-1',
-          phone: '052-123-4567',
           updatedAt: new Date()
         },
         'store-004': {
           id: 'store-004',
           storeNumber: '321',
           storeName: '福岡天神店',
-          address: '福岡県福岡市中央区天神2-2-2',
-          phone: '092-345-6789',
+          updatedAt: new Date()
+        },
+        'store-005': {
+          id: 'store-005',
+          storeNumber: '555',
+          storeName: '札幌大通店',
+          updatedAt: new Date()
+        },
+        'store-006': {
+          id: 'store-006',
+          storeNumber: '666',
+          storeName: '仙台一番町店',
+          updatedAt: new Date()
+        },
+        'store-007': {
+          id: 'store-007',
+          storeNumber: '777',
+          storeName: '広島本通店',
+          updatedAt: new Date()
+        },
+        'store-008': {
+          id: 'store-008',
+          storeNumber: '888',
+          storeName: '京都四条店',
+          updatedAt: new Date()
+        },
+        'store-009': {
+          id: 'store-009',
+          storeNumber: '999',
+          storeName: '神戸三宮店',
+          updatedAt: new Date()
+        },
+        'store-010': {
+          id: 'store-010',
+          storeNumber: '101',
+          storeName: '横浜みなとみらい店',
           updatedAt: new Date()
         }
       };
@@ -96,7 +153,6 @@ export const fetchStoreData = async (storeId: string = 'store-001'): Promise<Sto
     }, 500);
   });
 };
-
 /**
  * 商品リストを取得する
  * @param storeId 店舗ID (省略時はデフォルト店舗)
@@ -109,27 +165,27 @@ export const fetchProducts = async (storeId: string = 'store-001'): Promise<Prod
       // 店舗ごとの商品データのマッピング
       const productData: Record<string, Product[]> = {
         'store-001': [
-          { id: 'prod-001', name: 'りんご', description: '山形県産 ふじ', quantity: 50, category: '果物', isChecked: false },
-          { id: 'prod-002', name: 'バナナ', description: 'フィリピン産', quantity: 30, category: '果物', isChecked: false },
-          { id: 'prod-003', name: 'キャベツ', description: '千葉県産', quantity: 20, category: '野菜', isChecked: false },
-          { id: 'prod-004', name: 'トマト', description: '熊本県産', quantity: 15, category: '野菜', isChecked: false },
-          { id: 'prod-005', name: '牛乳', description: '1000ml', quantity: 10, category: '乳製品', isChecked: false }
+          { id: 'prod-001', name: 'りんご', quantity: 50, category: '果物', isChecked: false },
+          { id: 'prod-002', name: 'バナナ', quantity: 30, category: '果物', isChecked: false },
+          { id: 'prod-003', name: 'キャベツ', quantity: 20, category: '野菜', isChecked: false },
+          { id: 'prod-004', name: 'トマト', quantity: 15, category: '野菜', isChecked: false },
+          { id: 'prod-005', name: '牛乳', quantity: 10, category: '乳製品', isChecked: false }
         ],
         'store-002': [
-          { id: 'prod-101', name: 'みかん', description: '和歌山県産', quantity: 45, category: '果物', isChecked: false },
-          { id: 'prod-102', name: '大根', description: '京都府産', quantity: 25, category: '野菜', isChecked: false },
-          { id: 'prod-103', name: 'ほうれん草', description: '奈良県産', quantity: 18, category: '野菜', isChecked: false },
-          { id: 'prod-104', name: 'チーズ', description: '北海道産', quantity: 12, category: '乳製品', isChecked: false }
+          { id: 'prod-101', name: 'みかん', quantity: 45, category: '果物', isChecked: false },
+          { id: 'prod-102', name: '大根', quantity: 25, category: '野菜', isChecked: false },
+          { id: 'prod-103', name: 'ほうれん草', quantity: 18, category: '野菜', isChecked: false },
+          { id: 'prod-104', name: 'チーズ', quantity: 12, category: '乳製品', isChecked: false }
         ],
         'store-003': [
-          { id: 'prod-201', name: 'ぶどう', description: '長野県産', quantity: 40, category: '果物', isChecked: false },
-          { id: 'prod-202', name: '白菜', description: '愛知県産', quantity: 22, category: '野菜', isChecked: false },
-          { id: 'prod-203', name: 'ヨーグルト', description: '400g', quantity: 15, category: '乳製品', isChecked: false }
+          { id: 'prod-201', name: 'ぶどう', quantity: 40, category: '果物', isChecked: false },
+          { id: 'prod-202', name: '白菜', quantity: 22, category: '野菜', isChecked: false },
+          { id: 'prod-203', name: 'ヨーグルト', quantity: 15, category: '乳製品', isChecked: false }
         ],
         'store-004': [
-          { id: 'prod-301', name: 'いちご', description: '福岡県産', quantity: 35, category: '果物', isChecked: false },
-          { id: 'prod-302', name: 'ナス', description: '佐賀県産', quantity: 28, category: '野菜', isChecked: false },
-          { id: 'prod-303', name: 'クリーム', description: '200ml', quantity: 20, category: '乳製品', isChecked: false }
+          { id: 'prod-301', name: 'いちご', quantity: 35, category: '果物', isChecked: false },
+          { id: 'prod-302', name: 'ナス', quantity: 28, category: '野菜', isChecked: false },
+          { id: 'prod-303', name: 'クリーム', quantity: 20, category: '乳製品', isChecked: false }
         ]
       };
       
@@ -198,6 +254,7 @@ export const updateProductCheckStatus = async (
 export const initializeDataService = (): void => {
   console.log('データサービスを初期化しました');
 };
+
 /**
  * DynamoDBに実際に接続するための実装例（コメントアウト）
  * Amplify Gen2を使用する場合は、以下のようなコードを使用します

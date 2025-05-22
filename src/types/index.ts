@@ -7,8 +7,6 @@ export interface Store {
   id: string;           // 店舗の一意のID
   storeNumber: string;  // 店舗番号（例: "001"）
   storeName: string;    // 店舗名（例: "東京本店"）
-  address?: string;     // 店舗住所（オプション）
-  phone?: string;       // 電話番号（オプション）
   updatedAt?: Date;     // 最終更新日時（オプション）
 }
 
@@ -18,7 +16,6 @@ export interface Store {
 export interface Product {
   id: string;           // 商品の一意のID
   name: string;         // 商品名
-  description?: string; // 商品説明（オプション）
   quantity: number;     // 数量
   category?: string;    // カテゴリ（オプション）
   isChecked?: boolean;  // チェック状態（オプション）
