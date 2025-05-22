@@ -5,7 +5,7 @@ import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
 //     .model({
 //       content: a.string(),
 //     })
-//     .authorization((allow) => [allow.publicApiKey()]),
+//     ,
 // });
 
 
@@ -27,7 +27,8 @@ export const schema = a.schema({
     resDeptName: a.string(), //担当部門名 '肉１'
     orderCount: a.integer().required(), // 商品注文数 '3'
   })
-  .identifier(['storeId', 'date', 'itemId']), // PKとSK
+  .identifier(['storeId', 'date', 'itemId']) // PKとSK
+  .authorization((allow) => [allow.publicApiKey()]), //認証情報の設定
 
   Box: a.model({ //店舗-箱色のテーブル　←箱数情報、主に書き用(最後はこれを読む)
     storeId: a.string().required(), // 店舗ID '019'
@@ -41,6 +42,7 @@ export const schema = a.schema({
     boxCreatedBy: a.string() // 箱を作った部門
   })
   .identifier(['storeId', 'date', 'color']) //PKとSK
+  .authorization((allow) => [allow.publicApiKey()]) //認証情報の設定
 });
 
 //↑で定義したschemaの型情報を安全に再利用するためにSchemaという変数に格納(準必須)
