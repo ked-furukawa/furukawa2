@@ -14,8 +14,9 @@ const App: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
-
+  
+  // 選択中の商品IDを配列に変更（複数選択可能に）
+  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   // データの取得
   useEffect(() => {
     const loadData = async () => {
@@ -44,39 +45,36 @@ const App: React.FC = () => {
     setInputValue(value);
   };
 
-  // 商品の選択
+  // 商品の選択を切り替える（複数選択可能に）
   const handleProductSelect = (productId: string) => {
-    setSelectedProductId(productId);
-    
-    // 選択された商品の現在の数量を表示
-    const product = products.find(p => p.id === productId);
-    if (product) {
-      setInputValue(product.quantity.toString());
-    }
+    setSelectedProductIds(prev => {
+      // すでに選択されている場合は削除、そうでなければ追加
+      if (prev.includes(productId)) {
+        return prev.filter(id => id !== productId);
+      } else {
+        return [...prev, productId];
+      }
+    });
   };
 
-  // 商品数量の更新
+  // 商品数量の更新（選択されている全ての商品に適用）
   const handleQuantityUpdate = () => {
-    if (!selectedProductId || !inputValue) return;
+    if (selectedProductIds.length === 0 || !inputValue) return;
     
     const quantity = parseInt(inputValue, 10);
     if (isNaN(quantity)) return;
 
-    // 商品リストを更新
+    // 選択されている全ての商品の数量を更新
     setProducts(prevProducts => 
       prevProducts.map(product => 
-        product.id === selectedProductId 
+        selectedProductIds.includes(product.id) 
           ? { ...product, quantity } 
           : product
       )
     );
 
-    // 実際のアプリケーションでは、ここでデータベース更新の処理を行う
-    console.log(`商品ID: ${selectedProductId}, 数量: ${quantity}`);
-    
-    // 入力値をリセット
-    setInputValue('');
-    setSelectedProductId(null);
+    console.log(`選択商品ID: ${selectedProductIds.join(', ')}, 数量: ${quantity}`);
+
   };
 
   return (
@@ -106,7 +104,7 @@ const App: React.FC = () => {
           {/* 商品リスト */}
           <ProductList 
             products={products}
-            selectedProductId={selectedProductId}
+            selectedProductIds={selectedProductIds}
             onProductSelect={handleProductSelect}
             loading={loading}
             error={error}

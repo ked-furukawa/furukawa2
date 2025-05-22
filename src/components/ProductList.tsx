@@ -1,4 +1,4 @@
-// src/components/ProductList.tsx
+// src/components/ProductList.tsx の完全な再構築
 import React from 'react';
 import { 
   Paper, 
@@ -10,125 +10,74 @@ import {
   TableRow,
   Typography,
   Checkbox,
-  Skeleton,
-  Alert,
   Box
 } from '@mui/material';
 import { Product } from '../types';
 
-// コンポーネントのProps型定義
 interface ProductListProps {
   products: Product[];
-  selectedProductId: string | null;
+  selectedProductIds?: string[];
   onProductSelect: (productId: string) => void;
   loading?: boolean;
   error?: string | null;
 }
 
-/**
- * 商品リストを表形式で表示するコンポーネント
- */
 export const ProductList: React.FC<ProductListProps> = ({
   products,
-  selectedProductId,
+  selectedProductIds = [],
   onProductSelect,
   loading = false,
   error = null
 }) => {
-  // エラーがある場合はエラーメッセージを表示
+  if (loading) {
+    return <Paper elevation={2}><Box p={3}>読み込み中...</Box></Paper>;
+  }
+  
   if (error) {
-    return (
-      <Alert severity="error" sx={{ mb: 2 }}>
-        {error}
-      </Alert>
-    );
+    return <Paper elevation={2}><Box p={3} color="error.main">{error}</Box></Paper>;
+  }
+  
+  if (products.length === 0) {
+    return <Paper elevation={2}><Box p={3}>商品がありません</Box></Paper>;
   }
 
   return (
-    <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+    <Paper elevation={2}>
       <TableContainer>
         <Table>
-          <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
+          <TableHead>
             <TableRow>
-              <TableCell padding="checkbox" width="10%">選択</TableCell>
-              <TableCell width="60%">商品名</TableCell>
-              <TableCell align="right" width="30%">個数</TableCell>
+              <TableCell>商品名</TableCell>
+              <TableCell align="right">個数</TableCell>
+              <TableCell padding="checkbox" align="center">選択</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {loading ? (
-              // ローディング中のスケルトン表示
-              Array(5).fill(0).map((_, index) => (
-                <TableRow key={`skeleton-${index}`}>
-                  <TableCell padding="checkbox">
-                    <Skeleton variant="rectangular" width={20} height={20} />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton variant="text" width="80%" />
-                  </TableCell>
-                  <TableCell align="right">
-                    <Skeleton variant="text" width={40} />
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : products.length > 0 ? (
-              // 商品リストの表示
-              products.map((product) => (
-                <TableRow 
-                  key={product.id}
-                  hover
-                  selected={selectedProductId === product.id}
-                  onClick={() => onProductSelect(product.id)}
-                  sx={{ cursor: 'pointer' }}
-                >
-                  <TableCell padding="checkbox">
-                    <Checkbox 
-                      checked={selectedProductId === product.id}
-                      onChange={() => onProductSelect(product.id)}
-                      color="primary"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body1">{product.name}</Typography>
-                    {product.description && (
-                      <Typography variant="body2" color="text.secondary">
-                        {product.description}
-                      </Typography>
-                    )}
-                  </TableCell>
-                  <TableCell align="right">
-                    <Typography 
-                      variant="body1" 
-                      fontWeight={selectedProductId === product.id ? 'bold' : 'regular'}
-                    >
-                      {product.quantity}
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              // 商品がない場合のメッセージ
-              <TableRow>
-                <TableCell colSpan={3} align="center" sx={{ py: 3 }}>
-                  <Typography variant="body1" color="text.secondary">
-                    商品がありません
-                  </Typography>
+            {products.map((product) => (
+              <TableRow 
+                key={product.id}
+                hover
+                selected={selectedProductIds.includes(product.id)}
+              >
+                <TableCell>{product.name}</TableCell>
+                <TableCell align="right">{product.quantity}</TableCell>
+                <TableCell padding="checkbox" align="center">
+                  <Checkbox 
+                    checked={selectedProductIds.includes(product.id)}
+                    onChange={() => onProductSelect(product.id)}
+                  />
                 </TableCell>
               </TableRow>
-            )}
+            ))}
           </TableBody>
         </Table>
       </TableContainer>
-      
-      {/* テーブル下部のサマリー情報 */}
-      {!loading && products.length > 0 && (
-        <Box p={2} bgcolor="#f5f5f5">
-          <Typography variant="body2" align="right">
-            合計商品数: {products.length} / 
-            合計個数: {products.reduce((sum, product) => sum + product.quantity, 0)}
-          </Typography>
-        </Box>
-      )}
+      <Box p={2} bgcolor="#f5f5f5">
+        <Typography variant="body2" align="right">
+          合計商品数: {products.length} / 
+          合計個数: {products.reduce((sum, product) => sum + (product.quantity || 0), 0)}
+        </Typography>
+      </Box>
     </Paper>
   );
 };

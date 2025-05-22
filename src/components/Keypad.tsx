@@ -31,8 +31,10 @@ export const Keypad: React.FC<KeypadProps> = ({
       elevation={3} 
       sx={{ 
         p: 3,
-        borderRadius: 2
-      }}
+        borderRadius: 2,
+        width: '150%',  // 親要素の幅に合わせる
+        maxWidth: 400,  // 最大幅を指定（必要に応じて調整）
+  }}
     >
       {/* 入力表示エリア */}
       <TextField
@@ -131,7 +133,7 @@ export const Keypad: React.FC<KeypadProps> = ({
             sx={{ width: '33.3%', height: 60, fontSize: '1.5rem', fontWeight: 'bold' }} 
             onClick={() => handleNumberClick('0')}
           >
-            0
+              0
           </Button>
         </Box>
         
