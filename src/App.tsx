@@ -67,7 +67,7 @@ export const App = () => {
       }
     ];
 
-  const saveDataToDB = async (data: any[]) => {
+  const saveDataToDB = async (data: any[]) => { //DB保存用関数
   try {
     for (const item of data) {
       await boxClient.models.Box.create({
@@ -87,7 +87,7 @@ export const App = () => {
   }
 };
 // ボタンクリックハンドラーDB保存用
-const handleSaveClick = async () => {
+const handleSaveClick = async () => { //保存用関数にsampleData1か2を渡す
   const dataToSave = dataVersion === 1 ? sampleData1 : sampleData2;
   const success = await saveDataToDB(dataToSave);
   
@@ -117,7 +117,7 @@ const handleSaveClick = async () => {
     const storeMap = new Map<string, StoreBoxSummary>();
     
     boxes.forEach(box => {
-      if (!storeMap.has(box.storeId)) {
+      if (!storeMap.has(box.storeId)) { 
         storeMap.set(box.storeId, {
           storeId: box.storeId,
           storeName: box.storeName || '',
@@ -129,7 +129,7 @@ const handleSaveClick = async () => {
         });
       }
       
-      const store = storeMap.get(box.storeId)!;
+      const store = storeMap.get(box.storeId)!; //colorで分岐して各色の合計を計算
       if (box.color === 'green') {
         store.greenBoxes += box.boxCount;
       } else if (box.color === 'red') {
@@ -154,7 +154,7 @@ const handleSaveClick = async () => {
       <TableContainer component={Paper} sx={{ maxHeight: 440 }}>
         <Table stickyHeader aria-label="店舗データテーブル">
           <TableHead>
-            <TableRow>
+            <TableRow> //表のヘッダー
               <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'white' }}>店舗番号</TableCell>
               <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'white' }}>店舗名</TableCell>
               <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'white' }}>TC</TableCell>
@@ -171,7 +171,7 @@ const handleSaveClick = async () => {
                 <TableCell>{store.storeId}</TableCell>
                 <TableCell>{store.storeName}</TableCell>
                 <TableCell>{store.storeTc}</TableCell>
-                <TableCell 
+                <TableCell  //店舗IDごとの箱の合計
                   align="right"
                   sx={{ bgcolor: 'success.light', fontWeight: 'medium' }}
                 >
@@ -195,7 +195,7 @@ const handleSaveClick = async () => {
                 >
                   {store.yellowBoxes}
                 </TableCell>
-                <TableCell 
+                <TableCell //店舗IDごとの全ての合計
                   align="right"
                   sx={{ fontWeight: 'bold' }}
                 >
@@ -221,10 +221,10 @@ const handleSaveClick = async () => {
       borderColor: 'divider',
       zIndex: 1100,
     }}>
-      <Button variant="contained" color="primary" onClick={handleSaveClick}>
+      <Button variant="contained" color="primary" onClick={handleSaveClick}> //DB保存用関数を呼び出す
         保存
       </Button>
-      <Button variant="contained" color="primary" onClick={handleToggle}>
+      <Button variant="contained" color="primary" onClick={handleToggle}> //表示されるデータを切り替え
         切り替え
       </Button>
       <Button variant="outlined" color="secondary">
