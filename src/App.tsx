@@ -154,7 +154,7 @@ const handleSaveClick = async () => { //保存用関数にsampleData1か2を渡�
       <TableContainer component={Paper} sx={{ maxHeight: 440 }}>
         <Table stickyHeader aria-label="店舗データテーブル">
           <TableHead>
-            <TableRow> //表のヘッダー
+            <TableRow> 
               <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'white' }}>店舗番号</TableCell>
               <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'white' }}>店舗名</TableCell>
               <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'white' }}>TC</TableCell>
@@ -221,10 +221,10 @@ const handleSaveClick = async () => { //保存用関数にsampleData1か2を渡�
       borderColor: 'divider',
       zIndex: 1100,
     }}>
-      <Button variant="contained" color="primary" onClick={handleSaveClick}> //DB保存用関数を呼び出す
+      <Button variant="contained" color="primary" onClick={handleSaveClick}> {/*DB保存用関数を呼び出す*/}
         保存
       </Button>
-      <Button variant="contained" color="primary" onClick={handleToggle}> //表示されるデータを切り替え
+      <Button variant="contained" color="primary" onClick={handleToggle}> {/*表示されるデータを切り替え*/}
         切り替え
       </Button>
       <Button variant="outlined" color="secondary">
