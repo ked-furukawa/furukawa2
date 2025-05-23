@@ -21,6 +21,8 @@ import {
   fetchStores, 
 } from './services/dataService';
 import { Store, Product } from './types';
+// src/App.tsx のインポート部分に追加
+import { fetchStoresByDestination } from './services/dataService';
 
 const App: React.FC = () => {
   // 状態管理
@@ -70,41 +72,29 @@ const App: React.FC = () => {
     }
   };
   
-  // 初期データの取得
-  useEffect(() => {
-    const loadInitialData = async () => {
-      try {
-        setLoading(true);
-        // 店舗一覧を取得
-        const stores = await fetchStores();
-        if (stores && stores.length > 0) {
-          // 最初の店舗を選択
-          const firstStoreId = stores[0].id;
-          setSelectedStoreId(firstStoreId);
-          
-          // 選択した店舗のデータを取得
-          const store = await fetchStoreData(firstStoreId);
-          setStoreData(store);
-          
-          // 商品データの取得
-          const productList = await fetchProducts(firstStoreId);
-          setProducts(productList);
-          
-          // 次の店舗を設定
-          if (stores.length > 1) {
-            setNextStore(stores[1]);
-          }
-        }
-      } catch (err) {
-        setError('データの読み込みに失敗しました');
-        console.error(err);
-      } finally {
-        setLoading(false);
+// 初期データの取得
+useEffect(() => {
+  const loadInitialData = async () => {
+    try {
+      setLoading(true);
+      // 送り先ごとの店舗データを取得
+      const storesByDestination = await fetchStoresByDestination();
+      
+      if (storesByDestination.length > 0 && storesByDestination[0].stores.length > 0) {
+        // 最初の送り先の最初の店舗を選択
+        const firstStore = storesByDestination[0].stores[0];
+        await handleStoreSelect(firstStore.id);
       }
-    };
+    } catch (err) {
+      setError('データの読み込みに失敗しました');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    loadInitialData();
-  }, []);
+  loadInitialData();
+}, []);
 
 // src/App.tsx の変更部分
 

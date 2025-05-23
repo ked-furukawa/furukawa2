@@ -67,3 +67,31 @@ export interface StoreProcessStatus {
   isCompleted: boolean; // 処理完了フラグ
   boxCounts: Record<string, number>; // 商品IDと箱数のマッピング
 }
+
+/**
+ * 送り先情報の型定義
+ */
+export interface Destination {
+  id: string;           // 送り先の一意のID
+  name: string;         // 送り先名（例: "東京エリア", "大阪エリア"）
+  updatedAt?: Date;     // 最終更新日時（オプション）
+}
+
+/**
+ * 店舗情報の型定義
+ */
+export interface Store {
+  id: string;           // 店舗の一意のID
+  storeNumber: string;  // 店舗番号（例: "001"）
+  storeName: string;    // 店舗名（例: "東京本店"）
+  destinationId?: string; // 送り先ID（オプション）
+  updatedAt?: Date;     // 最終更新日時（オプション）
+}
+
+/**
+ * グループ化された店舗リストの型定義
+ */
+export interface StoresByDestination {
+  destination: Destination;
+  stores: Store[];
+}

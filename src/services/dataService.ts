@@ -1,5 +1,59 @@
 // src/services/dataService.ts
-import { Store, Product, ApiResponse } from '../types';
+import { Store, Product, ApiResponse, Destination, StoresByDestination } from '../types';
+
+/**
+ * 送り先一覧を取得する
+ * @returns Promise<Destination[]> 送り先一覧
+ */
+export const fetchDestinations = async (): Promise<Destination[]> => {
+  // モックデータを返します
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve([
+        {
+          id: 'dest-001',
+          name: '中之島',
+          updatedAt: new Date()
+        },
+        {
+          id: 'dest-002',
+          name: '上越',
+          updatedAt: new Date()
+        }
+      ]);
+    }, 500);
+  });
+};
+
+/**
+ * 送り先ごとにグループ化された店舗一覧を取得する
+ * @returns Promise<StoresByDestination[]> 送り先ごとの店舗一覧
+ */
+export const fetchStoresByDestination = async (): Promise<StoresByDestination[]> => {
+  try {
+    // 送り先と店舗データを並行して取得
+    const [destinations, stores] = await Promise.all([
+      fetchDestinations(),
+      fetchStores()
+    ]);
+    
+    // 送り先ごとに店舗をグループ化
+    const storesByDestination: StoresByDestination[] = destinations.map(destination => {
+      const destinationStores = stores.filter(store => 
+        store.destinationId && store.destinationId === destination.id
+      );
+      return {
+        destination,
+        stores: destinationStores
+      };
+    });
+    
+    return storesByDestination;
+  } catch (error) {
+    console.error('送り先ごとの店舗データ取得に失敗しました', error);
+    throw error;
+  }
+};
 
 /**
  * 店舗一覧を取得する
@@ -14,60 +68,70 @@ export const fetchStores = async (): Promise<Store[]> => {
           id: 'store-001',
           storeNumber: '123',
           storeName: '東京中央店',
+          destinationId: 'dest-001',
           updatedAt: new Date()
         },
         {
           id: 'store-002',
           storeNumber: '456',
           storeName: '大阪中之島店',
+          destinationId: 'dest-002',
           updatedAt: new Date()
         },
         {
           id: 'store-003',
           storeNumber: '789',
           storeName: '名古屋栄店',
+          destinationId: 'dest-001',
           updatedAt: new Date()
         },
         {
           id: 'store-004',
           storeNumber: '321',
           storeName: '福岡天神店',
+          destinationId: 'dest-002',
           updatedAt: new Date()
         },
         {
           id: 'store-005',
           storeNumber: '555',
           storeName: '札幌大通店',
+          destinationId: 'dest-001',
           updatedAt: new Date()
         },
         {
           id: 'store-006',
           storeNumber: '666',
           storeName: '仙台一番町店',
+          destinationId: 'dest-001',
           updatedAt: new Date()
         },
         {
           id: 'store-007',
           storeNumber: '777',
           storeName: '広島本通店',
+          destinationId: 'dest-002',
           updatedAt: new Date()
         },
         {
           id: 'store-008',
           storeNumber: '888',
           storeName: '京都四条店',
+          destinationId: 'dest-002',
           updatedAt: new Date()
         },
         {
           id: 'store-009',
           storeNumber: '999',
           storeName: '神戸三宮店',
+          destinationId: 'dest-002',
           updatedAt: new Date()
         },
         {
           id: 'store-010',
           storeNumber: '101',
           storeName: '横浜みなとみらい店',
+          destinationId: 'dest-001',
           updatedAt: new Date()
         }
       ]);
@@ -90,60 +154,70 @@ export const fetchStoreData = async (storeId: string = 'store-001'): Promise<Sto
           id: 'store-001',
           storeNumber: '123',
           storeName: '東京中央店',
+          destinationId: 'dest-001',
           updatedAt: new Date()
         },
         'store-002': {
           id: 'store-002',
           storeNumber: '456',
           storeName: '大阪中之島店',
+          destinationId: 'dest-002',
           updatedAt: new Date()
         },
         'store-003': {
           id: 'store-003',
           storeNumber: '789',
           storeName: '名古屋栄店',
+          destinationId: 'dest-001',
           updatedAt: new Date()
         },
         'store-004': {
           id: 'store-004',
           storeNumber: '321',
           storeName: '福岡天神店',
+          destinationId: 'dest-002',
           updatedAt: new Date()
         },
         'store-005': {
           id: 'store-005',
           storeNumber: '555',
           storeName: '札幌大通店',
+          destinationId: 'dest-001',
           updatedAt: new Date()
         },
         'store-006': {
           id: 'store-006',
           storeNumber: '666',
           storeName: '仙台一番町店',
+          destinationId: 'dest-001',
           updatedAt: new Date()
         },
         'store-007': {
           id: 'store-007',
           storeNumber: '777',
           storeName: '広島本通店',
+          destinationId: 'dest-002',
           updatedAt: new Date()
         },
         'store-008': {
           id: 'store-008',
           storeNumber: '888',
           storeName: '京都四条店',
+          destinationId: 'dest-002',
           updatedAt: new Date()
         },
         'store-009': {
           id: 'store-009',
           storeNumber: '999',
           storeName: '神戸三宮店',
+          destinationId: 'dest-002',
           updatedAt: new Date()
         },
         'store-010': {
           id: 'store-010',
           storeNumber: '101',
           storeName: '横浜みなとみらい店',
+          destinationId: 'dest-001',
           updatedAt: new Date()
         }
       };
@@ -153,6 +227,7 @@ export const fetchStoreData = async (storeId: string = 'store-001'): Promise<Sto
     }, 500);
   });
 };
+
 /**
  * 商品リストを取得する
  * @param storeId 店舗ID (省略時はデフォルト店舗)
@@ -291,7 +366,6 @@ export const getNextStoreId = async (currentStoreId: string): Promise<string | n
     return null;
   }
 };
-// src/services/dataService.ts に追加
 
 /**
  * 店舗の箱数データを保存する
@@ -319,6 +393,7 @@ export const saveBoxCountData = async (
     }, 800);
   });
 };
+
 /**
  * DynamoDBとの接続を初期化する
  */
