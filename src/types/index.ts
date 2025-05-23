@@ -48,3 +48,22 @@ export interface FilterOptions {
   searchTerm?: string;  // 検索語でフィルタリング
   showCheckedOnly?: boolean; // チェック済みのみ表示
 }
+
+/**
+ * 箱数データの型定義
+ */
+export interface BoxCount {
+  productId: string;    // 商品ID
+  storeId: string;      // 店舗ID
+  count: number;        // 箱数
+  updatedAt: Date;      // 更新日時
+}
+
+/**
+ * 店舗処理状態の型定義
+ */
+export interface StoreProcessStatus {
+  storeId: string;      // 店舗ID
+  isCompleted: boolean; // 処理完了フラグ
+  boxCounts: Record<string, number>; // 商品IDと箱数のマッピング
+}

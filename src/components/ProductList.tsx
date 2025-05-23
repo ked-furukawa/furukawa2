@@ -42,8 +42,20 @@ export const ProductList: React.FC<ProductListProps> = ({
   }
 
   return (
-    <Paper elevation={2}>
-      <TableContainer sx={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
+    <Paper 
+      elevation={2} 
+      sx={{ 
+        borderRadius: 2, // 角の丸さを調整（数値が大きいほど丸くなる）
+        overflow: 'hidden' // 角丸の中にテーブルを収める
+      }}
+    >
+      <TableContainer sx={{ 
+        maxHeight: 'calc(100vh - 200px)', 
+        overflowY: 'auto',
+        '& .MuiTableCell-root': { // セルの余白を調整
+          padding: '8px 12px' // デフォルトの余白を小さく
+        }
+      }}>
         <Table stickyHeader>
           <TableHead>
             <TableRow>
@@ -55,10 +67,13 @@ export const ProductList: React.FC<ProductListProps> = ({
           <TableBody>
             {products.map((product) => (
               <TableRow 
-                key={product.id}
-                hover
-                selected={selectedProductIds.includes(product.id)}
-              >
+                  key={product.id}
+                  hover
+                  selected={selectedProductIds.includes(product.id)}
+                  sx={{ 
+                    bgcolor: !product.isChecked ? 'rgba(255, 244, 229, 0.7)' : 'inherit' 
+                  }}
+                >
                 <TableCell>{product.name}</TableCell>
                 <TableCell align="right">{product.quantity}</TableCell>
                 <TableCell padding="checkbox" align="center">

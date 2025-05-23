@@ -249,6 +249,77 @@ export const updateProductCheckStatus = async (
 };
 
 /**
+ * 箱数データを保存する
+ * @param storeId 店舗ID
+ * @param productBoxCounts 商品IDと箱数のマッピング
+ * @returns Promise<ApiResponse<Record<string, number>>> 保存結果
+ */
+export const saveBoxCounts = async (
+  storeId: string,
+  productBoxCounts: Record<string, number>
+): Promise<ApiResponse<Record<string, number>>> => {
+  // モックの保存処理
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      console.log(`Store ${storeId} box counts saved:`, productBoxCounts);
+      resolve({
+        success: true,
+        data: productBoxCounts,
+        message: '箱数データを保存しました'
+      });
+    }, 500);
+  });
+};
+
+/**
+ * 次の店舗IDを取得する
+ * @param currentStoreId 現在の店舗ID
+ * @returns Promise<string | null> 次の店舗ID（存在しない場合はnull）
+ */
+export const getNextStoreId = async (currentStoreId: string): Promise<string | null> => {
+  try {
+    const stores = await fetchStores();
+    const currentIndex = stores.findIndex(store => store.id === currentStoreId);
+    
+    if (currentIndex === -1 || currentIndex === stores.length - 1) {
+      return null; // 現在の店舗が見つからないか、最後の店舗の場合
+    }
+    
+    return stores[currentIndex + 1].id;
+  } catch (error) {
+    console.error('次の店舗IDの取得に失敗しました', error);
+    return null;
+  }
+};
+// src/services/dataService.ts に追加
+
+/**
+ * 店舗の箱数データを保存する
+ * @param storeId 店舗ID
+ * @param boxCounts 商品IDと箱数のマッピング
+ * @returns Promise<ApiResponse<any>> 保存結果
+ */
+export const saveBoxCountData = async (
+  storeId: string,
+  boxCounts: Record<string, number>
+): Promise<ApiResponse<any>> => {
+  // モックデータを返します
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      console.log(`店舗 ${storeId} の箱数データを保存しました:`, boxCounts);
+      resolve({
+        success: true,
+        data: {
+          storeId,
+          boxCounts,
+          updatedAt: new Date()
+        },
+        message: '箱数データを保存しました'
+      });
+    }, 800);
+  });
+};
+/**
  * DynamoDBとの接続を初期化する
  */
 export const initializeDataService = (): void => {

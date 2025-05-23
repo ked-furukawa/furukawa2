@@ -8,7 +8,6 @@ interface KeypadProps {
   onChange: (value: string) => void;
   onEnter: () => void;
   onClear: () => void;
-  onBackspace: () => void;
 }
 
 /**
@@ -29,10 +28,10 @@ export const Keypad: React.FC<KeypadProps> = ({
     <Paper 
       elevation={3} 
       sx={{ 
-        p: 3,
+        p: 4,
         borderRadius: 2,
-        width: '150%',  // 親要素の幅に合わせる
-        maxWidth: 400,  // 最大幅を指定（必要に応じて調整）
+        width: '100%',  // 親要素の幅に合わせる
+        maxWidth: 500,  // 最大幅を指定（必要に応じて調整）
   }}
     >
       {/* 入力表示エリア */}
