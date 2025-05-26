@@ -26,6 +26,36 @@ export const fetchDestinations = async (): Promise<Destination[]> => {
 };
 
 /**
+ * 店舗の確定状態を更新する
+ * @param storeId 店舗ID
+ * @param isCompleted 確定状態
+ * @returns Promise<ApiResponse<Store>> 更新結果
+ */
+export const updateStoreCompletionStatus = async (
+  storeId: string,
+  isCompleted: boolean
+): Promise<ApiResponse<Store>> => {
+  // モックデータを返します
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      console.log(`店舗 ${storeId} の確定状態を ${isCompleted ? '完了' : '未完了'} に更新しました`);
+      resolve({
+        success: true,
+        data: {
+          id: storeId,
+          storeNumber: '',
+          storeName: '',
+          destinationId: '',
+          isCompleted: isCompleted,
+          updatedAt: new Date()
+        },
+        message: '店舗の確定状態を更新しました'
+      });
+    }, 300);
+  });
+};
+
+/**
  * 送り先ごとにグループ化された店舗一覧を取得する
  * @returns Promise<StoresByDestination[]> 送り先ごとの店舗一覧
  */

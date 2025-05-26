@@ -1,4 +1,4 @@
-// src/App.tsx
+
 import React, { useState, useEffect } from 'react';
 import { 
   Box, 
@@ -11,18 +11,18 @@ import {
   DialogTitle, 
   Typography 
 } from '@mui/material';
-import { StoreHeader } from './components/StoreHeader';
-import { ProductList } from './components/ProductList';
-import { Keypad } from './components/Keypad';
-import StoreList from './components/StoreList';
+import { StoreHeader } from '../components/StoreHeader';
+import { ProductList } from '../components/ProductList';
+import { Keypad } from '../components/Keypad';
+import StoreList from '../components/StoreList';
 import { 
   fetchStoreData, 
   fetchProducts, 
   fetchStores, 
   fetchStoresByDestination,
   updateStoreCompletionStatus
-} from './services/dataService';
-import { Store, Product } from './types';
+} from '../services/dataService';
+import { Store, Product } from '../types';
 
 const App: React.FC = () => {
   // 状態管理
@@ -98,7 +98,7 @@ useEffect(() => {
   loadInitialData();
 }, []);
 
-// src/App.tsx の変更部分
+
 
 // 状態管理に追加（既存のerror状態を活用）
 // const [error, setError] = useState<string | null>(null); // 既存のコード

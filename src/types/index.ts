@@ -95,3 +95,12 @@ export interface StoresByDestination {
   destination: Destination;
   stores: Store[];
 }
+
+export interface Store {
+  id: string;
+  storeNumber: string;
+  storeName: string;
+  destinationId?: string;
+  isCompleted?: boolean;  // 箱数確定済みかどうかのフラグ
+  updatedAt?: Date;
+}

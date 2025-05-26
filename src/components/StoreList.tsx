@@ -19,9 +19,14 @@ import { StoresByDestination } from '../types';
 interface StoreListProps {
   selectedStoreId: string | null;
   onSelectStore: (storeId: string) => void;
+  completedStoreIds: string[];
 }
 
-const StoreList: React.FC<StoreListProps> = ({ selectedStoreId, onSelectStore }) => {
+const StoreList: React.FC<StoreListProps> = ({ 
+  selectedStoreId, 
+  onSelectStore,
+  completedStoreIds 
+}) => {
   const [storesByDestination, setStoresByDestination] = useState<StoresByDestination[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
