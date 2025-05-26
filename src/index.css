@@ -63,3 +63,23 @@ a {
   font-weight: 800;
   text-decoration: none;
 }
+
+/* 既存のCSSの後に追加 */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 12px;
+  text-align: left;
+}
+
+th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+}
+
+tr:hover {
+  background-color: #f9f9f9;
+}
