@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { 
-  Box, 
-  Typography, 
-  Checkbox, 
-  Button, 
+import  { useState } from 'react';
+import {
+  Box,
+  Typography,
+  Checkbox,
+  Button,
   Paper,
   Snackbar,
   Alert,
@@ -14,6 +14,7 @@ import {
   TableHead,
   TableRow
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 // 商品データの型定義
 interface Product {
@@ -23,13 +24,7 @@ interface Product {
   isChecked: boolean;
 }
 
-// props の型定義
-interface SortingCheckScreenProps {
-  onProductSelect: (id: string) => void;
-  onNextProcess: () => void;
-}
-
-const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({ onProductSelect, onNextProcess }) => {
+const SortingCheckScreen = () => {
   // 商品リストの状態
   const [products, setProducts] = useState<Product[]>([
     { id: '1', name: '唐揚げ', expectedCount: 15, isChecked: false },
@@ -37,17 +32,19 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({ onProductSelect
     { id: '3', name: 'ポテトサラダ', expectedCount: 8, isChecked: false },
     { id: '4', name: '焼き鳥', expectedCount: 12, isChecked: false },
   ]);
-  
+
   // アラート表示のための状態
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [alertSeverity, setAlertSeverity] = useState<'success' | 'error'>('success');
 
+  const navigate = useNavigate();
+
   // チェックボックスの状態を変更する関数
   const handleCheckProduct = (productId: string) => {
-    setProducts(products.map(product => 
-      product.id === productId 
-        ? { ...product, isChecked: !product.isChecked } 
+    setProducts(products.map(product =>
+      product.id === productId
+        ? { ...product, isChecked: !product.isChecked }
         : product
     ));
   };
@@ -55,23 +52,23 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({ onProductSelect
   // 商品名をクリックして詳細画面に移動する関数
   const handleProductClick = (productId: string) => {
     // 商品詳細画面に遷移
-    onProductSelect(productId);
+    navigate(`/product-detail/${productId}`);
   };
 
   // 完了ボタンを押したときの処理
   const handleComplete = () => {
     // すべての商品がチェックされているか確認
     const allChecked = products.every(product => product.isChecked);
-    
+  
     if (allChecked) {
       // 成功メッセージを表示
       setAlertMessage('確認完了しました！次の工程に進みます');
       setAlertSeverity('success');
       setAlertOpen(true);
-      
+    
       // 少し待ってから次の画面に遷移
       setTimeout(() => {
-        onNextProcess();
+        navigate('/next-process');
       }, 1500);
     } else {
       // 未チェックの商品名を取得
@@ -79,7 +76,7 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({ onProductSelect
         .filter(product => !product.isChecked)
         .map(product => product.name)
         .join('、');
-      
+    
       // エラーメッセージを表示
       setAlertMessage(`${uncheckedProducts}の確認が完了していません`);
       setAlertSeverity('error');
@@ -92,7 +89,7 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({ onProductSelect
       <Typography variant="h5" component="h1" gutterBottom align="center">
         仕分け確認
       </Typography>
-      
+    
       <Paper elevation={3} sx={{ p: 2, mb: 3 }}>
         <TableContainer>
           <Table>
@@ -105,11 +102,11 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({ onProductSelect
             </TableHead>
             <TableBody>
               {products.map((product) => (
-                <TableRow 
+                <TableRow
                   key={product.id}
                   hover
                   onClick={() => handleProductClick(product.id)}
-                  sx={{ 
+                  sx={{
                     cursor: 'pointer',
                     '&:last-child td, &:last-child th': { border: 0 }
                   }}
@@ -131,27 +128,27 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({ onProductSelect
           </Table>
         </TableContainer>
       </Paper>
-      
+    
       <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-        <Button 
-          variant="contained" 
-          color="primary" 
+        <Button
+          variant="contained"
+          color="primary"
           size="large"
           onClick={handleComplete}
         >
           確認完了
         </Button>
       </Box>
-      
+    
       {/* アラート表示 */}
-      <Snackbar 
-        open={alertOpen} 
-        autoHideDuration={6000} 
+      <Snackbar
+        open={alertOpen}
+        autoHideDuration={6000}
         onClose={() => setAlertOpen(false)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert 
-          onClose={() => setAlertOpen(false)} 
+        <Alert
+          onClose={() => setAlertOpen(false)}
           severity={alertSeverity}
           sx={{ width: '100%' }}
         >
