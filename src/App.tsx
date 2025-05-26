@@ -7,6 +7,7 @@ import Test from "./pages/TestComponent.tsx"
 import BoxQuantityInput from "./pages/BoxQuantityInput.tsx";
 import SortingCheckScreen from "./pages/SortingCheckScreen.tsx"
 import ProductDetailScreen from "./pages/ProductDetailScreen.tsx";
+import StoreDoubleCheckList from "./pages/StoreDoubleCheckList.tsx";
 
 const pageList = [//- key:stateで使う識別子 - component: 実際に表示する React コンポーネント
 { key: 'FinalCheck', label: '最終確認', component: <FinalCheck /> },
@@ -14,6 +15,7 @@ const pageList = [//- key:stateで使う識別子 - component: 実際に表示�
 { key: 'BoxQuantityInput', label: '仕分け箱数入力', component: <BoxQuantityInput /> },
 { key: 'SortingCheckScreen', label: '仕分け前商品数確認', component: <SortingCheckScreen /> },  
 { key: 'ProductDetailScreen', label: '商品詳細', component: <ProductDetailScreen /> },  
+{ key: 'StoreDoubleCheckList', label: 'ダブルチェック', component: <StoreDoubleCheckList /> },
 // { key: 'C', label: 'C画面', component: <CComponent /> },
 ];
 

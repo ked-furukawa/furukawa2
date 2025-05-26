@@ -6,8 +6,8 @@ import {
   Keypad, 
   ErrorMessage, 
   ConfirmationDialog 
-} from '../components'; // インデックスファイルから一括インポート
-import StoreList from '../components/StoreList'; // StoreListがインデックスに含まれていない場合
+} from '../components/sakurai'; // インデックスファイルから一括インポート
+import StoreList from '../components/sakurai/StoreList'; // StoreListがインデックスに含まれていない場合
 import { useStoreManagement } from '../hooks/useStoreManagement';
 import { useProductSelection } from '../hooks/useProductSelection';
 

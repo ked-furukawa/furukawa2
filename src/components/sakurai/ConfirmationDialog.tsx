@@ -8,7 +8,7 @@ DialogTitle,
 Typography,
 Button
 } from '@mui/material';
-import { Store } from '../types';
+import { Store } from '../../types';
 
 interface ConfirmationDialogProps {
 open: boolean;
