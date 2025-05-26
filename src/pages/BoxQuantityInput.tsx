@@ -24,7 +24,7 @@ import {
 } from '../services/dataService';
 import { Store, Product } from '../types';
 
-const App: React.FC = () => {
+export const BoxQuantityInput: React.FC = () => {
   // 状態管理
   const [inputValue, setInputValue] = useState<string>('');
   const [storeData, setStoreData] = useState<Store | null>(null);
@@ -334,4 +334,4 @@ const navigateToNextStore = async () => {
   );
 };
 
-export default App;
+export default BoxQuantityInput;
