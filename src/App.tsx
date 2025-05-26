@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button, Box } from '@mui/material';
 
-//書く画面のimport
+//各画面のimport
 import FinalCheck from "./pages/FinalCheck"
 import Test from "./pages/TestComponent.tsx"
 import BoxQuantityInput from "./pages/BoxQuantityInput.tsx";
