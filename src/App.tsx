@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button, Box } from '@mui/material';
 
+//書く画面のimport
 import FinalCheck from "./pages/FinalCheck"
 import Test from "./pages/TestComponent.tsx"
 
