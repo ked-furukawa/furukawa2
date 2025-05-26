@@ -9,9 +9,6 @@ import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
 // });
 
 
-
-
-
 export const schema = a.schema({
   Order: a.model({ //店舗-商品名のテーブル　←注文情報、主に読み用
     date: a.string().required(),    // 注文日 '2025-05-22'
@@ -32,7 +29,6 @@ export const schema = a.schema({
 
   Box: a.model({ //店舗-箱色のテーブル　←箱数情報、主に書き用(最後はこれを読む)
     date: a.string().required(),    // 注文日 '2025-05-22'
-
 
     storeId: a.string().required(), // 店舗ID '019'
     storeName: a.string(), //店舗名 '内野店'

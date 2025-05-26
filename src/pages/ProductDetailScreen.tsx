@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { 
   Box, 
   Typography, 
@@ -22,7 +22,7 @@ const productData = {
   '4': { name: '焼き鳥', expectedCount: 12 },
 };
 
-const ProductDetailScreen: React.FC = () => {
+const ProductDetailScreen = () => {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
   

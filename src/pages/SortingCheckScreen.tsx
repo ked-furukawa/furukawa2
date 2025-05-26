@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import { 
   Box, 
   Typography, 
@@ -24,7 +24,7 @@ interface Product {
   isChecked: boolean;
 }
 
-const SortingCheckScreen: React.FC = () => {
+const SortingCheckScreen = () => {
   // 商品リストの状態
   const [products, setProducts] = useState<Product[]>([
     { id: '1', name: '唐揚げ', expectedCount: 15, isChecked: false },
