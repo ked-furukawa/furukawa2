@@ -14,7 +14,6 @@ import {
   TableHead,
   TableRow
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
 
 // 商品データの型定義
 interface Product {
@@ -24,7 +23,13 @@ interface Product {
   isChecked: boolean;
 }
 
-const SortingCheckScreen: React.FC = () => {
+// props の型定義
+interface SortingCheckScreenProps {
+  onProductSelect: (id: string) => void;
+  onNextProcess: () => void;
+}
+
+const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({ onProductSelect, onNextProcess }) => {
   // 商品リストの状態
   const [products, setProducts] = useState<Product[]>([
     { id: '1', name: '唐揚げ', expectedCount: 15, isChecked: false },
@@ -37,8 +42,6 @@ const SortingCheckScreen: React.FC = () => {
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [alertSeverity, setAlertSeverity] = useState<'success' | 'error'>('success');
-  
-  const navigate = useNavigate();
 
   // チェックボックスの状態を変更する関数
   const handleCheckProduct = (productId: string) => {
@@ -52,7 +55,7 @@ const SortingCheckScreen: React.FC = () => {
   // 商品名をクリックして詳細画面に移動する関数
   const handleProductClick = (productId: string) => {
     // 商品詳細画面に遷移
-    navigate(`/product-detail/${productId}`);
+    onProductSelect(productId);
   };
 
   // 完了ボタンを押したときの処理
@@ -68,7 +71,7 @@ const SortingCheckScreen: React.FC = () => {
       
       // 少し待ってから次の画面に遷移
       setTimeout(() => {
-        navigate('/next-process');
+        onNextProcess();
       }, 1500);
     } else {
       // 未チェックの商品名を取得
