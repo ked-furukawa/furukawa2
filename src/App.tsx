@@ -1,56 +1,57 @@
-import { useEffect, useState } from "react";
-import type { Schema } from "../amplify/data/resource";
-import { generateClient } from "aws-amplify/data";
+import { useState } from "react";
+import { Button, Box } from '@mui/material';
 
+//書く画面のimport
+import FinalCheck from "./pages/FinalCheck"
+import Test from "./pages/TestComponent.tsx"
 
-const client = generateClient<Schema>();
+const pageList = [//- key:stateで使う識別子 - component: 実際に表示する React コンポーネント
+  { key: 'FinalCheck', label: '最終確認', component: <FinalCheck /> },
+  { key: 'Test', label: 'テスト画面', component: <Test /> },
+  // { key: 'C', label: 'C画面', component: <CComponent /> },
+];
 
-function App() {
-  const [orders, setOrders] = useState<Array<Schema["Order"]["type"]>>([]); //テーブルを変更したのでエラーが出ないような暫定対応、todoという変数をorderに変更してます
+const App = () => {
+  const [view, setView] = useState('FinalCheck'); // 初期画面の指定
 
-  useEffect(() => {
-    client.models.Order.observeQuery().subscribe({
-      next: ({items}) => {
-        setOrders([...items]);
-        console.log("受信したデータ:", items);
-      }
-    });
-  }, []);
-
-  function createOrder() { 
-    // 0〜999の乱数を作って3桁のゼロパディングで文字列にする
-    const randomId = Math.floor(Math.random() * 1000);
-    const storeId = randomId.toString().padStart(3, '0');  // 例: "007", "123", "045"
-
-    const randomCount = Math.floor(Math.random() * 10) + 1; // 1〜10 の整数
-    client.models.Order.create({  //Todoのnewのボタンを押すとこの固定データがDBに書き込まれるようにしています
-      storeId:storeId, //storeIdとorderCountを乱数にしてます
-      date:'2025-05-22',
-      itemId:"Order content",
-      orderCount:randomCount
-    });
-  }
+  // ✅ 今選択されているページ情報を取得
+  const currentPage = pageList.find((p) => p.key === view);
 
   return (
-    <main>
-      <h1>My todos</h1>
-      <button onClick={createOrder}>+ new</button> //orderデータを生成
-      <ul>
-        {orders.map((order) => ( //データの表示部分
-          <li key={order.storeId}>
-            storeId: {order.storeId}, itemId: {order.itemId}, count: {order.orderCount}
-          </li>
+    <Box sx={{ minHeight: '100vh' }}>
+    <div>
+      {/* 🔸 ページ切り替えボタンを自動生成 */}
+      <nav>
+        <Box sx={{ position: 'fixed', top: 10, left: 10, zIndex:1300 }}>
+        {pageList.map((page) => (
+          <Button
+          sx={{border: '2px solid #1976d2', //切り替えボタンのスタイル設定
+                borderRadius: '4px',
+                color: '#1976d2',
+                backgroundColor: 'transparent', 
+                '&:hover': { // ホバー時の設定
+                  backgroundColor: '#e3f2fd',
+                  borderColor: '#115293',
+          }}}
+            key={page.key}
+            // 🔁 押されたボタンの key を state にセット
+            onClick={() => setView(page.key)} 
+          >
+            {page.label}
+          </Button>
         ))}
-      </ul>
-      <div>
-        🥳 App successfully hosted. Try creating a new todo.
-        <br />
-        <a href="https://docs.amplify.aws/react/start/quickstart/#make-frontend-updates">
-          Review next step of this tutorial.
-        </a>
-      </div>
-    </main>
-  );
-}
+        </Box>
+      </nav>
 
-export default App;//test
+      {/* 🔸 現在のページのコンポーネントを表示 */}
+      <main>
+        {currentPage?.component || <p>ページが見つかりません</p>}
+      </main>
+    </div>
+    </Box>
+  );
+
+};
+
+export default App;
+

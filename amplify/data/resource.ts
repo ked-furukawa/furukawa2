@@ -14,11 +14,11 @@ import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
 
 export const schema = a.schema({
   Order: a.model({ //店舗-商品名のテーブル　←注文情報、主に読み用
+    date: a.string().required(),    // 注文日 '2025-05-22'
+
     storeId: a.string().required(), // 店舗ID '019'
     storeName: a.string(), //店舗名 '内野店'
     storeTc: a.string(), //納品先物流センター '中之島'
-
-    date: a.string().required(),    // 注文日 '2025-05-22'
 
     itemId: a.string().required(), // 商品コードが使えそう '210039'
     itemName: a.string(), //商品名・規格 '大エビ天重キット'
@@ -27,21 +27,22 @@ export const schema = a.schema({
     resDeptName: a.string(), //担当部門名 '肉１'
     orderCount: a.integer().required(), // 商品注文数 '3'
   })
-  .identifier(['storeId', 'date', 'itemId']) // PKとSK
+  .identifier(['date', 'storeId', 'itemId']) // PKとSK
   .authorization((allow) => [allow.publicApiKey()]), //認証情報の設定
 
   Box: a.model({ //店舗-箱色のテーブル　←箱数情報、主に書き用(最後はこれを読む)
+    date: a.string().required(),    // 注文日 '2025-05-22'
+
+
     storeId: a.string().required(), // 店舗ID '019'
     storeName: a.string(), //店舗名 '内野店'
     storeTc: a.string(), //納品先物流センター '中之島'
-
-    date: a.string().required(),    // 注文日 '2025-05-22'
 
     color: a.string().required(),  // 箱色 'green'
     boxCount: a.integer().required(),   // 箱数 '20'
     boxCreatedBy: a.string() // 箱を作った部門
   })
-  .identifier(['storeId', 'date', 'color']) //PKとSK
+  .identifier(['date', 'storeId', 'color']) //PKとSK
   .authorization((allow) => [allow.publicApiKey()]) //認証情報の設定
 });
 
