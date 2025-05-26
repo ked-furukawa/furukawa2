@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
- 
+
 // 仮の商品データ
 const productData = {
   '1': { name: '唐揚げ', expectedCount: 15 },
@@ -20,11 +20,11 @@ const productData = {
   '3': { name: 'ポテトサラダ', expectedCount: 8 },
   '4': { name: '焼き鳥', expectedCount: 12 },
 };
- 
+
 const ProductDetailScreen = () => {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
- 
+
   // 商品が存在しない場合の処理
   if (!productId || !productData[productId as keyof typeof productData]) {
     return (
@@ -40,18 +40,18 @@ const ProductDetailScreen = () => {
       </Box>
     );
   }
- 
+
   const product = productData[productId as keyof typeof productData];
- 
+
   // 確認完了ボタンを押した時の処理
   const handleConfirm = () => {
     // ここで確認済みとしてマークする処理を実装
     // 例: API呼び出しやステート更新など
-   
+  
     // 前の画面に戻る
     navigate(-1);
   };
- 
+
   return (
     <Box sx={{ maxWidth: 600, margin: '0 auto', p: 2 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -62,7 +62,7 @@ const ProductDetailScreen = () => {
           {product.name}
         </Typography>
       </Box>
-     
+    
       <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
         <TableContainer>
           <Table>
@@ -78,7 +78,7 @@ const ProductDetailScreen = () => {
             </TableBody>
           </Table>
         </TableContainer>
-       
+      
         <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
           <Button
             variant="contained"
@@ -93,5 +93,5 @@ const ProductDetailScreen = () => {
     </Box>
   );
 };
- 
+
 export default ProductDetailScreen;

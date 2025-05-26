@@ -9,53 +9,53 @@ import SortingCheckScreen from "./pages/SortingCheckScreen.tsx"
 import ProductDetailScreen from "./pages/ProductDetailScreen.tsx";
 
 const pageList = [//- key:stateで使う識別子 - component: 実際に表示する React コンポーネント
-  { key: 'FinalCheck', label: '最終確認', component: <FinalCheck /> },
-  { key: 'Test', label: 'テスト画面', component: <Test /> },
-  { key: 'BoxQuantityInput', label: '仕分け箱数入力', component: <BoxQuantityInput /> },
-  { key: 'SortingCheckScreen', label: '仕分け前商品数確認', component: <SortingCheckScreen /> },  
-  { key: 'ProductDetailScreen', label: '商品詳細', component: <ProductDetailScreen /> },  
-  // { key: 'C', label: 'C画面', component: <CComponent /> },
+{ key: 'FinalCheck', label: '最終確認', component: <FinalCheck /> },
+{ key: 'Test', label: 'テスト画面', component: <Test /> },
+{ key: 'BoxQuantityInput', label: '仕分け箱数入力', component: <BoxQuantityInput /> },
+{ key: 'SortingCheckScreen', label: '仕分け前商品数確認', component: <SortingCheckScreen /> },  
+{ key: 'ProductDetailScreen', label: '商品詳細', component: <ProductDetailScreen /> },  
+// { key: 'C', label: 'C画面', component: <CComponent /> },
 ];
 
 const App = () => {
-  const [view, setView] = useState('FinalCheck'); // 初期画面の指定
+const [view, setView] = useState('FinalCheck'); // 初期画面の指定
 
-  // ✅ 今選択されているページ情報を取得
-  const currentPage = pageList.find((p) => p.key === view);
+// ✅ 今選択されているページ情報を取得
+const currentPage = pageList.find((p) => p.key === view);
 
-  return (
+return (
     <Box sx={{ minHeight: '100vh' }}>
     <div>
-      {/* 🔸 ページ切り替えボタンを自動生成 */}
-      <nav>
+    {/* 🔸 ページ切り替えボタンを自動生成 */}
+    <nav>
         <Box sx={{ position: 'fixed', top: 10, left: 10, zIndex:1300 }}>
         {pageList.map((page) => (
-          <Button
-          sx={{border: '2px solid #1976d2', //切り替えボタンのスタイル設定
+        <Button
+        sx={{border: '2px solid #1976d2', //切り替えボタンのスタイル設定
                 borderRadius: '4px',
                 color: '#1976d2',
                 backgroundColor: 'transparent', 
                 '&:hover': { // ホバー時の設定
-                  backgroundColor: '#e3f2fd',
-                  borderColor: '#115293',
-          }}}
+                backgroundColor: '#e3f2fd',
+                borderColor: '#115293',
+        }}}
             key={page.key}
             // 🔁 押されたボタンの key を state にセット
             onClick={() => setView(page.key)} 
-          >
+        >
             {page.label}
-          </Button>
+        </Button>
         ))}
         </Box>
-      </nav>
+    </nav>
 
-      {/* 🔸 現在のページのコンポーネントを表示 */}
-      <main>
+    {/* 🔸 現在のページのコンポーネントを表示 */}
+    <main>
         {currentPage?.component || <p>ページが見つかりません</p>}
-      </main>
+    </main>
     </div>
     </Box>
-  );
+);
 
 };
 
