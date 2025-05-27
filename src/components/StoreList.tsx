@@ -25,7 +25,7 @@ interface StoreListProps {
 const StoreList: React.FC<StoreListProps> = ({ 
   selectedStoreId, 
   onSelectStore,
-  completedStoreIds 
+  // completedStoreIds 
 }) => {
   const [storesByDestination, setStoresByDestination] = useState<StoresByDestination[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
