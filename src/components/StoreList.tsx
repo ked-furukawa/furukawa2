@@ -19,7 +19,7 @@ import { StoresByDestination } from '../types';
 interface StoreListProps {
   selectedStoreId: string | null;
   onSelectStore: (storeId: string) => void;
-  completedStoreIds: string[];
+  // completedStoreIds: string[];
 }
 
 const StoreList: React.FC<StoreListProps> = ({ 
