@@ -3,14 +3,14 @@ import { Button, Box } from '@mui/material';
 
 //各画面のimport
 import FinalCheck from "./pages/FinalCheck"
-import Test from "./pages/TestComponent.tsx"
+// import Test from "./pages/TestComponent.tsx"
 import BoxQuantityInput from "./pages/BoxQuantityInput.tsx";
+import SortingCheckScreen from "./components/SortingCheckScreen.tsx";
 
 const pageList = [//- key:stateで使う識別子 - component: 実際に表示する React コンポーネント
   { key: 'FinalCheck', label: '最終確認', component: <FinalCheck /> },
-  { key: 'Test', label: 'テスト画面', component: <Test /> },
   { key: 'BoxQuantityInput', label: '仕分け箱数入力', component: <BoxQuantityInput /> },
-  
+  { key: 'Test', label: '商品数確認', component: <SortingCheckScreen /> },
   // { key: 'C', label: 'C画面', component: <CComponent /> },
 ];
 
@@ -57,4 +57,3 @@ const App = () => {
 };
 
 export default App;
-
