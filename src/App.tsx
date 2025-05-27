@@ -7,7 +7,7 @@ import Test from "./pages/TestComponent.tsx"
 import BoxQuantityInput from "./pages/BoxQuantityInput.tsx";
 import SortingCheckScreen from "./pages/SortingCheckScreen.tsx"
 import ProductDetailScreen from "./pages/ProductDetailScreen.tsx";
-import ExcelUpload  from "./pages/Excelupload.tsx";
+import ExcelUpload from "./pages/ExcelUpload.tsx"
 
 const pageList = [//- key:stateで使う識別子 - component: 実際に表示する React コンポーネント
   { key: 'ExcelUpload', label: 'エクセルアップロード', component: <ExcelUpload /> },
