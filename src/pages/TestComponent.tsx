@@ -28,9 +28,9 @@ export const TestComponent = () => {
     setSubmittedValue(numValue);
 
     try {
-        const result = await boxClient.models.Box.update({
-            date: '2025-06-02',
-            storeId: '019',
+        const result = await boxClient.models.Box.update({ //DBの書き換え部分、今回はBoxテーブル
+            date: '2025-06-02', //実際は画面内のどこかに保持している変数などを使って必要情報を埋めていく
+            storeId: '019', //必要情報=定義したテーブルの中身
             storeName: '内野店',
             storeTc: '中之島',
             color: 'green',

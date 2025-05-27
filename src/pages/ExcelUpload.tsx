@@ -161,15 +161,15 @@ return (
     </Box>
     <Box sx={{
     position: "fixed",
-    top: 0,
+    bottom: 0,
     right: 0,
     margin: 2, 
     borderRadius: 1,
     }}>
-        <Button variant="contained" color="primary" onClick={() => handleSaveClick("order")}> {/*DB保存用関数を呼び出す*/}
+        <Button variant="contained" color="secondary" onClick={() => handleSaveClick("order")}> {/*DB保存用関数を呼び出す*/}
         orderテーブル保存
         </Button>
-        <Button variant="contained" color="primary" onClick={() => handleSaveClick("box")}> {/*DB保存用関数を呼び出す*/}
+        <Button variant="contained" color="secondary" onClick={() => handleSaveClick("box")}> {/*DB保存用関数を呼び出す*/}
         boxテーブル保存
         </Button>
     </Box>

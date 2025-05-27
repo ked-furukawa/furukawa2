@@ -22,9 +22,9 @@ export const FinalCheck = () => {
     const [storeData, setStoreData] = useState<StoreBoxSummary[]>([]);  
 
     useEffect(() => {       
-    const sub = boxClient.models.Box.observeQuery().subscribe({
-        next: ({ items }) => {
-            const storeMap = items.map(item => ({
+    const sub = boxClient.models.Box.observeQuery().subscribe({ //Boxテーブルの変更をサブスクライブ
+        next: ({ items }) => { //変更があった際に呼び出される処理、filterしてないのでBoxテーブル全体がitemsに入っている
+            const storeMap = items.map(item => ({ //itemsの中身をこの画面で使いたい形にマッピング
                 date: item.date,
                 storeId: item.storeId,
                 storeName: item.storeName,
@@ -34,7 +34,7 @@ export const FinalCheck = () => {
                 redBoxes: item.color === 'red' ? item.boxCount : 0,
                 blueBoxes: item.color === 'blue' ? item.boxCount : 0,
                 yellowBoxes: item.color === 'yellow' ? item.boxCount : 0
-            }))
+            })) //マッピングしたものはstoreMapに入っている、以降はこれを使う
 
             aggregateStoreData(storeMap);
         },
