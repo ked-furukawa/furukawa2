@@ -1,0 +1,21 @@
+
+[
+    {
+        "date": "2025-06-02",
+
+        "storeId": "019",
+        "storeName": "内野店",
+        "storeTC": "中之島",
+
+        "itemId": "210001",
+        "itemName": "かぼちゃ",
+        "itemFormalName": "カボチャスライス",
+        "resDeptId": 
+
+    },
+    {
+        "id": "2",
+        "name": "Bob",
+        "email": "bob@example.com"
+    }
+]
