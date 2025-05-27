@@ -1,13 +1,159 @@
 
 [
     {
-    "id": "1",
-    "name": "Alice",
-    "email": "alice@example.com"
+        "date": "2025-06-02",
+
+        "storeId": "019",
+        "storeName": "内野店",
+        "storeTc": "中之島",
+
+        "itemId": "210001",
+        "itemName": "かぼちゃ",
+        "itemFormalName": "カボチャスライス",
+        "orderCount": 1
     },
     {
-    "id": "2",
-    "name": "Bob",
-    "email": "bob@example.com"
+        "date": "2025-06-02",
+
+        "storeId": "019",
+        "storeName": "内野店",
+        "storeTc": "中之島",
+
+        "itemId": "210004",
+        "itemName": "トマト",
+        "itemFormalName": "ミニトマト",
+        "orderCount": 20
+    },
+        {
+        "date": "2025-06-02",
+
+        "storeId": "019",
+        "storeName": "内野店",
+        "storeTc": "中之島",
+
+        "itemId": "210005",
+        "itemName": "レモンスライス",
+        "itemFormalName": "レモン",
+        "orderCount": 5
+    },
+        {
+        "date": "2025-06-02",
+
+        "storeId": "019",
+        "storeName": "内野店",
+        "storeTc": "中之島",
+
+        "itemId": "210039",
+        "itemName": "大エビ",
+        "itemFormalName": "大エビ天重キット",
+        "orderCount": 3
+    },
+        {
+        "date": "2025-06-02",
+
+        "storeId": "020",
+        "storeName": "吉田店",
+        "storeTc": "中之島",
+
+        "itemId": "210039",
+        "itemName": "大エビ",
+        "itemFormalName": "大エビ天重キット",
+        "orderCount": 2
+    },
+        {
+        "date": "2025-06-02",
+
+        "storeId": "021",
+        "storeName": "四日町店",
+        "storeTc": "中之島",
+
+        "itemId": "210039",
+        "itemName": "大エビ",
+        "itemFormalName": "大エビ天重キット",
+        "orderCount": 2
+    },
+        {
+        "date": "2025-06-02",
+
+        "storeId": "021",
+        "storeName": "四日町店",
+        "storeTc": "中之島",
+
+        "itemId": "210030",
+        "itemName": "大エビ",
+        "itemFormalName": "大エビ天重キット",
+        "orderCount": 3
+    },
+        {
+        "date": "2025-06-02",
+
+        "storeId": "021",
+        "storeName": "四日町店",
+        "storeTc": "中之島",
+
+        "itemId": "210040",
+        "itemName": "てり",
+        "itemFormalName": "チキンステーキ（照焼き）１０枚",
+        "orderCount": 1
+    },
+    {
+        "date": "2025-06-02",
+
+        "storeId": "101",
+        "storeName": "関原店",
+        "storeTc": "中之島",
+
+        "itemId": "210040",
+        "itemName": "てり",
+        "itemFormalName": "チキンステーキ（照焼き）１０枚",
+        "orderCount": 2
+    },
+    {
+        "date": "2025-06-02",
+
+        "storeId": "025",
+        "storeName": "春日山店",
+        "storeTc": "上越",
+
+        "itemId": "210005",
+        "itemName": "レモンスライス",
+        "itemFormalName": "レモン",
+        "orderCount": 3
+    },
+    {
+        "date": "2025-06-02",
+
+        "storeId": "040",
+        "storeName": "黒部店",
+        "storeTc": "上越",
+
+        "itemId": "210005",
+        "itemName": "レモンスライス",
+        "itemFormalName": "レモン",
+        "orderCount": 3
+    },
+    {
+        "date": "2025-06-02",
+
+        "storeId": "040",
+        "storeName": "黒部店",
+        "storeTc": "上越",
+
+        "itemId": "210030",
+        "itemName": "大エビ",
+        "itemFormalName": "大エビ天重キット",
+        "orderCount": 1
+    },
+    {
+        "date": "2025-06-02",
+
+        "storeId": "137",
+        "storeName": "魚津店",
+        "storeTc": "上越",
+
+        "itemId": "210030",
+        "itemName": "バジル",
+        "itemFormalName": "バジルチキンと根菜キット",
+        "orderCount": 2
     }
 ]

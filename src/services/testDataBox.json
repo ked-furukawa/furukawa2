@@ -1,21 +1,133 @@
 
 [
     {
-        "date": "2025-06-02",
+    "date": "2025-06-02",
 
-        "storeId": "019",
-        "storeName": "内野店",
-        "storeTC": "中之島",
+    "storeId": "019",
+    "storeName": "内野店",
+    "storeTc": "中之島",
 
-        "itemId": "210001",
-        "itemName": "かぼちゃ",
-        "itemFormalName": "カボチャスライス",
-        "resDeptId": 
-
+    "color": "green",
+    "boxCount": 20
     },
     {
-        "id": "2",
-        "name": "Bob",
-        "email": "bob@example.com"
+    "date": "2025-06-02",
+
+    "storeId": "019",
+    "storeName": "内野店",
+    "storeTc": "中之島",
+
+    "color": "red",
+    "boxCount": 2
+    },
+    {
+    "date": "2025-06-02",
+
+    "storeId": "020",
+    "storeName": "吉田店",
+    "storeTc": "中之島",
+
+    "color": "green",
+    "boxCount": 30
+    },
+    {
+    "date": "2025-06-02",
+
+    "storeId": "020",
+    "storeName": "吉田店",
+    "storeTc": "中之島",
+
+    "color": "red",
+    "boxCount": 5
+    },
+    {
+    "date": "2025-06-02",
+
+    "storeId": "020",
+    "storeName": "吉田店",
+    "storeTc": "中之島",
+
+    "color": "blue",
+    "boxCount": 1
+    },
+    {
+    "date": "2025-06-02",
+
+    "storeId": "032",
+    "storeName": "五泉店",
+    "storeTc": "中之島",
+
+    "color": "green",
+    "boxCount": 12
+    },
+    {
+    "date": "2025-06-02",
+
+    "storeId": "160",
+    "storeName": "阿賀野店",
+    "storeTc": "中之島",
+
+    "color": "green",
+    "boxCount": 17
+    },
+    {
+    "date": "2025-06-02",
+
+    "storeId": "025",
+    "storeName": "春日山店",
+    "storeTc": "上越",
+
+    "color": "green",
+    "boxCount": 17
+    },
+    {
+    "date": "2025-06-02",
+
+    "storeId": "040",
+    "storeName": "黒部店",
+    "storeTc": "上越",
+
+    "color": "green",
+    "boxCount": 10
+    },
+    {
+    "date": "2025-06-02",
+
+    "storeId": "123",
+    "storeName": "若里店",
+    "storeTc": "上越",
+
+    "color": "green",
+    "boxCount": 32
+    },
+    {
+    "date": "2025-06-02",
+
+    "storeId": "123",
+    "storeName": "若里店",
+    "storeTc": "上越",
+
+    "color": "yellow",
+    "boxCount": 1
+    },
+    {
+    "date": "2025-06-02",
+
+    "storeId": "123",
+    "storeName": "若里店",
+    "storeTc": "上越",
+
+    "color": "red",
+    "boxCount": 2
+    },
+    {
+    "date": "2025-06-02",
+
+    "storeId": "123",
+    "storeName": "若里店",
+    "storeTc": "上越",
+
+    "color": "red",
+    "boxCount": 100
     }
 ]
