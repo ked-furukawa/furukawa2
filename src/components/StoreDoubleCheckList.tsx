@@ -1,3 +1,4 @@
+// src/components/StoreDoubleCheckList.tsx の修正
 import React from 'react';
 import {
 Paper,
@@ -18,6 +19,7 @@ interface StoreDoubleCheckListProps {
 stores: Store[];
 selectedStoreIds: string[];
 onStoreSelect: (storeId: string) => void;
+onSelectAll?: () => void;  // オプショナルプロパティとして追加
 loading?: boolean;
 error?: string | null;
 boxCounts?: Record<string, Record<string, number>>;
@@ -27,10 +29,15 @@ export const StoreDoubleCheckList: React.FC<StoreDoubleCheckListProps> = ({
 stores,
 selectedStoreIds,
 onStoreSelect,
+onSelectAll,  // 追加
 loading = false,
 error = null,
 boxCounts = {}
 }) => {
+// 全店舗が選択されているかチェック
+const areAllStoresSelected = stores.length > 0 && selectedStoreIds.length === stores.length;
+const someStoresSelected = selectedStoreIds.length > 0 && selectedStoreIds.length < stores.length;
+
 if (loading) {
     return <Typography align="center" py={3}>読み込み中...</Typography>;
 }
@@ -76,7 +83,15 @@ return (
             <TableCell align="center">店舗番号</TableCell>
             <TableCell align="center">箱数</TableCell>
             <TableCell align="center">状態</TableCell>
-            <TableCell align="center">選択</TableCell>
+            <TableCell align="center">
+                {onSelectAll && (
+                <Checkbox 
+                    checked={areAllStoresSelected}
+                    indeterminate={someStoresSelected}
+                    onChange={onSelectAll}
+                />
+                )}
+            </TableCell>
             </TableRow>
         </TableHead>
         <TableBody>
@@ -88,7 +103,7 @@ return (
                 hover 
                 selected={selectedStoreIds.includes(store.id)}
                 sx={{ 
-                    bgcolor: !store.isCompleted ? 'rgba(255, 244, 229, 0.7)' : 'inherit' 
+                    bgcolor: store.isCompleted ? 'rgba(232, 245, 233, 0.7)' : 'rgba(255, 244, 229, 0.7)' 
                 }}
                 >
                 <TableCell>{store.storeName}</TableCell>
@@ -105,6 +120,7 @@ return (
                     <Checkbox 
                     checked={selectedStoreIds.includes(store.id)} 
                     onChange={() => onStoreSelect(store.id)} 
+                    disabled={store.isCompleted}
                     />
                 </TableCell>
                 </TableRow>
