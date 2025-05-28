@@ -28,61 +28,56 @@ const [snackbarMessage, setSnackbarMessage] = useState<string>('');
 
 // データを取得
 useEffect(() => {
-    try {
+try {
     setLoading(true);
-    
-    // テストデータから店舗情報を抽出
+
     const storeMap = new Map<string, Store>();
     const boxCountsData: Record<string, Record<string, number>> = {};
-    
-    // テストデータを型安全に扱うための型アサーション
+
     const boxData = testDataBox as Array<{
-        date: string;
-        storeId: string;
-        storeName: string;
-        storeTc: string;
-        color: string;
-        boxCount: number;
+    date: string;
+    storeId: string;
+    storeName: string;
+    storeTc: string;
+    color: string;
+    boxCount: number;
     }>;
-    
+
     boxData.forEach(box => {
-        // 店舗情報を抽出
-        if (!storeMap.has(box.storeId)) {
+    if (!storeMap.has(box.storeId)) {
         storeMap.set(box.storeId, {
-            id: box.storeId,
-            storeName: box.storeName || '',
-            storeNumber: box.storeId,
-            storeTc: box.storeTc || '',
-            isCompleted: false // 初期値はfalse
+        id: box.storeId,
+        storeName: box.storeName || '',
+        storeNumber: box.storeId,
+        storeTc: box.storeTc || '',
+        isCompleted: false
         });
-        }
-        
-        // 箱数情報を抽出
-        if (!boxCountsData[box.storeId]) {
+    }
+
+    if (!boxCountsData[box.storeId]) {
         boxCountsData[box.storeId] = {};
-        }
-        boxCountsData[box.storeId][box.color] = box.boxCount;
+    }
+    boxCountsData[box.storeId][box.color] = box.boxCount;
     });
-    
-    // 確定済み店舗の情報を取得（ローカルストレージから）
-    const completedStores = JSON.parse(localStorage.getItem('completedStores') || '[]');
-    
-    // 確定済み店舗の情報を反映
+
+    const completedStores: string[] = JSON.parse(localStorage.getItem('completedStores') || '[]');
+
     const storesArray = Array.from(storeMap.values()).map(store => ({
-        ...store,
-        isCompleted: completedStores.includes(store.id)
+    ...store,
+    isCompleted: completedStores.includes(store.id)
     }));
-    
+
     setStores(storesArray);
     setBoxCounts(boxCountsData);
     setError(null);
-    } catch (err) {
+} catch (err) {
     console.error('データの取得に失敗しました', err);
     setError('データの取得に失敗しました');
-    } finally {
+} finally {
     setLoading(false);
-    }
+}
 }, []);
+
 
 // 店舗選択ハンドラー
 const handleStoreSelect = (storeId: string) => {
@@ -91,19 +86,6 @@ const handleStoreSelect = (storeId: string) => {
         ? prev.filter(id => id !== storeId)
         : [...prev, storeId]
     );
-};
-
-// 全店舗選択/解除ハンドラー
-const handleSelectAllStores = () => {
-    if (selectedStoreIds.length === stores.length) {
-    setSelectedStoreIds([]);
-    } else {
-    // 確定済みでない店舗のみを選択
-    const selectableStores = stores
-        .filter(store => !store.isCompleted)
-        .map(store => store.id);
-    setSelectedStoreIds(selectableStores);
-    }
 };
 
 // 選択した店舗を確定済みにする
@@ -128,14 +110,6 @@ const handleConfirmSelected = async () => {
     // ローカルストレージに保存
     localStorage.setItem('completedStores', JSON.stringify(completedStores));
     
-    // 店舗リストを更新
-    setStores(prevStores => 
-        prevStores.map(store => 
-        selectedStoreIds.includes(store.id) 
-            ? { ...store, isCompleted: true } 
-            : store
-        )
-    );
     
     setSnackbarMessage(`${selectedStoreIds.length}件の店舗を確定済みにしました`);
     setSnackbarOpen(true);
@@ -169,7 +143,6 @@ return (
         stores={stores}
         selectedStoreIds={selectedStoreIds}
         onStoreSelect={handleStoreSelect}
-        onSelectAll={handleSelectAllStores}
         loading={loading}
         error={error}
         boxCounts={boxCounts}

@@ -11,7 +11,6 @@ TableRow,
 Typography,
 Checkbox,
 Box,
-Chip
 } from '@mui/material';
 import { Store } from '../types';
 
@@ -102,19 +101,11 @@ return (
                 key={store.id} 
                 hover 
                 selected={selectedStoreIds.includes(store.id)}
-                sx={{ 
-                    bgcolor: store.isCompleted ? 'rgba(232, 245, 233, 0.7)' : 'rgba(255, 244, 229, 0.7)' 
-                }}
                 >
                 <TableCell>{store.storeName}</TableCell>
                 <TableCell align="center">{store.storeNumber}</TableCell>
                 <TableCell align="center">{storeBoxCount}</TableCell>
                 <TableCell align="center">
-                    <Chip 
-                    label={store.isCompleted ? "確定済" : "未確定"} 
-                    color={store.isCompleted ? "success" : "warning"}
-                    size="small"
-                    />
                 </TableCell>
                 <TableCell align="center">
                     <Checkbox 
