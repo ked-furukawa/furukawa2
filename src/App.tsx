@@ -17,7 +17,6 @@ import TestComponent from "./pages/TestComponent.tsx"
 import BoxQuantityInput from "./pages/BoxQuantityInput.tsx";
 import SortingCheckScreen from "./pages/SortingCheckScreen.tsx"
 import StoreDoubleCheckList from "./pages/StoreDoubleCheckList.tsx";
-import TestComponent from "./pages/TestComponent.tsx";
 import ExcelUpload from "./pages/ExcelUpload.tsx"
 
 const pageList = [//- key:stateで使う識別子 - component: 実際に表示する React コンポーネント
