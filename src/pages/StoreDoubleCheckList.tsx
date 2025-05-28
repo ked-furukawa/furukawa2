@@ -6,7 +6,8 @@ Container,
 Button,
 Snackbar,
 Alert,
-Divider
+Divider,
+Paper
 } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { StoreDoubleCheckList as StoreDoubleCheckListComponent } from '../components/StoreDoubleCheckList';
@@ -171,18 +172,25 @@ const handleCloseSnackbar = () => {
 };
 
 return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-    <Box mb={4}>
-        <Typography variant="h4" component="h1" gutterBottom>
+    <Container maxWidth={false} disableGutters sx={{ 
+        height: '100vh', 
+        display: 'flex', 
+        flexDirection: 'column',
+        px: 2, 
+        py: 2,
+        }}>
+    <Paper elevation={1} sx={{ p: 3, mb: 2, borderRadius: 2 }}>
+    <Typography variant="h4" component="h1" gutterBottom sx={{ fontSize: '1.8rem' }}>
         店舗ダブルチェック (2025年6月2日)
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
+    </Typography>
+    <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1.1rem' }}>
         各店舗の箱数を確認し、問題がなければ確定してください。
-        </Typography>
-    </Box>
-    
+    </Typography>
+    </Paper>
+        
     <Divider sx={{ mb: 3 }} />
     
+    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
     <StoreDoubleCheckListComponent
         stores={stores}
         selectedStoreIds={selectedStoreIds}
@@ -191,32 +199,44 @@ return (
         error={error}
         boxCounts={boxCounts}
     />
+    </Box>
     
-    <Box display="flex" justifyContent="flex-end" mt={3}>
-        <Button
-        variant="contained"
-        color="primary"
-        startIcon={<CheckCircleOutlineIcon />}
-        onClick={handleConfirmSelected}
-        disabled={selectedStoreIds.length === 0 || loading}
-        >
-        選択した店舗を確定する
-        </Button>
+    <Box display="flex" justifyContent="center" mt={3} mb={2}>
+    <Button
+    variant="contained"
+    color="primary"
+    size="large"
+    startIcon={<CheckCircleOutlineIcon />}
+    onClick={handleConfirmSelected}
+    disabled={selectedStoreIds.length !== stores.length || loading} // ここを変更
+    sx={{ 
+        py: 1.5, 
+        px: 4, 
+        fontSize: '1.2rem',
+        borderRadius: 2,
+        width: '80%',
+        maxWidth: '500px'
+    }}
+    >
+    {selectedStoreIds.length === stores.length 
+        ? '全店舗を確定する' 
+        : `全店舗を選択してください (${selectedStoreIds.length}/${stores.length})`}
+    </Button>
     </Box>
     
     <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+    open={snackbarOpen}
+    autoHideDuration={6000}
+    onClose={handleCloseSnackbar}
+    anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
     >
-        <Alert 
+    <Alert 
         onClose={handleCloseSnackbar} 
         severity={snackbarSeverity} 
-        sx={{ width: '100%' }}
-        >
+        sx={{ width: '100%', fontSize: '1.1rem' }}
+    >
         {snackbarMessage}
-        </Alert>
+    </Alert>
     </Snackbar>
     </Container>
 );

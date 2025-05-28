@@ -61,10 +61,11 @@ return (
     >
     <TableContainer 
         sx={{
-        maxHeight: 'calc(100vh - 200px)',
+        maxHeight: 'calc(100vh - 280px)',
         overflowY: 'auto',
         '& .MuiTableCell-root': {
-            padding: '8px 12px'
+        padding: '12px 16px', // セルのパディングを大きくして操作しやすく
+        fontSize: '1.1rem' // フォントサイズを大きく
         }
         }}
     >
@@ -86,7 +87,8 @@ return (
                 hover 
                 selected={selectedStoreIds.includes(store.id)}
                 sx={{ 
-                    bgcolor: !store.isChecked ? 'rgba(255, 244, 229, 0.7)' : 'inherit' 
+                    bgcolor: !store.isChecked ? 'rgba(255, 244, 229, 0.7)' : 'inherit' ,
+                    height: '60px' // 行の高さを大きくしてタップしやすく
                 }}
                 >
                 <TableCell>{store.storeName}</TableCell>
@@ -96,6 +98,7 @@ return (
                     <Checkbox 
                     checked={selectedStoreIds.includes(store.id)} 
                     onChange={() => onStoreSelect(store.id)} 
+                     sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }} // チェックボックスを大きく
                     />
                 </TableCell>
                 </TableRow>
