@@ -18,8 +18,8 @@ export const schema = a.schema({
     storeTc: a.string(), //納品先物流センター '中之島'
 
     itemId: a.string().required(), // 商品コードが使えそう '210039'
-    itemName: a.string(), //商品名・規格 '大エビ天重キット'
-    itemFormalName: a.string(), //社内呼称 '大エビ'
+    itemName: a.string(), //社内呼称 '大エビ'
+    itemFormalName: a.string(), //商品名・規格 '大エビ天重キット'
     resDeptId: a.string(), //部門から生成する担当部門ID 'niku1'
     resDeptName: a.string(), //担当部門名 '肉１'
     orderCount: a.integer().required(), // 商品注文数 '3'

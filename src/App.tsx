@@ -13,18 +13,24 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 
 // 各画面のimport
 import FinalCheck from "./pages/FinalCheck"
+import TestComponent from "./pages/TestComponent.tsx"
 import BoxQuantityInput from "./pages/BoxQuantityInput.tsx";
-import SortingCheckScreen from "./pages/SortingCheckScreen.tsx";
+import SortingCheckScreen from "./pages/SortingCheckScreen.tsx"
+import StoreDoubleCheckList from "./pages/StoreDoubleCheckList.tsx";
+import ExcelUpload from "./pages/ExcelUpload.tsx"
 
 const pageList = [//- key:stateで使う識別子 - component: 実際に表示する React コンポーネント
+  { key: 'ExcelUpload', label: 'エクセルアップロード', component: <ExcelUpload /> },
   { key: 'FinalCheck', label: '最終確認', component: <FinalCheck /> },
+  { key: 'Test', label: 'テスト画面', component: <TestComponent /> },
   { key: 'BoxQuantityInput', label: '仕分け箱数入力', component: <BoxQuantityInput /> },
-  { key: 'Test', label: '商品数確認', component: <SortingCheckScreen /> },
+  { key: 'SortingCheckScreen', label: '仕分け前商品数確認', component: <SortingCheckScreen /> },  
+  { key: 'StoreDoubleCheckList', label: 'ダブルチェック', component: <StoreDoubleCheckList /> },
   // { key: 'C', label: 'C画面', component: <CComponent /> },
 ];
 
 const App = () => {
-  const [view, setView] = useState('FinalCheck'); // 初期画面の指定
+  const [view, setView] = useState('ExcelUpload'); // 初期画面の指定
   const [drawerOpen, setDrawerOpen] = useState(false); // サイドバーの開閉状態
 
   // ✅ 今選択されているページ情報を取得
@@ -113,5 +119,4 @@ const App = () => {
     </Box>
   );
 };
-
 export default App;

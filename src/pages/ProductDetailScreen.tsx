@@ -1,8 +1,7 @@
-
-import { 
-  Box, 
-  Typography, 
-  Button, 
+import {
+  Box,
+  Typography,
+  Button,
   Paper,
   IconButton,
   Table,
@@ -48,9 +47,9 @@ const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({
       </Box>
     );
   }
-  
+
   const product = productData[productId as keyof typeof productData];
-  
+
   // 確認完了ボタンを押した時の処理
   const handleConfirm = () => {
     // ここで確認済みとしてマークする処理を実装
@@ -59,7 +58,7 @@ const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({
     // 親コンポーネントに通知
     onConfirm();
   };
-  
+
   return (
     <Box sx={{ maxWidth: 600, margin: '0 auto', p: 2 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -70,7 +69,7 @@ const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({
           {product.name}
         </Typography>
       </Box>
-      
+    
       <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
         <TableContainer>
           <Table>
@@ -86,7 +85,7 @@ const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({
             </TableBody>
           </Table>
         </TableContainer>
-        
+      
         <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
           <Button
             variant="contained"
