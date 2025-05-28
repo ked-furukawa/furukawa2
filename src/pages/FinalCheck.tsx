@@ -24,7 +24,8 @@ export const FinalCheck = () => {
     useEffect(() => {       
     const sub = boxClient.models.Box.observeQuery().subscribe({ //Boxテーブルの変更をサブスクライブ
         next: ({ items }) => { //変更があった際に呼び出される処理、filterしてないのでBoxテーブル全体がitemsに入っている
-            const storeMap = items.map(item => ({ //itemsの中身をこの画面で使いたい形にマッピング
+            const storeMap = items.filter((item:Box)=>item !=null)
+            .map(item => ({ //itemsの中身をこの画面で使いたい形にマッピング
                 date: item.date,
                 storeId: item.storeId,
                 storeName: item.storeName,
