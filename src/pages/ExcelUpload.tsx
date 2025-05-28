@@ -49,7 +49,7 @@ const handleUpload = async () => {
     }).result;
 
     console.log('S3 upload result:', result);
-    setMessage({ type: 'success', text: 'S3へのアップロード成功！' });
+    setMessage({ type: 'success', text: 'アップロード成功！' });
     setFile(null);
     } catch (err) {
     console.error(err);
@@ -130,7 +130,7 @@ return (
     }}
     >
     <Typography variant="h6" gutterBottom>
-        ExcelファイルをS3にアップロード
+        Excelファイルをアップロード
     </Typography>
 
     <Input type="file" inputProps={{ accept: '.xlsx' }} onChange={handleFileChange} />
