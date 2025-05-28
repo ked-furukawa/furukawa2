@@ -170,7 +170,7 @@ export const FinalCheck = () => {
         店舗別箱数一覧
     </Typography>
     
-    <TableContainer component={Paper} sx={{ width: '100%', overflowY: 'auto', mt: 2 }}>
+    <TableContainer component={Paper} sx={{ width: '100%',maxHeight: '600px',  overflowY: 'auto', mt: 2 }}>
         <Table stickyHeader aria-label="店舗データテーブル" >
             <TableHead>
             <TableRow> 
