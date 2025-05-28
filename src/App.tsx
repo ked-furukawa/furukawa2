@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { 
-  Button, 
+import {  
   Box, 
   Drawer, 
   IconButton, 
@@ -15,7 +14,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 // 各画面のimport
 import FinalCheck from "./pages/FinalCheck"
 import BoxQuantityInput from "./pages/BoxQuantityInput.tsx";
-import SortingCheckScreen from "./components/SortingCheckScreen.tsx";
+import SortingCheckScreen from "./pages/SortingCheckScreen.tsx";
 
 const pageList = [//- key:stateで使う識別子 - component: 実際に表示する React コンポーネント
   { key: 'FinalCheck', label: '最終確認', component: <FinalCheck /> },
