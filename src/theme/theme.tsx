@@ -10,8 +10,8 @@ const theme = createTheme({
         main: '#1976d2',     // プライマリ色
         },
         secondary: {
-        main: '#9c27b0',     // セカンダリ色
-        },
+        main: '#008080',     // セカンダリ色
+        }
     },
     typography: {
         fontFamily: 'Roboto, Arial, sans-serif',
