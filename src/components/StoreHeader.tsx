@@ -43,7 +43,7 @@ export const StoreHeader: React.FC<StoreHeaderProps> = ({
               fontWeight="bold"
               sx={{ mr: 2 }}
             >
-              {storeName}
+              {storeName || '店舗名なし'}
             </Typography>
             <Typography 
               variant="subtitle1" 
@@ -56,12 +56,9 @@ export const StoreHeader: React.FC<StoreHeaderProps> = ({
                 fontWeight: 'medium'
               }}
             >
-              店舗番号: {storeNumber}
+              店舗番号: {storeNumber || '不明'}
             </Typography>
           </Box>
-          <Typography variant="body2" color="text.secondary">
-            最終更新: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
-          </Typography>
         </Box>
       )}
     </Paper>

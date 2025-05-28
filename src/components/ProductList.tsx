@@ -12,7 +12,17 @@ import {
   Checkbox,
   Box
 } from '@mui/material';
-import { Product } from '../types';
+
+// 商品の型定義
+interface Product {
+  id: string;
+  itemId: string;
+  itemName: string;
+  itemFormalName: string;
+  orderCount: number;
+  quantity: number;
+  isChecked: boolean;
+}
 
 interface ProductListProps {
   products: Product[];
@@ -76,8 +86,15 @@ export const ProductList: React.FC<ProductListProps> = ({
                   bgcolor: !product.isChecked ? 'rgba(255, 244, 229, 0.7)' : 'inherit' 
                 }}
               >
-                <TableCell>{product.name}</TableCell>
-                <TableCell align="right">{product.quantity}</TableCell>
+                <TableCell>
+                  <Typography variant="body2">
+                    {product.itemName}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {product.itemFormalName}
+                  </Typography>
+                </TableCell>
+                <TableCell align="right">{product.orderCount}</TableCell>
                 <TableCell align="center">
                   <Checkbox 
                     checked={selectedProductIds.includes(product.id)} 
@@ -91,7 +108,7 @@ export const ProductList: React.FC<ProductListProps> = ({
       </TableContainer>
       <Box sx={{ p: 2, borderTop: '1px solid rgba(224, 224, 224, 1)' }}>
         <Typography variant="body2">
-          合計商品数: {products.length} / 合計個数: {products.reduce((sum, product) => sum + (product.quantity || 0), 0)}
+          合計商品数: {products.length} / 合計個数: {products.reduce((sum, product) => sum + product.orderCount, 0)}
         </Typography>
       </Box>
     </Paper>

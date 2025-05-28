@@ -1,4 +1,4 @@
-
+// src/pages/BoxQuantityInput.tsx
 import React, { useState, useEffect } from 'react';
 import { 
   Box, 
@@ -15,14 +15,28 @@ import { StoreHeader } from '../components/StoreHeader';
 import { ProductList } from '../components/ProductList';
 import { Keypad } from '../components/Keypad';
 import StoreList from '../components/StoreList';
-import { 
-  fetchStoreData, 
-  fetchProducts, 
-  fetchStores, 
-  fetchStoresByDestination,
-  updateStoreCompletionStatus
-} from '../services/dataService';
-import { Store, Product } from '../types';
+import { generateClient } from "aws-amplify/data";
+import type { Schema } from "../../amplify/data/resource";
+
+// Amplify クライアントの生成
+const dataClient = generateClient<Schema>();
+
+// 型定義
+interface Store {
+  storeId: string;
+  storeName: string;
+  storeTc: string;
+}
+
+interface Product {
+  id: string;
+  itemId: string;
+  itemName: string;
+  itemFormalName: string;
+  orderCount: number;
+  quantity: number;
+  isChecked: boolean;
+}
 
 export const BoxQuantityInput: React.FC = () => {
   // 状態管理
@@ -38,19 +52,94 @@ export const BoxQuantityInput: React.FC = () => {
   const [savingData, setSavingData] = useState<boolean>(false);
   const [checkError, setCheckError] = useState<string | null>(null);
   const [completedStoreIds, setCompletedStoreIds] = useState<string[]>([]);
+  const [allStores, setAllStores] = useState<Store[]>([]);
   
+  // 全店舗データを取得する関数
+  const fetchAllStores = async (): Promise<Store[]> => {
+    try {
+      // テスト用固定日付
+      const testDate = "2025-06-02";
+      
+      // Order テーブルから店舗データを取得
+      const { data: orderData } = await dataClient.models.Order.list({
+        filter: { date: { eq: testDate } }
+      });
+      
+      // 店舗ごとにグループ化
+      const storeMap = new Map<string, Store>();
+      
+      orderData.forEach(order => {
+        if (!storeMap.has(order.storeId)) {
+          storeMap.set(order.storeId, {
+            storeId: order.storeId,
+            storeName: order.storeName || '不明な店舗',
+            storeTc: order.storeTc || '未分類'
+          });
+        }
+      });
+      
+      // 配列に変換してソート
+      return Array.from(storeMap.values())
+        .sort((a, b) => a.storeId.localeCompare(b.storeId));
+    } catch (err) {
+      console.error('店舗データの取得に失敗しました:', err);
+      throw err;
+    }
+  };
 
   // 店舗選択時の処理
   const handleStoreSelect = async (storeId: string) => {
     setSelectedStoreId(storeId);
     setLoading(true);
     try {
-      // 選択した店舗のデータを取得
-      const store = await fetchStoreData(storeId);
-      setStoreData(store);
+      // テスト用固定日付
+      const testDate = "2025-06-02";
       
-      // 選択した店舗の商品データを取得
-      const productList = await fetchProducts(storeId);
+      // 選択した店舗の注文データを取得
+      const { data: orderData } = await dataClient.models.Order.list({
+        filter: { 
+          date: { eq: testDate },
+          storeId: { eq: storeId }
+        }
+      });
+      
+      if (orderData.length === 0) {
+        setError('店舗データが見つかりませんでした');
+        setLoading(false);
+        return;
+      }
+      
+      // 店舗データを設定
+      setStoreData({
+        storeId: storeId,
+        storeName: orderData[0].storeName || '',
+        storeTc: orderData[0].storeTc || ''
+      });
+      
+      // 選択した店舗の箱データを取得
+      const { data: boxData } = await dataClient.models.Box.list({
+        filter: { 
+          date: { eq: testDate },
+          storeId: { eq: storeId }
+        }
+      });
+      
+      // 商品データを変換
+      const productList = orderData.map(order => {
+        // 対応する箱データがあるかチェック
+        const box = boxData.find(b => b.boxCreatedBy === order.itemName);
+        
+        return {
+          id: order.itemId,
+          itemId: order.itemId,
+          itemName: order.itemName || '',
+          itemFormalName: order.itemFormalName || '',
+          orderCount: order.orderCount,
+          quantity: box ? box.boxCount : 0,
+          isChecked: !!box // 箱データがあればチェック済み
+        };
+      });
+      
       setProducts(productList);
       
       // 商品選択をリセット
@@ -58,13 +147,23 @@ export const BoxQuantityInput: React.FC = () => {
       setInputValue('');
       
       // 次の店舗を取得
-      const allStores = await fetchStores();
-      const currentIndex = allStores.findIndex(s => s.id === storeId);
-      if (currentIndex >= 0 && currentIndex < allStores.length - 1) {
-        setNextStore(allStores[currentIndex + 1]);
+      if (allStores.length === 0) {
+        const stores = await fetchAllStores();
+        setAllStores(stores);
+        
+        const currentIndex = stores.findIndex(s => s.storeId === storeId);
+        if (currentIndex >= 0 && currentIndex < stores.length - 1) {
+          setNextStore(stores[currentIndex + 1]);
+        } else {
+          setNextStore(currentIndex >= 0 ? stores[0] : null);
+        }
       } else {
-        // 最後の店舗の場合は最初の店舗を次の店舗とする
-        setNextStore(currentIndex >= 0 ? allStores[0] : null);
+        const currentIndex = allStores.findIndex(s => s.storeId === storeId);
+        if (currentIndex >= 0 && currentIndex < allStores.length - 1) {
+          setNextStore(allStores[currentIndex + 1]);
+        } else {
+          setNextStore(currentIndex >= 0 ? allStores[0] : null);
+        }
       }
     } catch (err) {
       setError('店舗データの読み込みに失敗しました');
@@ -74,137 +173,130 @@ export const BoxQuantityInput: React.FC = () => {
     }
   };
   
-// 初期データの取得
-useEffect(() => {
-  const loadInitialData = async () => {
-    try {
-      setLoading(true);
-      // 送り先ごとの店舗データを取得
-      const storesByDestination = await fetchStoresByDestination();
-      
-      if (storesByDestination.length > 0 && storesByDestination[0].stores.length > 0) {
-        // 最初の送り先の最初の店舗を選択
-        const firstStore = storesByDestination[0].stores[0];
-        await handleStoreSelect(firstStore.id);
+  // 初期データの取得
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        setLoading(true);
+        
+        // 全店舗データを取得
+        const stores = await fetchAllStores();
+        setAllStores(stores);
+        
+        if (stores.length > 0) {
+          // 最初の店舗を選択
+          await handleStoreSelect(stores[0].storeId);
+        }
+      } catch (err) {
+        setError('データの読み込みに失敗しました');
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      setError('データの読み込みに失敗しました');
-      console.error(err);
-    } finally {
-      setLoading(false);
+    };
+
+    loadInitialData();
+  }, []);
+
+  // 箱数更新処理
+  const handleQuantityUpdate = () => {
+    if (selectedProductIds.length === 0 || !inputValue) {
+      setError('商品を選択して箱数を入力してください');
+      return;
     }
+    
+    const quantity = parseInt(inputValue, 10);
+    if (isNaN(quantity)) return;
+
+    // すべての商品がチェックされているか確認
+    const uncheckedProducts = products.filter(p => !p.isChecked && !selectedProductIds.includes(p.id));
+    if (uncheckedProducts.length > 0) {
+      setError(`${uncheckedProducts.length}個の商品がチェックされていません。すべての商品をチェックしてください。`);
+      return;
+    }
+
+    // 選択されている全ての商品の数量を更新
+    setProducts(prevProducts => 
+      prevProducts.map(product => 
+        selectedProductIds.includes(product.id) 
+          ? { ...product, quantity, isChecked: true } 
+          : product
+      )
+    );
+
+    // エラーをクリア
+    setError(null);
+    
+    // 確認ダイアログを表示
+    setShowConfirmDialog(true);
+  };
+    
+  // 商品の選択を処理する関数
+  const handleProductSelect = (productId: string) => {
+    setSelectedProductIds(prev => {
+      // すでに選択されている場合は削除、そうでなければ追加
+      if (prev.includes(productId)) {
+        return prev.filter(id => id !== productId);
+      } else {
+        return [...prev, productId];
+      }
+    });
   };
 
-  loadInitialData();
-}, []);
+  // テンキーからの入力を処理する関数
+  const handleInputChange = (value: string) => {
+    setInputValue(value);
+  };
 
-
-
-// 状態管理に追加（既存のerror状態を活用）
-// const [error, setError] = useState<string | null>(null); // 既存のコード
-
-// handleQuantityUpdate関数の修正
-const handleQuantityUpdate = () => {
-  if (selectedProductIds.length === 0 || !inputValue) {
-    setError('商品を選択して箱数を入力してください');
-    return;
-  }
-  
-  const quantity = parseInt(inputValue, 10);
-  if (isNaN(quantity)) return;
-
-  // すべての商品がチェックされているか確認
-  const uncheckedProducts = products.filter(p => !p.isChecked && !selectedProductIds.includes(p.id));
-  if (uncheckedProducts.length > 0) {
-    setError(`${uncheckedProducts.length}個の商品がチェックされていません。すべての商品をチェックしてください。`);
-    return;
-  }
-
-  // 選択されている全ての商品の数量を更新
-  setProducts(prevProducts => 
-    prevProducts.map(product => 
-      selectedProductIds.includes(product.id) 
-        ? { ...product, quantity, isChecked: true } 
-        : product
-    )
-  );
-
-  // エラーをクリア
-  setError(null);
-  
-  // 確認ダイアログを表示
-  setShowConfirmDialog(true);
-};
-  
-// 商品の選択を処理する関数
-const handleProductSelect = (productId: string) => {
-  setSelectedProductIds(prev => {
-    // すでに選択されている場合は削除、そうでなければ追加
-    if (prev.includes(productId)) {
-      return prev.filter(id => id !== productId);
-    } else {
-      return [...prev, productId];
-    }
-  });
-};
-
-// テンキーからの入力を処理する関数
-const handleInputChange = (value: string) => {
-  setInputValue(value);
-};
-
-// 次の店舗へ移動する関数
-const navigateToNextStore = async () => {
-  if (!nextStore) return;
-  
-  try {
-    setSavingData(true);
+  // 次の店舗へ移動する関数
+  const navigateToNextStore = async () => {
+    if (!nextStore || !selectedStoreId || !storeData) return;
     
-    // 選択された商品と箱数のデータを作成
-    const boxCountData: Record<string, number> = {};
-    selectedProductIds.forEach(id => {
-      const product = products.find(p => p.id === id);
-      if (product) {
-        boxCountData[id] = product.quantity;
+    try {
+      setSavingData(true);
+      
+      // テスト用固定日付
+      const testDate = "2025-06-02";
+      
+      // 選択された商品と箱数のデータを作成
+      for (const productId of selectedProductIds) {
+        const product = products.find(p => p.id === productId);
+        if (product && product.quantity > 0) {
+          // 箱データを保存
+          const boxData = {
+            date: testDate,
+            storeId: selectedStoreId,
+            storeName: storeData.storeName,
+            storeTc: storeData.storeTc,
+            color: 'green', // デフォルト色を設定
+            boxCount: product.quantity,
+            boxCreatedBy: product.itemName
+          };
+          
+          // DynamoDB に保存
+          await dataClient.models.Box.create(boxData);
+        }
       }
-    });
-    
-    // データを保存（実際の実装はここで）
-    // 例: await saveBoxCountData(selectedStoreId || '', boxCountData);
-    console.log('保存されるデータ:', {
-      storeId: selectedStoreId,
-      boxCountData
-    });
-    
-    // 現在の店舗を完了済みとしてマーク
-    if (selectedStoreId) {
-      // 状態を更新
+      
+      // 現在の店舗を完了済みとしてマーク
       setCompletedStoreIds(prev => [...prev, selectedStoreId]);
       
-      // APIを呼び出して確定状態を更新
-      try {
-        await updateStoreCompletionStatus(selectedStoreId, true);
-      } catch (err) {
-        console.error('店舗の確定状態の更新に失敗しました', err);
-      }
+      // 次の店舗に移動
+      await handleStoreSelect(nextStore.storeId);
+      
+      // 選択をクリア
+      setSelectedProductIds([]);
+      setInputValue('');
+      
+    } catch (err) {
+      setError('データの保存に失敗しました');
+      console.error(err);
+    } finally {
+      setSavingData(false);
+      setShowConfirmDialog(false);
     }
+  };
     
-    // 次の店舗に移動
-    await handleStoreSelect(nextStore.id);
-    
-    // 選択をクリア
-    setSelectedProductIds([]);
-    setInputValue('');
-    
-  } catch (err) {
-    setError('データの保存に失敗しました');
-    console.error(err);
-  } finally {
-    setSavingData(false);
-    setShowConfirmDialog(false);
-  }
-};
-  
   // 確認ダイアログをキャンセルする関数
   const handleDialogCancel = () => {
     setShowConfirmDialog(false);
@@ -238,7 +330,7 @@ const navigateToNextStore = async () => {
             >
               {/* 店舗情報 */}
               <StoreHeader 
-                storeNumber={storeData?.storeNumber || ''}
+                storeNumber={storeData?.storeId || ''}
                 storeName={storeData?.storeName || ''}
                 loading={loading}
               />
@@ -251,11 +343,10 @@ const navigateToNextStore = async () => {
               )}
               
               {/* 商品リスト */}
-              
               <ProductList 
                 products={products}
                 selectedProductIds={selectedProductIds}
-                onProductSelect={handleProductSelect} // この関数が定義されていることを確認
+                onProductSelect={handleProductSelect}
                 loading={loading}
                 error={null}
               />
@@ -274,30 +365,30 @@ const navigateToNextStore = async () => {
         </Container>
       </Box>
 
-{/* チェックエラーメッセージ */}
-{checkError && (
-  <Box 
-    sx={{ 
-      mt: 2, 
-      p: 2, 
-      bgcolor: 'warning.light', 
-      color: 'warning.contrastText', 
-      borderRadius: 1,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between'
-    }}
-  >
-    <Typography variant="body1">{checkError}</Typography>
-    <Button 
-      size="small" 
-      onClick={() => setCheckError(null)}
-      sx={{ ml: 2 }}
-    >
-      閉じる
-    </Button>
-  </Box>
-)}
+      {/* チェックエラーメッセージ */}
+      {checkError && (
+        <Box 
+          sx={{ 
+            mt: 2, 
+            p: 2, 
+            bgcolor: 'warning.light', 
+            color: 'warning.contrastText', 
+            borderRadius: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}
+        >
+          <Typography variant="body1">{checkError}</Typography>
+          <Button 
+            size="small" 
+            onClick={() => setCheckError(null)}
+            sx={{ ml: 2 }}
+          >
+            閉じる
+          </Button>
+        </Box>
+      )}
 
       {/* 確認ダイアログ */}
       <Dialog

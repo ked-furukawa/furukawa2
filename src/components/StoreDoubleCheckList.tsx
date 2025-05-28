@@ -1,4 +1,3 @@
-// src/components/StoreDoubleCheckList.tsx の修正
 import React from 'react';
 import {
 Paper,
@@ -10,7 +9,7 @@ TableHead,
 TableRow,
 Typography,
 Checkbox,
-Box,
+Box
 } from '@mui/material';
 import { Store } from '../types';
 
@@ -18,7 +17,6 @@ interface StoreDoubleCheckListProps {
 stores: Store[];
 selectedStoreIds: string[];
 onStoreSelect: (storeId: string) => void;
-onSelectAll?: () => void;  // オプショナルプロパティとして追加
 loading?: boolean;
 error?: string | null;
 boxCounts?: Record<string, Record<string, number>>;
@@ -28,25 +26,20 @@ export const StoreDoubleCheckList: React.FC<StoreDoubleCheckListProps> = ({
 stores,
 selectedStoreIds,
 onStoreSelect,
-onSelectAll,  // 追加
 loading = false,
 error = null,
 boxCounts = {}
 }) => {
-// 全店舗が選択されているかチェック
-const areAllStoresSelected = stores.length > 0 && selectedStoreIds.length === stores.length;
-const someStoresSelected = selectedStoreIds.length > 0 && selectedStoreIds.length < stores.length;
-
 if (loading) {
-    return <Typography align="center" py={3}>読み込み中...</Typography>;
+    return <Typography>読み込み中...</Typography>;
 }
 
 if (error) {
-    return <Typography color="error" align="center" py={3}>{error}</Typography>;
+    return <Typography color="error">{error}</Typography>;
 }
 
 if (stores.length === 0) {
-    return <Typography align="center" py={3}>店舗がありません</Typography>;
+    return <Typography>店舗がありません</Typography>;
 }
 
 // 各店舗の合計箱数を計算
@@ -71,7 +64,7 @@ return (
         maxHeight: 'calc(100vh - 200px)',
         overflowY: 'auto',
         '& .MuiTableCell-root': {
-            padding: '8px 16px'
+            padding: '8px 12px'
         }
         }}
     >
@@ -81,16 +74,7 @@ return (
             <TableCell>店舗名</TableCell>
             <TableCell align="center">店舗番号</TableCell>
             <TableCell align="center">箱数</TableCell>
-            <TableCell align="center">状態</TableCell>
-            <TableCell align="center">
-                {onSelectAll && (
-                <Checkbox 
-                    checked={areAllStoresSelected}
-                    indeterminate={someStoresSelected}
-                    onChange={onSelectAll}
-                />
-                )}
-            </TableCell>
+            <TableCell align="center">選択</TableCell>
             </TableRow>
         </TableHead>
         <TableBody>
@@ -101,17 +85,17 @@ return (
                 key={store.id} 
                 hover 
                 selected={selectedStoreIds.includes(store.id)}
+                sx={{ 
+                    bgcolor: !store.isChecked ? 'rgba(255, 244, 229, 0.7)' : 'inherit' 
+                }}
                 >
                 <TableCell>{store.storeName}</TableCell>
                 <TableCell align="center">{store.storeNumber}</TableCell>
                 <TableCell align="center">{storeBoxCount}</TableCell>
                 <TableCell align="center">
-                </TableCell>
-                <TableCell align="center">
                     <Checkbox 
                     checked={selectedStoreIds.includes(store.id)} 
                     onChange={() => onStoreSelect(store.id)} 
-                    disabled={store.isCompleted}
                     />
                 </TableCell>
                 </TableRow>

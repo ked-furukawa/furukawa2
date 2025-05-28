@@ -3,18 +3,19 @@ export interface Store {
   id: string;
   storeName: string;
   storeNumber: string;
-  storeTc: string;
-  isCompleted: boolean;
+  storeTc?: string;
+  isChecked?: boolean;
 }
 
 export interface BoxData {
   date: string;
   storeId: string;
-  storeName: string;
-  storeTc: string;
+  storeName?: string;
+  storeTc?: string;
   color: string;
   boxCount: number;
   boxCreatedBy?: string;
+  isChecked?: boolean;
 }
 
 export interface OrderData {
