@@ -201,7 +201,7 @@ return (
     />
     </Box>
     
-    <Box display="flex" justifyContent="center" mt={3} mb={2}>
+    <Box display="flex" justifyContent="center" mt={1} mb={2}>
     <Button
     variant="contained"
     color="primary"
