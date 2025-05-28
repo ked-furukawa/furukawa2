@@ -54,7 +54,7 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
     { id: '8', name: 'ハムカツ', expectedCount: 16, isChecked: false },
     { id: '9', name: 'チキンカツ', expectedCount: 12, isChecked: false }, // 9個目の商品を追加
   ]);
-  
+
   // アラート表示のための状態
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
@@ -62,9 +62,9 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
 
   // チェックボックスの状態を変更する関数
   const handleCheckProduct = (productId: string) => {
-    setProducts(products.map(product => 
-      product.id === productId 
-        ? { ...product, isChecked: !product.isChecked } 
+    setProducts(products.map(product =>
+      product.id === productId
+        ? { ...product, isChecked: !product.isChecked }
         : product
     ));
   };
@@ -79,7 +79,7 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
   const handleComplete = () => {
     // すべての商品がチェックされているか確認
     const allChecked = products.every(product => product.isChecked);
-    
+  
     if (allChecked) {
       // 成功メッセージを表示
       setAlertMessage('確認完了しました！次の工程に進みます');
@@ -99,7 +99,7 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
         .filter(product => !product.isChecked)
         .map(product => product.name)
         .join('、');
-      
+    
       // エラーメッセージを表示
       setAlertMessage(`${uncheckedProducts}の確認が完了していません`);
       setAlertSeverity('error');
@@ -235,7 +235,7 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
             </TableHead>
             <TableBody>
               {products.map((product) => (
-                <TableRow 
+                <TableRow
                   key={product.id}
                   hover
                   onClick={() => handleProductClick(product.id)}
