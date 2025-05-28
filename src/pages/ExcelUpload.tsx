@@ -167,10 +167,10 @@ return (
     borderRadius: 1,
     }}>
         <Button variant="contained" color="secondary" onClick={() => handleSaveClick("order")}> {/*DB保存用関数を呼び出す*/}
-        orderテーブル保存
+        Orderテスト用ボタン
         </Button>
         <Button variant="contained" color="secondary" onClick={() => handleSaveClick("box")}> {/*DB保存用関数を呼び出す*/}
-        boxテーブル保存
+        Boxテスト用ボタン
         </Button>
     </Box>
     </>
