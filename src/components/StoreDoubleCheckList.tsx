@@ -12,7 +12,7 @@ Checkbox,
 Box,
 Chip
 } from '@mui/material';
-import { Store } from '../../types';
+import { Store } from '../types';
 
 interface StoreDoubleCheckListProps {
 stores: Store[];

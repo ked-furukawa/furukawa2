@@ -13,8 +13,8 @@ import {
 } from '@mui/material';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
-import { fetchStoresByDestination } from '../../services/dataService';
-import { StoresByDestination } from '../../types';
+import { fetchStoresByDestination } from '../services/dataService';
+import { StoresByDestination } from '../types';
 
 interface StoreListProps {
   selectedStoreId: string | null;
@@ -25,7 +25,6 @@ interface StoreListProps {
 const StoreList: React.FC<StoreListProps> = ({ 
   selectedStoreId, 
   onSelectStore,
-  completedStoreIds 
 }) => {
   const [storesByDestination, setStoresByDestination] = useState<StoresByDestination[]>([]);
   const [loading, setLoading] = useState<boolean>(true);

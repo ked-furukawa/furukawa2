@@ -12,7 +12,7 @@ import {
   Checkbox,
   Box
 } from '@mui/material';
-import { Product } from '../../types';
+import { Product } from '../types';
 
 interface ProductListProps {
   products: Product[];

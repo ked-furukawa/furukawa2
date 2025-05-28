@@ -16,10 +16,9 @@ import {
   DialogTitle
 } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-
-import { StoreHeader } from '../components/sakurai/StoreHeader';
-import { ProductList } from '../components/sakurai/ProductList';
-import { Keypad } from '../components/sakurai/Keypad';
+import { StoreHeader } from '../components/StoreHeader';
+import { ProductList } from '../components/ProductList';
+import { Keypad } from '../components/Keypad';
 import { 
   fetchStoreData, 
   fetchProducts, 
