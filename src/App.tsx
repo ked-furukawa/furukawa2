@@ -1,5 +1,5 @@
 import { useState } from "react";
-import {  
+import { 
   Box, 
   Drawer, 
   IconButton, 
@@ -9,7 +9,6 @@ import {
   ListItemText 
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 
 // 各画面のimport
 import FinalCheck from "./pages/FinalCheck"
@@ -78,12 +77,7 @@ const App = () => {
           },
         }}
       >
-        {/* サイドバーのヘッダー部分 */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', px: 1 }}>
-          <IconButton onClick={toggleDrawer}>
-            <ChevronLeftIcon />
-          </IconButton>
-        </Box>
+
 
         {/* メニューリスト */}
         <List>
