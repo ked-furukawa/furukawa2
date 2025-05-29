@@ -371,7 +371,7 @@ const fetchProducts = async () => {
 
         <Box
           p={isLandscape ? 2 : 1.5}
-          bgcolor="#f5f5f5"
+          //bgcolor="#f5f5f5"
           sx={{
             display: 'flex',
             justifyContent: 'space-between',
