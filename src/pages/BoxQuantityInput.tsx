@@ -62,37 +62,69 @@ export const BoxQuantityInput: React.FC = () => {
   const [selectedColor, setSelectedColor] = useState<BoxColor>('green');
 
   // 全店舗データを取得する関数
-  const fetchAllStores = async (): Promise<Store[]> => {
-    try {
-      // テスト用固定日付
-      const testDate = "2025-06-02";
+const fetchAllStores = async (): Promise<Store[]> => {
+  try {
+    // テスト用固定日付
+    const testDate = "2025-06-02";
+    
+    // Order テーブルから店舗データを取得
+    const { data: orderData } = await dataClient.models.Order.list({
+      filter: { date: { eq: testDate } }
+    });
+    
+    // 店舗ごとにグループ化
+    const storeMap = new Map<string, Store>();
+    
+    orderData.forEach(order => {
+      if (!storeMap.has(order.storeId)) {
+        storeMap.set(order.storeId, {
+          storeId: order.storeId,
+          storeName: order.storeName || '不明な店舗',
+          storeTc: order.storeTc || '未分類'
+        });
+      }
+    });
+    
+    // 配列に変換
+    const stores = Array.from(storeMap.values());
+    
+    // 物流センター別にグループ化
+    const nakanoshimaStores = stores
+      .filter(store => store.storeTc === '中之島')
+      .sort((a, b) => a.storeId.localeCompare(b.storeId));
       
-      // Order テーブルから店舗データを取得
-      const { data: orderData } = await dataClient.models.Order.list({
-        filter: { date: { eq: testDate } }
-      });
+    const joetsuStores = stores
+      .filter(store => store.storeTc === '上越')
+      .sort((a, b) => a.storeId.localeCompare(b.storeId));
       
-      // 店舗ごとにグループ化
-      const storeMap = new Map<string, Store>();
-      
-      orderData.forEach(order => {
-        if (!storeMap.has(order.storeId)) {
-          storeMap.set(order.storeId, {
-            storeId: order.storeId,
-            storeName: order.storeName || '不明な店舗',
-            storeTc: order.storeTc || '未分類'
-          });
-        }
-      });
-      
-      // 配列に変換してソート
-      return Array.from(storeMap.values())
-        .sort((a, b) => a.storeId.localeCompare(b.storeId));
-    } catch (err) {
-      console.error('店舗データの取得に失敗しました:', err);
-      throw err;
-    }
-  };
+    // その他の物流センター（もしあれば）
+    const otherStores = stores
+      .filter(store => store.storeTc !== '中之島' && store.storeTc !== '上越')
+      .sort((a, b) => a.storeId.localeCompare(b.storeId));
+    
+    // 中之島 → 上越 → その他 の順に結合
+    return [...nakanoshimaStores, ...joetsuStores, ...otherStores];
+  } catch (err) {
+    console.error('店舗データの取得に失敗しました:', err);
+    throw err;
+  }
+};
+
+// 次の店舗を取得する関数
+const getNextStore = (currentStoreId: string): Store | null => {
+  if (!allStores.length) return null;
+  
+  const currentIndex = allStores.findIndex(s => s.storeId === currentStoreId);
+  if (currentIndex === -1) return allStores[0];
+  
+  // 次の店舗を返す
+  if (currentIndex < allStores.length - 1) {
+    return allStores[currentIndex + 1];
+  }
+  
+  // 最後の店舗の場合は最初の店舗を返す
+  return allStores[0];
+};
 
   // 店舗選択時の処理
   const handleStoreSelect = async (storeId: string) => {
@@ -153,32 +185,20 @@ export const BoxQuantityInput: React.FC = () => {
       setSelectedProductIds([]);
       setInputValue('');
       
-      // 次の店舗を取得
-      if (allStores.length === 0) {
-        const stores = await fetchAllStores();
-        setAllStores(stores);
-        
-        const currentIndex = stores.findIndex(s => s.storeId === storeId);
-        if (currentIndex >= 0 && currentIndex < stores.length - 1) {
-          setNextStore(stores[currentIndex + 1]);
-        } else {
-          setNextStore(currentIndex >= 0 ? stores[0] : null);
-        }
-      } else {
-        const currentIndex = allStores.findIndex(s => s.storeId === storeId);
-        if (currentIndex >= 0 && currentIndex < allStores.length - 1) {
-          setNextStore(allStores[currentIndex + 1]);
-        } else {
-          setNextStore(currentIndex >= 0 ? allStores[0] : null);
-        }
-      }
-    } catch (err) {
-      setError('店舗データの読み込みに失敗しました');
-      console.error(err);
-    } finally {
-      setLoading(false);
+      // 次の店舗を取得 - この部分を修正
+    if (allStores.length === 0) {
+      const stores = await fetchAllStores();
+      setAllStores(stores);
+      setNextStore(getNextStore(storeId)); // 新しい関数を使用
+    } else {
+      setNextStore(getNextStore(storeId)); // 新しい関数を使用
     }
-  };
+  } catch (err) {
+    // エラー処理
+  } finally {
+    setLoading(false);
+  }
+};
   
   // 初期データの取得
   useEffect(() => {
