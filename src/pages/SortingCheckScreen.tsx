@@ -167,9 +167,9 @@ const fetchProducts = async () => {
   };
 
   // データを再読み込みする関数
-  // const handleRefresh = () => {
-  //   fetchProducts();
-  // };
+  const handleRefresh = () => {
+    fetchProducts();
+  };
 
 
 
@@ -221,16 +221,15 @@ const fetchProducts = async () => {
         <Alert severity="error" sx={{ mb: 2, fontSize: '1.2rem' }}>
           {error}
         </Alert>
-        <Button
-        variant="contained"
-        color="primary"
-        size="large"
-        onClick={handleComplete}
-        disabled={products.length === 0 || products.some((product) => !product.isChecked)}
-      >
-        {products.some(p => !p.isChecked) ? '未完了' : '確認完了'}
-      </Button>
-     </Box>
+        <Button 
+          variant="contained" 
+          size="large" 
+          onClick={handleRefresh}
+          sx={{ fontSize: '1.2rem', px: 4, py: 1.5 }}
+        >
+          再読み込み
+        </Button>
+      </Box>
     );
   }
 
@@ -390,25 +389,22 @@ const fetchProducts = async () => {
           >
             確認済: {checkedCount}/{totalProducts} 品目 (合計{totalCount}個)
           </Typography>
-            <Button
-              variant="contained"
-              color="primary"
-              size="large"
-              onClick={handleComplete}
-              disabled={products.length === 0 || products.some((product) => !product.isChecked)} // ← 追加
-              sx={{
-                py: isLandscape ? 1.5 : 1,
-                px: isLandscape ? 6 : 4,
-                fontSize: isLandscape ? '1.4rem' : '1.2rem',
-                fontWeight: 'bold',
-                minWidth: isLandscape ? '220px' : '180px',
-                opacity: products.some(p => !p.isChecked) ? 0.5 : 1,              // ← 追加（見た目調整）
-                pointerEvents: products.some(p => !p.isChecked) ? 'none' : 'auto' // ← 追加（クリック制御）
-              }}
-            >
-              確認完了
-            </Button>
-          </Box>
+          <Button
+            variant="contained"
+            color="primary"
+            size="large"
+            onClick={handleComplete}
+            sx={{
+              py: isLandscape ? 1.5 : 1,
+              px: isLandscape ? 6 : 4,
+              fontSize: isLandscape ? '1.4rem' : '1.2rem',
+              fontWeight: 'bold',
+              minWidth: isLandscape ? '220px' : '180px'
+            }}
+          >
+            確認完了
+          </Button>
+        </Box>
       </Paper>
      
       {/* アラート表示 */}
