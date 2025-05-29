@@ -91,29 +91,31 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
             ) : (
             // 店舗情報の表示
             <Box>
-                <Box display="flex" alignItems="center" mb={1}>
+            <Box display="flex" alignItems="center" mb={1}>
+                {/* 店舗番号を太字で表示 */}
                 <Typography
-                    variant="h5"
-                    component="h1"
-                    fontWeight="bold"
-                    sx={{ mr: 2 }}
-                >
-                    {storeName || '店舗名なし'}
-                </Typography>
-                <Typography
-                    variant="subtitle1"
-                    component="span"
-                    sx={{
-                    backgroundColor: '#e0e0e0',
+                variant="h4"  // サイズを大きくして目立たせる
+                component="span"
+                sx={{
                     px: 1.5,
                     py: 0.5,
                     borderRadius: 1,
-                    fontWeight: 'medium'
-                    }}
+                    fontWeight: 'bold',  // 太字に変更
+                    mr: 2
+                }}
                 >
-                    店舗番号: {storeNumber || '不明'}
+                {storeNumber || '不明'}
                 </Typography>
-                </Box>
+                
+                {/* 店舗名を小さく表示 */}
+                <Typography
+                variant="subtitle1"  // サイズを小さく変更
+                component="h1"
+                fontWeight="medium"  // やや軽めの太さに
+                >
+                {storeName || '店舗名なし'}
+                </Typography>
+            </Box>
             </Box>
             )}
         </Box>
