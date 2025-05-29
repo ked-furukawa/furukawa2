@@ -1,6 +1,6 @@
 // src/components/Keypad.tsx
 import React from 'react';
-import { Box, Button, TextField, Paper, Typography } from '@mui/material';
+import { Box, Button, TextField, Paper } from '@mui/material';
 
 // コンポーネントのProps型定義
 interface KeypadProps {
@@ -156,12 +156,6 @@ export const Keypad: React.FC<KeypadProps> = ({
         </Box>
       </Box>
 
-      {/* ステータス表示 */}
-      <Box mt={3}>
-        <Typography variant="body1" align="center" color="text.secondary">
-          入力中の箱数: {value || 0}
-        </Typography>
-      </Box>
     </Paper>
   );
 };
