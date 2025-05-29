@@ -16,11 +16,9 @@ import {
   Backdrop,
   useMediaQuery,
   useTheme,
-  IconButton,
   CircularProgress
 } from '@mui/material';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from "../../amplify/data/resource";
 
@@ -72,48 +70,59 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
     fetchProducts();
   }, [targetDate, targetStoreId]);
 
-  const fetchProducts = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Orderモデルからデータを取得（特定の日付と店舗IDで絞り込み）
-      const { data } = await client.models.Order.list({
-        filter: {
-          and: [
-            { date: { eq: targetDate } },
-            { storeId: { eq: targetStoreId } }
-          ]
-        }
-      });
+const fetchProducts = async () => {
+  try {
+    setLoading(true);
+    setError(null);
 
-      console.log(data);
-      
-      if (data) {
-        // Orderデータを商品表示用の形式に変換
-        const formattedProducts: Product[] = data.map(order => ({
-          id: `${order.date}-${order.storeId}-${order.itemId}`,
-          name: order.itemName || order.itemFormalName || `商品ID: ${order.itemId}`,
-          expectedCount: order.orderCount || 0,
-          isChecked: false,
-          itemId: order.itemId,
-          date: order.date,
-          storeId: order.storeId,
-          storeName: order.storeName ?? undefined, // nullをundefinedに変換
-          resDeptName: order.resDeptName ?? undefined // nullをundefinedに変換
-        }));
-
-        
-        setProducts(formattedProducts);
-        console.log(formattedProducts);
+    // 店舗IDは指定せず、日付のみで取得
+    const { data } = await client.models.Order.list({
+      filter: {
+        date: { eq: targetDate }
       }
-    } catch (err) {
-      console.error('注文データの取得に失敗しました:', err);
-      setError('注文データの取得に失敗しました。再度お試しください。');
-    } finally {
-      setLoading(false);
+    });
+
+    console.log(data);
+
+    if (data) {
+      // 商品名（itemFormalName）でグループ化して集計
+      const groupedMap = new Map<string, Product>();
+
+      for (const order of data) {
+        const key = order.itemFormalName || `商品ID: ${order.itemId}`;
+
+        if (groupedMap.has(key)) {
+          const existing = groupedMap.get(key)!;
+          existing.expectedCount += order.orderCount || 0;
+        } else {
+          groupedMap.set(key, {
+            id: key, // 固有IDでなくても今回は表示上問題なし
+            name: key,
+            expectedCount: order.orderCount || 0,
+            isChecked: false,
+            itemId: order.itemId,
+            date: order.date,
+            storeId: order.storeId,
+            storeName: order.storeName ?? undefined,
+            resDeptName: order.resDeptName ?? undefined
+          });
+        }
+      }
+
+      const formattedProducts: Product[] = Array.from(groupedMap.values());
+
+      setProducts(formattedProducts);
+      console.log(formattedProducts);
     }
-  };
+  } catch (err) {
+    console.error('注文データの取得に失敗しました:', err);
+    setError('注文データの取得に失敗しました。再度お試しください。');
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   // チェックボックスの状態を変更（ローカル状態のみ）
   const handleCheckProduct = (productId: string) => {
@@ -162,18 +171,7 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
     fetchProducts();
   };
 
-  // スクロール操作のための関数
-  const scrollUp = () => {
-    if (tableContainerRef.current) {
-      tableContainerRef.current.scrollBy({ top: -200, behavior: 'smooth' });
-    }
-  };
 
-  const scrollDown = () => {
-    if (tableContainerRef.current) {
-      tableContainerRef.current.scrollBy({ top: 200, behavior: 'smooth' });
-    }
-  };
 
   // 合計商品数と合計個数を計算
   const totalProducts = products.length;
@@ -256,25 +254,6 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
           height: `calc(100vh - ${navButtonHeight}px)`
         }}
       >
-        {/* スクロールボタン（上） */}
-        <Box sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          backgroundColor: theme.palette.grey[100],
-          borderBottom: `1px solid ${theme.palette.grey[300]}`
-        }}>
-          <IconButton
-            onClick={scrollUp}
-            size="large"
-            sx={{
-              width: '100%',
-              borderRadius: 0,
-              py: 0.5
-            }}
-          >
-            <KeyboardArrowUpIcon fontSize="large" />
-          </IconButton>
-        </Box>
 
         <TableContainer
           ref={tableContainerRef}
@@ -386,25 +365,7 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
           </Table>
         </TableContainer>
 
-        {/* スクロールボタン（下） */}
-        <Box sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          backgroundColor: theme.palette.grey[100],
-          borderTop: `1px solid ${theme.palette.grey[300]}`
-        }}>
-          <IconButton
-            onClick={scrollDown}
-            size="large"
-            sx={{
-              width: '100%',
-              borderRadius: 0,
-              py: 0.5
-            }}
-          >
-            <KeyboardArrowDownIcon fontSize="large" />
-          </IconButton>
-        </Box>
+
 
         <Box
           p={isLandscape ? 2 : 1.5}
