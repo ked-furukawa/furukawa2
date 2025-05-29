@@ -8,7 +8,7 @@ LinearProgress,
 Alert,
 Input,
 } from '@mui/material';
-import { uploadData } from 'aws-amplify/storage';
+import { getUrl, uploadData } from 'aws-amplify/storage';
 //テストデータ
 import testDataOrder from '../services/testDataOrder.json';
 import testDataBox from '../services/testDataBox.json';
@@ -33,15 +33,28 @@ const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     }
 };
 
-const handleUpload = async () => {
+const handleUpload = async () => { //S3へのアップロード関数
     if (!file) return;
 
     setLoading(true);
     setMessage(null);
 
+    const filePath = `excel-files/${Date.now()}-${file.name}` // S3上のパス
+
     try {
+            // 同名ファイルが存在するかチェック
+    try {
+      await getUrl({ path: filePath }); // 存在すれば成功 → エラーでなければ既に存在
+        setMessage({ type: 'error', text: 'アップロード済みのファイルです。' });
+        setLoading(false);
+        return;
+        } catch(err) {
+            if((err instanceof Error) && err.name !== 'NotFound') {
+            throw err; 
+        }
+    }
     const result = await uploadData({
-        path: `excel-files/${Date.now()}-${file.name}`, // S3上のパス
+        path: filePath, // S3上のパス
         data: file,
         options: {
         contentType: file.type,
