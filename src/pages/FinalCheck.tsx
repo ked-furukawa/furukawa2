@@ -110,7 +110,7 @@ export const FinalCheck = () => {
         fontSize?: string;
     };
 
-    const SummaryTable = ({ title, total, fontSize = '1.5rem' }: SummaryTableProps) => {
+    const SummaryTable = ({ title, total, fontSize = '1.5rem' }: SummaryTableProps) => { //右表の定義部分
     const cellStyle = (bgcolor?: string, isBold = false) => ({
         fontSize,
         bgcolor,
@@ -152,7 +152,7 @@ export const FinalCheck = () => {
     }
 
     return (
-    <Box sx={{
+    <Box sx={{ //表部分の親Box
         display: 'flex',
         flexDirection: 'row', // ← 横並びにする
         justifyContent: 'flex-start',
@@ -163,7 +163,7 @@ export const FinalCheck = () => {
         gap: 3, // 間のスペース
 
     }}>
-    <Box sx={{display: 'flex', // フレックスボックスにする
+    <Box sx={{display: 'flex', //左表Box
         justifyContent: 'flex-start', flexDirection: 'column',
         alignItems: 'flex-start', minHeight:'100vh', width: '100%', p: 3,  }}>
     <Typography variant="h5" component="h2" gutterBottom sx={{ alignSelf: 'flex-start' }}>
@@ -238,7 +238,7 @@ export const FinalCheck = () => {
     </TableContainer>
     </Box>
 
-    <Box
+    <Box //右表Box
     sx={{
     display: 'flex',
     flexDirection: 'column',
@@ -252,7 +252,7 @@ export const FinalCheck = () => {
     <SummaryTable title="全体 合計" total={totalAll} />
     <SummaryTable title="中之島物流センター 合計" total={totalNakanoshima} />
     <SummaryTable title="上越物流センター 合計" total={totalJyoetsu} />
-</Box>
+    </Box>
     </Box>
     );
 };
