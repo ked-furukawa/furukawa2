@@ -82,7 +82,7 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
         filter: {
           and: [
             { date: { eq: targetDate } },
-            // { storeId: { eq: targetStoreId } }
+            { storeId: { eq: targetStoreId } }
           ]
         }
       });
