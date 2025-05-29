@@ -178,12 +178,14 @@ const fetchProducts = async () => {
   const totalCount = products.reduce((sum, product) => sum + product.expectedCount, 0);
   const checkedCount = products.filter(product => product.isChecked).length;
 
+  const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1280px)');
+
   // フッターの高さを定義（レスポンシブ対応）
-  const footerHeight = isLandscape ? 70 : 60;
-  const navButtonHeight = isLandscape ? 60 : 50;
-  const headerFontSize = isLandscape ? '1.6rem' : '1.4rem';
-  const cellFontSize = isLandscape ? '1.5rem' : '1.3rem';
-  const rowHeight = isLandscape ? '80px' : '70px';
+  const headerFontSize = isTablet ? '1.3rem' : isLandscape ? '1.6rem' : '1.2rem';
+  const cellFontSize = isTablet ? '1.2rem' : isLandscape ? '1.5rem' : '1rem';
+  const rowHeight = isTablet ? '68px' : isLandscape ? '80px' : '64px';
+  const navButtonHeight = isTablet ? 52 : isLandscape ? 60 : 50;
+
 
   // ローディング表示
   if (loading) {
@@ -259,7 +261,7 @@ const fetchProducts = async () => {
           ref={tableContainerRef}
           sx={{
             flex: 1,
-            height: `calc(100vh - ${navButtonHeight + footerHeight + 80}px)`,
+            height:"100%",
             width: '100%',
             overflowY: 'auto',
             '& .MuiTableCell-root': {
@@ -374,7 +376,6 @@ const fetchProducts = async () => {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            height: footerHeight,
             boxSizing: 'border-box'
           }}
         >
@@ -426,8 +427,8 @@ const fetchProducts = async () => {
             severity={alertSeverity}
             onClose={() => setAlertOpen(false)}
             sx={{
-              width: isLandscape ? '60%' : '85%',
-              maxWidth: isLandscape ? '700px' : '500px',
+              width: isTablet ? '80%' : isLandscape ? '60%' : '90%',
+              maxWidth: '600px',
               boxShadow: 6,
               fontSize: isLandscape ? '1.5rem' : '1.3rem',
               padding: isLandscape ? '20px 28px' : '16px 20px',
