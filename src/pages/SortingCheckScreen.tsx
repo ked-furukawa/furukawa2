@@ -167,9 +167,9 @@ const fetchProducts = async () => {
   };
 
   // データを再読み込みする関数
-  const handleRefresh = () => {
-    fetchProducts();
-  };
+  // const handleRefresh = () => {
+  //   fetchProducts();
+  // };
 
 
 
@@ -221,15 +221,16 @@ const fetchProducts = async () => {
         <Alert severity="error" sx={{ mb: 2, fontSize: '1.2rem' }}>
           {error}
         </Alert>
-        <Button 
-          variant="contained" 
-          size="large" 
-          onClick={handleRefresh}
-          sx={{ fontSize: '1.2rem', px: 4, py: 1.5 }}
-        >
-          再読み込み
-        </Button>
-      </Box>
+        <Button
+        variant="contained"
+        color="primary"
+        size="large"
+        onClick={handleComplete}
+        disabled={products.length === 0 || products.some((product) => !product.isChecked)}
+      >
+        {products.some(p => !p.isChecked) ? '未完了' : '確認完了'}
+      </Button>
+     </Box>
     );
   }
 
