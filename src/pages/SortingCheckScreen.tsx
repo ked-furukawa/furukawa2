@@ -239,7 +239,7 @@ const fetchProducts = async () => {
       width: '100vw',
       display: 'flex',
       flexDirection: 'column',
-      pt: `${navButtonHeight}px`,
+      pt: 0,
       pb: 0,
       px: 0,
       overflow: 'hidden'
@@ -281,31 +281,48 @@ const fetchProducts = async () => {
           }}
         >
           <Table stickyHeader size="medium" sx={{ width: '100%' }}>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{
-                  fontWeight: 'bold',
-                  width: '40%',
-                  backgroundColor: theme.palette.primary.main,
-                  color: 'white',
-                  fontSize: headerFontSize
-                }}>食品名</TableCell>
+          <TableHead>
+            <TableRow
+              sx={{
+                height: isLandscape ? '120px' : '64px', // 高さを追加（例：従来より高め）
+              }}
+            >
+              <TableCell sx={{
+                fontWeight: 'bold',
+                width: '40%',
+                backgroundColor: theme.palette.primary.main,
+                color: 'white',
+                fontSize: headerFontSize,
+                paddingTop: isLandscape ? 3 : 2,
+                paddingBottom: isLandscape ? 3 : 2
+              }}>
+                食品名
+              </TableCell>
                 <TableCell align="right" sx={{
                   fontWeight: 'bold',
                   width: '30%',
                   backgroundColor: theme.palette.primary.main,
                   color: 'white',
-                  fontSize: headerFontSize
-                }}>商品数</TableCell>
-                <TableCell padding="checkbox" align="center" sx={{
-                  fontWeight: 'bold',
-                  width: '30%',
-                  backgroundColor: theme.palette.primary.main,
-                  color: 'white',
-                  fontSize: headerFontSize
-                }}>確認</TableCell>
-              </TableRow>
-            </TableHead>
+                  fontSize: headerFontSize,
+                  paddingTop: isLandscape ? 3 : 2,
+                  paddingBottom: isLandscape ? 3 : 2
+              }}>
+                商品数
+              </TableCell>
+              <TableCell padding="checkbox" align="center" sx={{
+                fontWeight: 'bold',
+                width: '30%',
+                backgroundColor: theme.palette.primary.main,
+                color: 'white',
+                fontSize: headerFontSize,
+                paddingTop: isLandscape ? 3 : 2,
+                paddingBottom: isLandscape ? 3 : 2
+              }}>
+                確認
+              </TableCell>
+            </TableRow>
+          </TableHead>
+
             <TableBody>
               {products.map((product) => (
                 <TableRow
