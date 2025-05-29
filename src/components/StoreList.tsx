@@ -10,7 +10,8 @@ import {
   Divider,
   Collapse,
   IconButton,
-  CircularProgress
+  CircularProgress,
+  Paper
 } from '@mui/material';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
@@ -181,96 +182,169 @@ const StoreList: React.FC<StoreListProps> = ({
     }));
   };
 
+  // ローディング表示
   if (loading) {
     return (
-      <Box sx={{ 
-        width: 250, 
-        p: 2, 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center',
-        height: '100%'
-      }}>
-        <CircularProgress />
-      </Box>
+      <Paper
+        elevation={3}
+        sx={{ 
+          width: 250, 
+          height: '100%',
+          borderRadius: 2,
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+      >
+        {/* ヘッダー部分 */}
+        <Box
+          sx={{
+            p: 1.5,
+            backgroundColor: '#1976d2', // MUIのprimary色
+            color: 'white',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.2)'
+          }}
+        >
+          <Typography variant="h6" fontWeight="medium">
+            店舗一覧
+          </Typography>
+        </Box>
+        
+        <Box sx={{ 
+          flex: 1,
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center'
+        }}>
+          <CircularProgress />
+        </Box>
+      </Paper>
     );
   }
 
+  // エラー表示
   if (error) {
     return (
-      <Box sx={{ width: 250, p: 2 }}>
-        <Typography color="error">{error}</Typography>
-      </Box>
+      <Paper
+        elevation={3}
+        sx={{ 
+          width: 250, 
+          height: '100%',
+          borderRadius: 2,
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+      >
+        {/* ヘッダー部分 */}
+        <Box
+          sx={{
+            p: 1.5,
+            backgroundColor: '#1976d2', // MUIのprimary色
+            color: 'white',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.2)'
+          }}
+        >
+          <Typography variant="h6" fontWeight="medium">
+            店舗一覧
+          </Typography>
+        </Box>
+        
+        <Box sx={{ p: 2 }}>
+          <Typography color="error">{error}</Typography>
+        </Box>
+      </Paper>
     );
   }
 
+  // 通常表示
   return (
-    <Box 
+    <Paper
+      elevation={3}
       sx={{ 
         width: 250, 
-        height: '100%',
-        borderRight: 1,
-        borderColor: 'divider',
-        overflow: 'auto'
+        height: { xs: 'auto', md: '600px' }, // 他のパネルと同じ高さに設定
+        borderRadius: 2,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden'
       }}
     >
-      <Typography variant="h6" sx={{ p: 2, bgcolor: 'primary.main', color: 'primary.contrastText' }}>
-        店舗一覧
-      </Typography>
-      <List component="nav" dense>
-        {storesByDestination.map((group) => (
-          <React.Fragment key={group.destination.id}>
-            {/* 送り先ヘッダー */}
-            <ListItem 
-              sx={{ 
-                bgcolor: 'grey.100',
-                borderBottom: 1,
-                borderColor: 'divider'
-              }}
-            >
-              <ListItemText 
-                primary={group.destination.name} 
-                primaryTypographyProps={{ fontWeight: 'bold' }}
-              />
-              <IconButton 
-                edge="end" 
-                size="small"
-                onClick={() => toggleDestination(group.destination.id)}
+      {/* ヘッダー部分 */}
+      <Box
+        sx={{
+          p: 1.5,
+          backgroundColor: '#1976d2', // MUIのprimary色
+          color: 'white',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.2)'
+        }}
+      >
+        <Typography variant="h6" fontWeight="medium">
+          店舗一覧
+        </Typography>
+      </Box>
+      
+      {/* リスト部分 */}
+      <Box sx={{ flex: 1, overflow: 'auto' }}>
+        <List component="nav" dense disablePadding>
+          {storesByDestination.map((group) => (
+            <React.Fragment key={group.destination.id}>
+              {/* 送り先ヘッダー */}
+              <ListItem 
+                sx={{ 
+                  bgcolor: 'grey.100',
+                  borderBottom: 1,
+                  borderColor: 'divider'
+                }}
               >
-                {expandedDestinations[group.destination.id] ? <ExpandLess /> : <ExpandMore />}
-              </IconButton>
-            </ListItem>
-            
-            {/* 送り先に属する店舗リスト */}
-            <Collapse in={expandedDestinations[group.destination.id]} timeout="auto" unmountOnExit>
-              <List component="div" disablePadding>
-                {group.stores.map((store) => (
-                  <ListItemButton
-                    key={store.id}
-                    selected={selectedStoreId === store.id}
-                    onClick={() => onSelectStore(store.id)}
-                    sx={{ 
-                      pl: 4,
-                      bgcolor: completedStoreIds.includes(store.id) ? 'success.light' : 'inherit'
-                    }}
-                  >
-                    <ListItemText 
-                      primary={`${store.storeName}`} 
-                      secondary={`店舗番号: ${store.storeNumber}`}
-                    />
-                    {completedStoreIds.includes(store.id) && (
-                      <CheckCircleIcon color="success" fontSize="small" />
-                    )}
-                  </ListItemButton>
-                ))}
-              </List>
-            </Collapse>
-            
-            <Divider />
-          </React.Fragment>
-        ))}
-      </List>
-    </Box>
+                <ListItemText 
+                  primary={group.destination.name} 
+                  primaryTypographyProps={{ fontWeight: 'bold' }}
+                />
+                <IconButton 
+                  edge="end" 
+                  size="small"
+                  onClick={() => toggleDestination(group.destination.id)}
+                >
+                  {expandedDestinations[group.destination.id] ? <ExpandLess /> : <ExpandMore />}
+                </IconButton>
+              </ListItem>
+              
+              {/* 送り先に属する店舗リスト */}
+              <Collapse in={expandedDestinations[group.destination.id]} timeout="auto" unmountOnExit>
+                <List component="div" disablePadding>
+                  {group.stores.map((store) => (
+                    <ListItemButton
+                      key={store.id}
+                      selected={selectedStoreId === store.id}
+                      onClick={() => onSelectStore(store.id)}
+                      sx={{ 
+                        pl: 4,
+                        bgcolor: completedStoreIds.includes(store.id) ? 'rgba(76, 175, 80, 0.15)' : 'inherit',
+                        '&.Mui-selected': {
+                          bgcolor: 'primary.light',
+                          '&:hover': {
+                            bgcolor: 'primary.light',
+                          }
+                        }
+                      }}
+                    >
+                      <ListItemText 
+                        primary={`${store.storeName}`} 
+                        secondary={`店舗番号: ${store.storeNumber}`}
+                      />
+                      {completedStoreIds.includes(store.id) && (
+                        <CheckCircleIcon color="success" fontSize="small" />
+                      )}
+                    </ListItemButton>
+                  ))}
+                </List>
+              </Collapse>
+              
+              <Divider />
+            </React.Fragment>
+          ))}
+        </List>
+      </Box>
+    </Paper>
   );
 };
 

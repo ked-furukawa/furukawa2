@@ -74,24 +74,41 @@ export const Keypad: React.FC<KeypadProps> = ({
     <Paper 
       elevation={3} 
       sx={{ 
-        p: 4,
         borderRadius: 2,
-        width: '100%',  // 親要素の幅に合わせる
-        maxWidth: 500,  // 最大幅を指定（必要に応じて調整）
+        overflow: 'hidden',
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column'
       }}
     >
-      {/* 入力表示エリア */}
-      <TextField
-        fullWidth
-        variant="outlined"
-        value={value}
-        placeholder="0"
-        InputProps={{
-          readOnly: true,
-          sx: { input: { textAlign: 'right', fontSize: '1.8rem' } }
+      {/* ヘッダー部分を直接追加 */}
+      <Box
+        sx={{
+          p: 1.5,
+          backgroundColor: '#1976d2', // MUIのprimary色
+          color: 'white',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.2)'
         }}
-        sx={{ mb: 3 }}
-      />
+      >
+        <Typography variant="h6" fontWeight="medium">
+          箱数入力
+        </Typography>
+      </Box>
+      {/* 入力エリアとテンキー */}
+      <Box sx={{ p: 4, flex: 1, display: 'flex', flexDirection: 'column' }}>
+        {/* 入力表示エリア */}
+        <TextField
+          fullWidth
+          variant="outlined"
+          value={value}
+          placeholder="0"
+          InputProps={{
+            readOnly: true,
+            sx: { input: { textAlign: 'right', fontSize: '1.8rem' } }
+          }}
+          sx={{ mb: 3 }}
+        />
 
       {/* 色選択ボタン */}
       <Box mb={2}>
@@ -144,8 +161,8 @@ export const Keypad: React.FC<KeypadProps> = ({
         </Menu>
       </Box>
 
-      {/* テンキー配置 */}
-      <Box>
+       {/* テンキー配置 */}
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
         {/* 1行目: 7-8-9 */}
         <Box display="flex" gap={1} mb={1}>
           <Button 
@@ -254,10 +271,11 @@ export const Keypad: React.FC<KeypadProps> = ({
       </Box>
 
       {/* ステータス表示 */}
-      <Box mt={3}>
-        <Typography variant="body1" align="center" color="text.secondary">
-          入力中の箱数: {value || 0} / 色: {colorNames[selectedColor]}
-        </Typography>
+        <Box mt={3}>
+          <Typography variant="body1" align="center" color="text.secondary">
+            入力中の箱数: {value || 0}
+          </Typography>
+        </Box>
       </Box>
     </Paper>
   );

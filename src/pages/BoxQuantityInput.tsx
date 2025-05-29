@@ -11,12 +11,13 @@ import {
   DialogTitle, 
   Typography 
 } from '@mui/material';
-import { StoreHeader } from '../components/StoreHeader';
-import { ProductList } from '../components/ProductList';
+// import { StoreHeader } from '../components/StoreHeader';
+// import { ProductList } from '../components/ProductList';
 import { Keypad } from '../components/Keypad';
 import StoreList from '../components/StoreList';
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../../amplify/data/resource";
+import { StoreProductPanel } from '../components/StoreProductPanel';
 
 
 // 型定義に BoxColor を追加
@@ -315,69 +316,60 @@ export const BoxQuantityInput: React.FC = () => {
   };
 
   return (
-    <Box display="flex" height="100vh">
-      {/* 左側：店舗リスト */}
+  <Box display="flex" height="100vh">
+    {/* 左側：店舗リスト - 余白を小さく調整 */}
+    <Box sx={{ p: 1, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
       <StoreList 
         selectedStoreId={selectedStoreId} 
         onSelectStore={handleStoreSelect} 
         completedStoreIds={completedStoreIds}
       />
-      
-      <Box flex="1" display="flex" flexDirection="column" overflow="auto">
-        <CssBaseline />
-        <Container maxWidth="md"> 
+    </Box>
+    
+    <Box flex="1" display="flex" flexDirection="column" overflow="auto" p={1}>
+      <CssBaseline />
+      <Container maxWidth="lg" disableGutters> {/* guttersを無効化して余白を減らす */}
+        <Box 
+          display="flex"
+          flexDirection={{ xs: 'column', md: 'row' }}
+          justifyContent="space-between"
+          alignItems="flex-start"
+          gap={1} 
+          height="100%"
+        >
+          {/* 中央：統合された店舗情報と商品リスト */}
           <Box 
-            display="flex"
-            flexDirection={{ xs: 'column', md: 'row' }}
-            justifyContent="space-between"
-            alignItems="flex-start"
-            py={1}
-            height="100%"
+            width={{ xs: '100%', md: '55%' }} 
+            height={{ xs: 'auto', md: '600px' }}
           >
-            {/* 中央：店舗情報と商品リスト */}
-            <Box 
-              width={{ xs: '100%', sm: '55%' }} 
-              mb={{ xs: 3, sm: 0 }}
-              mr={{ xs: 0, sm: 2 }}
-            >
-              {/* 店舗情報 */}
-              <StoreHeader 
-                storeNumber={storeData?.storeId || ''}
-                storeName={storeData?.storeName || ''}
-                loading={loading}
-              />
-              
-              {/* エラーメッセージ表示 */}
-              {error && (
-                <Box sx={{ mb: 2, p: 1, bgcolor: 'error.light', color: 'error.contrastText', borderRadius: 1 }}>
-                  {error}
-                </Box>
-              )}
-              
-              {/* 商品リスト */}
-              <ProductList 
-                products={products}
-                selectedProductIds={selectedProductIds}
-                onProductSelect={handleProductSelect}
-                loading={loading}
-                error={null}
-              />
-            </Box>
-
-            {/* 右側：テンキー */}
-            <Box width={{ xs: '100%', sm: '40%' }}>
-              <Keypad 
-                value={inputValue}
-                onChange={handleInputChange}
-                onEnter={handleQuantityUpdate}
-                onClear={() => setInputValue('')}
-                selectedColor={selectedColor}
-                onColorChange={handleColorChange}
-              />
-            </Box>
+            <StoreProductPanel
+              storeNumber={storeData?.storeId || ''}
+              storeName={storeData?.storeName || ''}
+              products={products}
+              selectedProductIds={selectedProductIds}
+              onProductSelect={handleProductSelect}
+              loading={loading}
+              error={error}
+            />
           </Box>
-        </Container>
-      </Box>
+
+          {/* 右側：テンキー */}
+          <Box 
+            width={{ xs: '100%', md: '43%' }}
+            height={{ xs: 'auto', md: '600px' }}
+          >
+            <Keypad 
+              value={inputValue}
+              onChange={handleInputChange}
+              onEnter={handleQuantityUpdate}
+              onClear={() => setInputValue('')}
+              selectedColor={selectedColor}
+              onColorChange={handleColorChange}
+            />
+          </Box>
+        </Box>
+      </Container>
+    </Box>
 
       {/* チェックエラーメッセージ */}
       {checkError && (
