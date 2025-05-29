@@ -1,13 +1,13 @@
-import React, { useState, useRef } from 'react';
-import { 
-  Box, 
-  Typography, 
-  Checkbox, 
-  Button, 
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  Box,
+  Typography,
+  Checkbox,
+  Button,
   Paper,
   Alert,
   Table,
-  TableBody,
+  TableBody,  
   TableCell,
   TableContainer,
   TableHead,
@@ -16,51 +16,106 @@ import {
   Backdrop,
   useMediaQuery,
   useTheme,
-  IconButton
+  IconButton,
+  CircularProgress
 } from '@mui/material';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import { generateClient } from 'aws-amplify/data';
+import type { Schema } from "../../amplify/data/resource";
 
-// 商品データの型定義
+// Amplifyクライアントの初期化
+const client = generateClient<Schema>();
+
+// 商品データの型定義（Orderモデルベース）
 interface Product {
-  id: string;
-  name: string;
-  expectedCount: number;
-  isChecked: boolean;
+  id: string; // date-storeId-itemIdの組み合わせ
+  name: string; // itemNameまたはitemFormalName
+  expectedCount: number; // orderCount
+  isChecked: boolean; // ローカル状態で管理
+  itemId: string;
+  date: string;
+  storeId: string;
+  storeName?: string;
+  resDeptName?: string;
 }
 
 interface SortingCheckScreenProps {
   onProductClick?: (productId: string) => void;
   onComplete?: () => void;
+  targetDate?: string; // 対象日付（YYYY-MM-DD形式）
+  targetStoreId?: string; // 対象店舗ID
 }
 
 const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
   onProductClick = () => {},
-  onComplete = () => {}
+  onComplete = () => {},
+  targetDate = '2025-06-02', 
+  targetStoreId = '019' 
 }) => {
   const theme = useTheme();
   const isLandscape = useMediaQuery('(orientation: landscape)');
   const tableContainerRef = useRef<HTMLDivElement>(null);
-  
-  // 商品リストの状態 - 9個に増加
-  const [products, setProducts] = useState<Product[]>([
-    { id: '1', name: '唐揚げ', expectedCount: 15, isChecked: false },
-    { id: '2', name: 'コロッケ', expectedCount: 20, isChecked: false },
-    { id: '3', name: 'ポテトサラダ', expectedCount: 8, isChecked: false },
-    { id: '4', name: '焼き鳥', expectedCount: 12, isChecked: false },
-    { id: '5', name: 'エビフライ', expectedCount: 10, isChecked: false },
-    { id: '6', name: '春巻き', expectedCount: 18, isChecked: false },
-    { id: '7', name: 'メンチカツ', expectedCount: 14, isChecked: false },
-    { id: '8', name: 'ハムカツ', expectedCount: 16, isChecked: false },
-    { id: '9', name: 'チキンカツ', expectedCount: 12, isChecked: false }, // 9個目の商品を追加
-  ]);
+
+  // 商品リストの状態
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // アラート表示のための状態
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [alertSeverity, setAlertSeverity] = useState<'success' | 'error'>('success');
 
-  // チェックボックスの状態を変更する関数
+  // DynamoDBからOrderデータを取得
+  useEffect(() => {
+    fetchProducts();
+  }, [targetDate, targetStoreId]);
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Orderモデルからデータを取得（特定の日付と店舗IDで絞り込み）
+      const { data } = await client.models.Order.list({
+        filter: {
+          and: [
+            { date: { eq: targetDate } },
+            // { storeId: { eq: targetStoreId } }
+          ]
+        }
+      });
+
+      console.log(data);
+      
+      if (data) {
+        // Orderデータを商品表示用の形式に変換
+        const formattedProducts: Product[] = data.map(order => ({
+          id: `${order.date}-${order.storeId}-${order.itemId}`,
+          name: order.itemName || order.itemFormalName || `商品ID: ${order.itemId}`,
+          expectedCount: order.orderCount || 0,
+          isChecked: false,
+          itemId: order.itemId,
+          date: order.date,
+          storeId: order.storeId,
+          storeName: order.storeName ?? undefined, // nullをundefinedに変換
+          resDeptName: order.resDeptName ?? undefined // nullをundefinedに変換
+        }));
+
+        
+        setProducts(formattedProducts);
+        console.log(formattedProducts);
+      }
+    } catch (err) {
+      console.error('注文データの取得に失敗しました:', err);
+      setError('注文データの取得に失敗しました。再度お試しください。');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // チェックボックスの状態を変更（ローカル状態のみ）
   const handleCheckProduct = (productId: string) => {
     setProducts(products.map(product =>
       product.id === productId
@@ -71,45 +126,40 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
 
   // 商品名をクリックして詳細画面に移動する関数
   const handleProductClick = (productId: string) => {
-    // 親コンポーネントに通知
     onProductClick(productId);
   };
 
   // 完了ボタンを押したときの処理
   const handleComplete = () => {
-    // すべての商品がチェックされているか確認
     const allChecked = products.every(product => product.isChecked);
-  
+
     if (allChecked) {
-      // 成功メッセージを表示
       setAlertMessage('確認完了しました！次の工程に進みます');
       setAlertSeverity('success');
       setAlertOpen(true);
-      
-      // 少し待ってから親コンポーネントに通知
+
       setTimeout(() => {
         setAlertOpen(false);
         setTimeout(() => {
           onComplete();
-        }, 300); // フェードアウト後に遷移
+        }, 300);
       }, 1500);
     } else {
-      // 未チェックの商品名を取得
       const uncheckedProducts = products
         .filter(product => !product.isChecked)
         .map(product => product.name)
         .join('、');
-    
-      // エラーメッセージを表示
+
       setAlertMessage(`${uncheckedProducts}の確認が完了していません`);
       setAlertSeverity('error');
       setAlertOpen(true);
-      
-      // エラーメッセージは自動で閉じる
-      setTimeout(() => {
-        setAlertOpen(false);
-      }, 3000);
+      setTimeout(() => setAlertOpen(false), 3000);
     }
+  };
+
+  // データを再読み込みする関数
+  const handleRefresh = () => {
+    fetchProducts();
   };
 
   // スクロール操作のための関数
@@ -132,50 +182,92 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
 
   // フッターの高さを定義（レスポンシブ対応）
   const footerHeight = isLandscape ? 70 : 60;
-  
-  // ナビゲーションボタン用のスペースを確保（上部の余白）
   const navButtonHeight = isLandscape ? 60 : 50;
-
-  // フォントサイズを大きく設定
   const headerFontSize = isLandscape ? '1.6rem' : '1.4rem';
   const cellFontSize = isLandscape ? '1.5rem' : '1.3rem';
   const rowHeight = isLandscape ? '80px' : '70px';
 
+  // ローディング表示
+  if (loading) {
+    return (
+      <Box sx={{
+        height: '100vh',
+        width: '100vw',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'column',
+        gap: 2
+      }}>
+        <CircularProgress size={60} />
+        <Typography variant="h6">注文データを読み込み中...</Typography>
+      </Box>
+    );
+  }
+
+  // エラー表示
+  if (error) {
+    return (
+      <Box sx={{
+        height: '100vh',
+        width: '100vw',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'column',
+        gap: 2,
+        p: 3
+      }}>
+        <Alert severity="error" sx={{ mb: 2, fontSize: '1.2rem' }}>
+          {error}
+        </Alert>
+        <Button 
+          variant="contained" 
+          size="large" 
+          onClick={handleRefresh}
+          sx={{ fontSize: '1.2rem', px: 4, py: 1.5 }}
+        >
+          再読み込み
+        </Button>
+      </Box>
+    );
+  }
+
   return (
-    <Box sx={{ 
+    <Box sx={{
       height: '100vh',
       width: '100vw',
       display: 'flex',
       flexDirection: 'column',
-      pt: `${navButtonHeight}px`, // ナビゲーションボタン用の上部余白を追加
+      pt: `${navButtonHeight}px`,
       pb: 0,
       px: 0,
-      overflow: 'hidden' // はみ出しを防止
+      overflow: 'hidden'
     }}>
-      <Paper 
-        elevation={3} 
-        sx={{ 
-          borderRadius: 0, // 角丸を削除して画面いっぱいに
+      <Paper
+        elevation={3}
+        sx={{
+          borderRadius: 0,
           overflow: 'hidden',
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
           width: '100%',
-          height: `calc(100vh - ${navButtonHeight}px)` // ナビゲーションボタンの高さを引いた分
+          height: `calc(100vh - ${navButtonHeight}px)`
         }}
       >
         {/* スクロールボタン（上） */}
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'center',
           backgroundColor: theme.palette.grey[100],
           borderBottom: `1px solid ${theme.palette.grey[300]}`
         }}>
-          <IconButton 
-            onClick={scrollUp} 
-            size="large" 
-            sx={{ 
-              width: '100%', 
+          <IconButton
+            onClick={scrollUp}
+            size="large"
+            sx={{
+              width: '100%',
               borderRadius: 0,
               py: 0.5
             }}
@@ -184,11 +276,11 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
           </IconButton>
         </Box>
 
-        <TableContainer 
+        <TableContainer
           ref={tableContainerRef}
-          sx={{ 
+          sx={{
             flex: 1,
-            height: `calc(100vh - ${navButtonHeight + footerHeight + 80}px)`, // ナビゲーション、フッター、スクロールボタンの高さを引いた分
+            height: `calc(100vh - ${navButtonHeight + footerHeight + 80}px)`,
             width: '100%',
             overflowY: 'auto',
             '& .MuiTableCell-root': {
@@ -210,22 +302,22 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
           <Table stickyHeader size="medium" sx={{ width: '100%' }}>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ 
-                  fontWeight: 'bold', 
+                <TableCell sx={{
+                  fontWeight: 'bold',
                   width: '40%',
                   backgroundColor: theme.palette.primary.main,
                   color: 'white',
                   fontSize: headerFontSize
                 }}>食品名</TableCell>
-                <TableCell align="right" sx={{ 
-                  fontWeight: 'bold', 
+                <TableCell align="right" sx={{
+                  fontWeight: 'bold',
                   width: '30%',
                   backgroundColor: theme.palette.primary.main,
                   color: 'white',
                   fontSize: headerFontSize
                 }}>商品数</TableCell>
-                <TableCell padding="checkbox" align="center" sx={{ 
-                  fontWeight: 'bold', 
+                <TableCell padding="checkbox" align="center" sx={{
+                  fontWeight: 'bold',
                   width: '30%',
                   backgroundColor: theme.palette.primary.main,
                   color: 'white',
@@ -240,7 +332,7 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
                   hover
                   onClick={() => handleProductClick(product.id)}
                   selected={product.isChecked}
-                  sx={{ 
+                  sx={{
                     cursor: 'pointer',
                     bgcolor: !product.isChecked ? 'rgba(255, 244, 229, 0.7)' : 'inherit',
                     '&:last-child td, &:last-child th': { border: 0 },
@@ -253,19 +345,19 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
                     }
                   }}
                 >
-                  <TableCell 
-                    component="th" 
-                    scope="row" 
-                    sx={{ 
+                  <TableCell
+                    component="th"
+                    scope="row"
+                    sx={{
                       fontSize: cellFontSize,
                       fontWeight: 'bold'
                     }}
                   >
                     {product.name}
                   </TableCell>
-                  <TableCell 
-                    align="right" 
-                    sx={{ 
+                  <TableCell
+                    align="right"
+                    sx={{
                       fontSize: cellFontSize,
                       fontWeight: 'bold'
                     }}
@@ -277,9 +369,9 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
                       checked={product.isChecked}
                       onChange={() => handleCheckProduct(product.id)}
                       inputProps={{ 'aria-labelledby': `checkbox-${product.id}` }}
-                      sx={{ 
-                        '& .MuiSvgIcon-root': { 
-                          fontSize: isLandscape ? 40 : 36 
+                      sx={{
+                        '& .MuiSvgIcon-root': {
+                          fontSize: isLandscape ? 40 : 36
                         },
                         color: theme.palette.primary.main,
                         '&.Mui-checked': {
@@ -295,17 +387,17 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
         </TableContainer>
 
         {/* スクロールボタン（下） */}
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'center',
           backgroundColor: theme.palette.grey[100],
           borderTop: `1px solid ${theme.palette.grey[300]}`
         }}>
-          <IconButton 
-            onClick={scrollDown} 
-            size="large" 
-            sx={{ 
-              width: '100%', 
+          <IconButton
+            onClick={scrollDown}
+            size="large"
+            sx={{
+              width: '100%',
               borderRadius: 0,
               py: 0.5
             }}
@@ -314,33 +406,33 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
           </IconButton>
         </Box>
 
-        <Box 
-          p={isLandscape ? 2 : 1.5} 
-          bgcolor="#f5f5f5" 
-          sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
+        <Box
+          p={isLandscape ? 2 : 1.5}
+          bgcolor="#f5f5f5"
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
             alignItems: 'center',
             height: footerHeight,
             boxSizing: 'border-box'
           }}
         >
-          <Typography 
-            variant={isLandscape ? "h6" : "subtitle1"} 
-            align="left" 
-            sx={{ 
+          <Typography
+            variant={isLandscape ? "h6" : "subtitle1"}
+            align="left"
+            sx={{
               fontWeight: 'bold',
               fontSize: isLandscape ? '1.4rem' : '1.2rem'
             }}
           >
             確認済: {checkedCount}/{totalProducts} 品目 (合計{totalCount}個)
           </Typography>
-          <Button 
-            variant="contained" 
-            color="primary" 
+          <Button
+            variant="contained"
+            color="primary"
             size="large"
             onClick={handleComplete}
-            sx={{ 
+            sx={{
               py: isLandscape ? 1.5 : 1,
               px: isLandscape ? 6 : 4,
               fontSize: isLandscape ? '1.4rem' : '1.2rem',
@@ -352,11 +444,11 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
           </Button>
         </Box>
       </Paper>
-      
-      {/* 表の真ん中にアラートを表示 */}
+     
+      {/* アラート表示 */}
       <Backdrop
-        sx={{ 
-          color: '#fff', 
+        sx={{
+          color: '#fff',
           zIndex: (theme) => theme.zIndex.drawer + 1,
           position: 'absolute',
           top: 0,
@@ -369,10 +461,10 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
         onClick={() => setAlertOpen(false)}
       >
         <Fade in={alertOpen}>
-          <Alert 
+          <Alert
             severity={alertSeverity}
             onClose={() => setAlertOpen(false)}
-            sx={{ 
+            sx={{
               width: isLandscape ? '60%' : '85%',
               maxWidth: isLandscape ? '700px' : '500px',
               boxShadow: 6,

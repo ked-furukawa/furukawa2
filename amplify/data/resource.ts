@@ -1,14 +1,5 @@
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
 
-// const schema = a.schema({
-//   Todo: a
-//     .model({
-//       content: a.string(),
-//     })
-//     ,
-// });
-
-
 export const schema = a.schema({
   Order: a.model({ //店舗-商品名のテーブル　←注文情報、主に読み用
     date: a.string().required(),    // 注文日 '2025-05-22'
