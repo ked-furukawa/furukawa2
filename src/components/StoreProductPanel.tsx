@@ -154,7 +154,7 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
                     hover
                     selected={selectedProductIds.includes(product.id)}
                     sx={{
-                        bgcolor: !product.isChecked ? 'rgba(255, 244, 229, 0.7)' : 'inherit',
+                        // bgcolor: !product.isChecked ? 'rgba(255, 244, 229, 0.7)' : 'inherit',
                         cursor: 'pointer'
                     }}
                     onClick={() => onProductSelect(product.id)} // 行クリックでも選択できるようにする

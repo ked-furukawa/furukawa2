@@ -87,7 +87,7 @@ return (
                 hover 
                 selected={selectedStoreIds.includes(store.id)}
                 sx={{ 
-                    bgcolor: !store.isChecked ? 'rgba(255, 244, 229, 0.7)' : 'inherit' ,
+                    // bgcolor: !store.isChecked ? 'rgba(255, 244, 229, 0.7)' : 'inherit' ,
                     height: '60px' // 行の高さを大きくしてタップしやすく
                 }}
                 >
