@@ -128,5 +128,117 @@
 
     "color": "red",
     "boxCount": 100
+    },
+    {
+    "date": "2025-06-02",
+    "storeId": "021",
+    "storeName": "高田店",
+    "storeTc": "上越",
+    "color": "red",
+    "boxCount": 15
+    },
+    {
+    "date": "2025-06-02",
+    "storeId": "125",
+    "storeName": "直江津店",
+    "storeTc": "上越",
+    "color": "yellow",
+    "boxCount": 18
+    },
+    {
+    "date": "2025-06-02",
+    "storeId": "017",
+    "storeName": "青山店",
+    "storeTc": "中之島",
+    "color": "green",
+    "boxCount": 20
+    },
+    {
+    "date": "2025-06-02",
+    "storeId": "200",
+    "storeName": "柏崎店",
+    "storeTc": "上越",
+    "color": "blue",
+    "boxCount": 25
+    },
+    {
+    "date": "2025-06-02",
+    "storeId": "023",
+    "storeName": "長岡店",
+    "storeTc": "中之島",
+    "color": "yellow",
+    "boxCount": 17
+    },
+    {
+    "date": "2025-06-02",
+    "storeId": "027",
+    "storeName": "糸魚川店",
+    "storeTc": "上越",
+    "color": "green",
+    "boxCount": 30
+    },
+    {
+    "date": "2025-06-02",
+    "storeId": "018",
+    "storeName": "寺尾店",
+    "storeTc": "中之島",
+    "color": "red",
+    "boxCount": 12
+    },
+    {
+    "date": "2025-06-02",
+    "storeId": "024",
+    "storeName": "吉田店",
+    "storeTc": "上越",
+    "color": "blue",
+    "boxCount": 19
+    },
+    {
+    "date": "2025-06-02",
+    "storeId": "024",
+    "storeName": "吉田店",
+    "storeTc": "上越",
+    "color": "yellow",
+    "boxCount": 21
+    },
+    {
+    "date": "2025-06-02",
+    "storeId": "026",
+    "storeName": "能生店",
+    "storeTc": "上越",
+    "color": "green",
+    "boxCount": 14
+    },
+    {
+    "date": "2025-06-02",
+    "storeId": "026",
+    "storeName": "能生店",
+    "storeTc": "上越",
+    "color": "red",
+    "boxCount": 16
+    },
+    {
+    "date": "2025-06-02",
+    "storeId": "028",
+    "storeName": "妙高店",
+    "storeTc": "上越",
+    "color": "yellow",
+    "boxCount": 13
+    },
+    {
+    "date": "2025-06-02",
+    "storeId": "015",
+    "storeName": "新発田店",
+    "storeTc": "中之島",
+    "color": "blue",
+    "boxCount": 26
+    },
+    {
+    "date": "2025-06-02",
+    "storeId": "029",
+    "storeName": "三条店",
+    "storeTc": "上越",
+    "color": "red",
+    "boxCount": 24
     }
 ]
