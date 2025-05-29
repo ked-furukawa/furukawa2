@@ -18,6 +18,11 @@ import StoreList from '../components/StoreList';
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../../amplify/data/resource";
 
+
+// 型定義に BoxColor を追加
+type BoxColor = 'green' | 'red' | 'blue' | 'yellow';
+
+
 // Amplify クライアントの生成
 const dataClient = generateClient<Schema>();
 
@@ -53,7 +58,8 @@ export const BoxQuantityInput: React.FC = () => {
   const [checkError, setCheckError] = useState<string | null>(null);
   const [completedStoreIds, setCompletedStoreIds] = useState<string[]>([]);
   const [allStores, setAllStores] = useState<Store[]>([]);
-  
+  const [selectedColor, setSelectedColor] = useState<BoxColor>('green');
+
   // 全店舗データを取得する関数
   const fetchAllStores = async (): Promise<Store[]> => {
     try {
@@ -230,6 +236,11 @@ export const BoxQuantityInput: React.FC = () => {
     // 確認ダイアログを表示
     setShowConfirmDialog(true);
   };
+  
+  // 色変更ハンドラー
+  const handleColorChange = (color: BoxColor) => {
+    setSelectedColor(color);
+  };
     
   // 商品の選択を処理する関数
   const handleProductSelect = (productId: string) => {
@@ -262,13 +273,13 @@ export const BoxQuantityInput: React.FC = () => {
       for (const productId of selectedProductIds) {
         const product = products.find(p => p.id === productId);
         if (product && product.quantity > 0) {
-          // 箱データを保存
+          // 箱データを保存（色情報を追加）
           const boxData = {
             date: testDate,
             storeId: selectedStoreId,
             storeName: storeData.storeName,
             storeTc: storeData.storeTc,
-            color: 'green', // デフォルト色を設定
+            color: selectedColor, // 選択された色を使用
             boxCount: product.quantity,
             boxCreatedBy: product.itemName
           };
@@ -287,6 +298,7 @@ export const BoxQuantityInput: React.FC = () => {
       // 選択をクリア
       setSelectedProductIds([]);
       setInputValue('');
+      // 色はリセットしない（次の入力でも同じ色を使用できるようにする）
       
     } catch (err) {
       setError('データの保存に失敗しました');
@@ -359,6 +371,8 @@ export const BoxQuantityInput: React.FC = () => {
                 onChange={handleInputChange}
                 onEnter={handleQuantityUpdate}
                 onClear={() => setInputValue('')}
+                selectedColor={selectedColor}
+                onColorChange={handleColorChange}
               />
             </Box>
           </Box>
