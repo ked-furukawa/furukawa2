@@ -1,6 +1,24 @@
-// src/components/Keypad.tsx
-import React from 'react';
-import { Box, Button, TextField, Paper, Typography } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Button, TextField, Paper, Typography, Menu, MenuItem, Tooltip } from '@mui/material';
+
+// 色の定義
+type BoxColor = 'green' | 'red' | 'blue' | 'yellow';
+
+// 色の表示名マッピング
+const colorNames: Record<BoxColor, string> = {
+  green: '緑',
+  red: '赤',
+  blue: '青',
+  yellow: '黄'
+};
+
+// 色のスタイルマッピング
+const colorStyles: Record<BoxColor, { bg: string, text: string }> = {
+  green: { bg: '#4caf50', text: 'white' },
+  red: { bg: '#f44336', text: 'white' },
+  blue: { bg: '#2196f3', text: 'white' },
+  yellow: { bg: '#ffeb3b', text: 'black' }
+};
 
 // コンポーネントのProps型定義
 interface KeypadProps {
@@ -8,6 +26,9 @@ interface KeypadProps {
   onChange: (value: string) => void;
   onEnter: () => void;
   onClear: () => void;
+  // 色関連のpropsを追加
+  selectedColor?: BoxColor;
+  onColorChange?: (color: BoxColor) => void;
 }
 
 /**
@@ -17,38 +38,131 @@ export const Keypad: React.FC<KeypadProps> = ({
   value,
   onChange,
   onEnter,
-  onClear, 
+  onClear,
+  selectedColor = 'green', // デフォルト色は緑
+  onColorChange = () => {}, // デフォルトの空関数
 }) => {
+  // 色選択メニューの状態
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+
   // 数字ボタンクリック時のハンドラー
   const handleNumberClick = (num: string) => {
     onChange(value + num);
   };
 
+  // 色選択メニューを開く
+  const handleColorButtonClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  // 色選択メニューを閉じる
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  // 色を選択
+  const handleColorSelect = (color: BoxColor) => {
+    onColorChange(color);
+    handleClose();
+  };
+
+  // 現在選択中の色のスタイル
+  const currentColorStyle = colorStyles[selectedColor];
+
   return (
     <Paper 
       elevation={3} 
       sx={{ 
-        p: 4,
         borderRadius: 2,
-        width: '100%',  // 親要素の幅に合わせる
-        maxWidth: 500,  // 最大幅を指定（必要に応じて調整）
-  }}
+        overflow: 'hidden',
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column'
+      }}
     >
-      {/* 入力表示エリア */}
-      <TextField
-        fullWidth
-        variant="outlined"
-        value={value}
-        placeholder="0"
-        InputProps={{
-          readOnly: true,
-          sx: { input: { textAlign: 'right', fontSize: '1.8rem' } }
+      {/* ヘッダー部分を直接追加 */}
+      <Box
+        sx={{
+          p: 1.5,
+          backgroundColor: '#1976d2', // MUIのprimary色
+          color: 'white',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.2)'
         }}
-        sx={{ mb: 3 }}
-      />
+      >
+        <Typography variant="h6" fontWeight="medium">
+          箱数入力
+        </Typography>
+      </Box>
+      {/* 入力エリアとテンキー */}
+      <Box sx={{ p: 4, flex: 1, display: 'flex', flexDirection: 'column' }}>
+        {/* 入力表示エリア */}
+        <TextField
+          fullWidth
+          variant="outlined"
+          value={value}
+          placeholder="0"
+          InputProps={{
+            readOnly: true,
+            sx: { input: { textAlign: 'right', fontSize: '1.8rem' } }
+          }}
+          sx={{ mb: 3 }}
+        />
 
-      {/* テンキー配置 */}
-      <Box>
+      {/* 色選択ボタン */}
+      <Box mb={2}>
+        <Tooltip title="クリックして箱の色を選択">
+          <Button
+            variant="contained"
+            fullWidth
+            onClick={handleColorButtonClick}
+            sx={{
+              backgroundColor: currentColorStyle.bg,
+              color: currentColorStyle.text,
+              '&:hover': {
+                backgroundColor: currentColorStyle.bg,
+                opacity: 0.9
+              },
+              height: 50,
+              fontSize: '1rem'
+            }}
+          >
+            箱の色: {colorNames[selectedColor]}
+          </Button>
+        </Tooltip>
+        
+        {/* 色選択メニュー */}
+        <Menu
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleClose}
+        >
+          {(Object.keys(colorNames) as BoxColor[]).map((color) => (
+            <MenuItem 
+              key={color} 
+              onClick={() => handleColorSelect(color)}
+              sx={{
+                backgroundColor: colorStyles[color].bg,
+                color: colorStyles[color].text,
+                '&:hover': {
+                  backgroundColor: colorStyles[color].bg,
+                  opacity: 0.8
+                },
+                minWidth: 100,
+                justifyContent: 'center',
+                margin: '4px',
+                borderRadius: '4px'
+              }}
+            >
+              {colorNames[color]}
+            </MenuItem>
+          ))}
+        </Menu>
+      </Box>
+
+       {/* テンキー配置 */}
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
         {/* 1行目: 7-8-9 */}
         <Box display="flex" gap={1} mb={1}>
           <Button 
@@ -157,10 +271,11 @@ export const Keypad: React.FC<KeypadProps> = ({
       </Box>
 
       {/* ステータス表示 */}
-      <Box mt={3}>
-        <Typography variant="body1" align="center" color="text.secondary">
-          入力中の箱数: {value || 0}
-        </Typography>
+        <Box mt={3}>
+          <Typography variant="body1" align="center" color="text.secondary">
+            入力中の箱数: {value || 0}
+          </Typography>
+        </Box>
       </Box>
     </Paper>
   );

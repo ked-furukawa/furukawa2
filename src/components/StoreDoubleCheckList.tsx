@@ -9,8 +9,7 @@ TableHead,
 TableRow,
 Typography,
 Checkbox,
-Box,
-Chip
+Box
 } from '@mui/material';
 import { Store } from '../types';
 
@@ -32,15 +31,15 @@ error = null,
 boxCounts = {}
 }) => {
 if (loading) {
-    return <Typography align="center" py={3}>読み込み中...</Typography>;
+    return <Typography>読み込み中...</Typography>;
 }
 
 if (error) {
-    return <Typography color="error" align="center" py={3}>{error}</Typography>;
+    return <Typography color="error">{error}</Typography>;
 }
 
 if (stores.length === 0) {
-    return <Typography align="center" py={3}>店舗がありません</Typography>;
+    return <Typography>店舗がありません</Typography>;
 }
 
 // 各店舗の合計箱数を計算
@@ -62,10 +61,11 @@ return (
     >
     <TableContainer 
         sx={{
-        maxHeight: 'calc(100vh - 200px)',
+        maxHeight: 'calc(100vh - 280px)',
         overflowY: 'auto',
         '& .MuiTableCell-root': {
-            padding: '8px 16px'
+        padding: '12px 16px', // セルのパディングを大きくして操作しやすく
+        fontSize: '1.1rem' // フォントサイズを大きく
         }
         }}
     >
@@ -75,7 +75,6 @@ return (
             <TableCell>店舗名</TableCell>
             <TableCell align="center">店舗番号</TableCell>
             <TableCell align="center">箱数</TableCell>
-            <TableCell align="center">状態</TableCell>
             <TableCell align="center">選択</TableCell>
             </TableRow>
         </TableHead>
@@ -88,23 +87,18 @@ return (
                 hover 
                 selected={selectedStoreIds.includes(store.id)}
                 sx={{ 
-                    bgcolor: !store.isCompleted ? 'rgba(255, 244, 229, 0.7)' : 'inherit' 
+                    // bgcolor: !store.isChecked ? 'rgba(255, 244, 229, 0.7)' : 'inherit' ,
+                    height: '60px' // 行の高さを大きくしてタップしやすく
                 }}
                 >
                 <TableCell>{store.storeName}</TableCell>
                 <TableCell align="center">{store.storeNumber}</TableCell>
                 <TableCell align="center">{storeBoxCount}</TableCell>
                 <TableCell align="center">
-                    <Chip 
-                    label={store.isCompleted ? "確定済" : "未確定"} 
-                    color={store.isCompleted ? "success" : "warning"}
-                    size="small"
-                    />
-                </TableCell>
-                <TableCell align="center">
                     <Checkbox 
                     checked={selectedStoreIds.includes(store.id)} 
                     onChange={() => onStoreSelect(store.id)} 
+                     sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }} // チェックボックスを大きく
                     />
                 </TableCell>
                 </TableRow>
