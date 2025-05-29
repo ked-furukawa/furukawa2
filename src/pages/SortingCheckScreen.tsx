@@ -281,47 +281,57 @@ const fetchProducts = async () => {
           }}
         >
           <Table stickyHeader size="medium" sx={{ width: '100%' }}>
-          <TableHead>
-            <TableRow
-              sx={{
-                height: isLandscape ? '120px' : '64px', // 高さを追加（例：従来より高め）
-              }}
-            >
-              <TableCell sx={{
-                fontWeight: 'bold',
-                width: '40%',
-                backgroundColor: theme.palette.primary.main,
-                color: 'white',
-                fontSize: headerFontSize,
-                paddingTop: isLandscape ? 3 : 2,
-                paddingBottom: isLandscape ? 3 : 2
-              }}>
-                食品名
-              </TableCell>
-                <TableCell align="right" sx={{
-                  fontWeight: 'bold',
-                  width: '30%',
-                  backgroundColor: theme.palette.primary.main,
-                  color: 'white',
-                  fontSize: headerFontSize,
-                  paddingTop: isLandscape ? 3 : 2,
-                  paddingBottom: isLandscape ? 3 : 2
-              }}>
-                商品数
-              </TableCell>
-              <TableCell padding="checkbox" align="center" sx={{
-                fontWeight: 'bold',
-                width: '30%',
-                backgroundColor: theme.palette.primary.main,
-                color: 'white',
-                fontSize: headerFontSize,
-                paddingTop: isLandscape ? 3 : 2,
-                paddingBottom: isLandscape ? 3 : 2
-              }}>
-                確認
-              </TableCell>
-            </TableRow>
-          </TableHead>
+            <TableHead>
+              <TableRow
+                sx={{
+                  height: isLandscape ? '120px' : '64px',
+                }}
+              >
+                <TableCell
+                  sx={{
+                    fontWeight: 'bold',
+                    width: '40%',
+                    backgroundColor: theme.palette.primary.main,
+                    color: 'white',
+                    fontSize: headerFontSize,
+                    verticalAlign: 'bottom', // 追加
+                    paddingBottom: '12px', // 任意の余白を追加
+                  }}
+                >
+                  食品名
+                </TableCell>
+                <TableCell
+                  align="right"
+                  sx={{
+                    fontWeight: 'bold',
+                    width: '30%',
+                    backgroundColor: theme.palette.primary.main,
+                    color: 'white',
+                    fontSize: headerFontSize,
+                    verticalAlign: 'bottom', // 追加
+                    paddingBottom: '12px',
+                  }}
+                >
+                  商品数
+                </TableCell>
+                <TableCell
+                  padding="checkbox"
+                  align="center"
+                  sx={{
+                    fontWeight: 'bold',
+                    width: '30%',
+                    backgroundColor: theme.palette.primary.main,
+                    color: 'white',
+                    fontSize: headerFontSize,
+                    verticalAlign: 'bottom', // 追加
+                    paddingBottom: '12px',
+                  }}
+                >
+                  確認
+                </TableCell>
+              </TableRow>
+            </TableHead>
+
 
             <TableBody>
               {products.map((product) => (
@@ -411,12 +421,15 @@ const fetchProducts = async () => {
             color="primary"
             size="large"
             onClick={handleComplete}
+            disabled={!products.every(product => product.isChecked)} // ✅ 追加
             sx={{
               py: isLandscape ? 1.5 : 1,
               px: isLandscape ? 6 : 4,
               fontSize: isLandscape ? '1.4rem' : '1.2rem',
               fontWeight: 'bold',
-              minWidth: isLandscape ? '220px' : '180px'
+              minWidth: isLandscape ? '220px' : '180px',
+              opacity: !products.every(p => p.isChecked) ? 0.5 : 1, // グレーアウト風見た目（任意）
+              pointerEvents: !products.every(p => p.isChecked) ? 'none' : 'auto' // 任意
             }}
           >
             確認完了
