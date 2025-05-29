@@ -155,5 +155,106 @@
         "itemName": "バジル",
         "itemFormalName": "バジルチキンと根菜キット",
         "orderCount": 2
+    },
+    {
+    "date": "2025-06-02",
+    "storeId": "026",
+    "storeName": "能生店",
+    "storeTc": "上越",
+    "itemId": "210091",
+    "itemName": "親子",
+    "itemFormalName": "だし香る親子丼",
+    "orderCount": 3
+    },
+    {
+    "date": "2025-06-02",
+    "storeId": "017",
+    "storeName": "青山店",
+    "storeTc": "中之島",
+    "itemId": "210004",
+    "itemName": "トマト",
+    "itemFormalName": "ミニトマト",
+    "orderCount": 2
+    },
+    {
+    "date": "2025-06-02",
+    "storeId": "020",
+    "storeName": "柏崎店",
+    "storeTc": "上越",
+    "itemId": "210082",
+    "itemName": "バジル",
+    "itemFormalName": "バジルチキンと根菜キット",
+    "orderCount": 4
+    },
+    {
+    "date": "2025-06-02",
+    "storeId": "018",
+    "storeName": "寺尾店",
+    "storeTc": "中之島",
+    "itemId": "210068",
+    "itemName": "とりてん",
+    "itemFormalName": "弁当用とり天キット",
+    "orderCount": 1
+    },
+    {
+    "date": "2025-06-02",
+    "storeId": "028",
+    "storeName": "妙高店",
+    "storeTc": "上越",
+    "itemId": "210001",
+    "itemName": "かぼちゃ",
+    "itemFormalName": "カボチャスライス",
+    "orderCount": 2
+    },
+    {
+    "date": "2025-06-02",
+    "storeId": "015",
+    "storeName": "新発田店",
+    "storeTc": "中之島",
+    "itemId": "210004",
+    "itemName": "トマト",
+    "itemFormalName": "ミニトマト",
+    "orderCount": 3
+    },
+    {
+    "date": "2025-06-02",
+    "storeId": "025",
+    "storeName": "直江津店",
+    "storeTc": "上越",
+    "itemId": "210001",
+    "itemName": "かぼちゃ",
+    "itemFormalName": "カボチャスライス",
+    "orderCount": 5
+    },
+    {
+    "date": "2025-06-02",
+    "storeId": "019",
+    "storeName": "内野店",
+    "storeTc": "中之島",
+    "itemId": "210082",
+    "itemName": "バジル",
+    "itemFormalName": "バジルチキンと根菜キット",
+    "orderCount": 1
+    },
+    {
+    "date": "2025-06-02",
+    "storeId": "022",
+    "storeName": "巻店",
+    "storeTc": "中之島",
+    "itemId": "210091",
+    "itemName": "親子",
+    "itemFormalName": "だし香る親子丼",
+    "orderCount": 2
+    },
+    {
+    "date": "2025-06-02",
+    "storeId": "021",
+    "storeName": "高田店",
+    "storeTc": "上越",
+    "itemId": "210068",
+    "itemName": "とりてん",
+    "itemFormalName": "弁当用とり天キット",
+    "orderCount": 4
     }
+
 ]
