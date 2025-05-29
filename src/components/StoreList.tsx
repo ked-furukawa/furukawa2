@@ -328,13 +328,21 @@ const StoreList: React.FC<StoreListProps> = ({
                       }}
                     >
                       <ListItemText 
-                        primary={`${store.storeName}`} 
-                        secondary={`店舗番号: ${store.storeNumber}`}
+                        primary={` ${store.storeNumber}`} 
+                          primaryTypographyProps={{ 
+                          fontSize: '1.4rem',  // 店舗番号のフォントサイズを指定
+                          fontWeight: 'bold'   // 太字にする場合
+                        }}
+                        secondary={`${store.storeName}`} 
+                        secondaryTypographyProps={{ 
+                          fontSize: '0.8rem'   // 店舗名のフォントサイズを指定
+                        }}
                       />
                       {completedStoreIds.includes(store.id) && (
                         <CheckCircleIcon color="success" fontSize="small" />
                       )}
                     </ListItemButton>
+                    
                   ))}
                 </List>
               </Collapse>
