@@ -22,7 +22,6 @@ import {
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from "../../amplify/data/resource";
 
-// Amplifyクライアントの初期化
 const client = generateClient<Schema>();
 
 // 商品データの型定義（Orderモデルベース）
@@ -294,8 +293,8 @@ const fetchProducts = async () => {
                     backgroundColor: theme.palette.primary.main,
                     color: 'white',
                     fontSize: headerFontSize,
-                    verticalAlign: 'bottom', // 追加
-                    paddingBottom: '12px', // 任意の余白を追加
+                    verticalAlign: 'bottom', 
+                    paddingBottom: '12px', 
                   }}
                 >
                   食品名
@@ -308,7 +307,7 @@ const fetchProducts = async () => {
                     backgroundColor: theme.palette.primary.main,
                     color: 'white',
                     fontSize: headerFontSize,
-                    verticalAlign: 'bottom', // 追加
+                    verticalAlign: 'bottom', 
                     paddingBottom: '12px',
                   }}
                 >
@@ -323,7 +322,7 @@ const fetchProducts = async () => {
                     backgroundColor: theme.palette.primary.main,
                     color: 'white',
                     fontSize: headerFontSize,
-                    verticalAlign: 'bottom', // 追加
+                    verticalAlign: 'bottom', 
                     paddingBottom: '12px',
                   }}
                 >
