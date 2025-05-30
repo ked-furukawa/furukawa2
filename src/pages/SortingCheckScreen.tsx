@@ -28,7 +28,7 @@ const client = generateClient<Schema>();
 // 商品データの型定義（Orderモデルベース）
 interface Product {
   id: string; // date-storeId-itemIdの組み合わせ
-  name: string; // itemNameまたはitemFormalName
+  name: string; // itemNameまたはitemName
   expectedCount: number; // orderCount
   isChecked: boolean; // ローカル状態で管理
   itemId: string;
@@ -92,7 +92,7 @@ const fetchProducts = async () => {
       const groupedMap = new Map<string, Product>();
 
       for (const order of data) {
-        const key = order.itemFormalName || `商品ID: ${order.itemId}`;
+        const key = order.itemName || `商品ID: ${order.itemId}`;
 
         if (groupedMap.has(key)) {
           const existing = groupedMap.get(key)!;
