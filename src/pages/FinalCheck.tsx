@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Box, Typography } from "@mui/material";
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../../amplify/data/resource";
 
@@ -27,9 +31,16 @@ interface StoreBoxSummary {
 
 export const FinalCheck = () => {
     const [storeData, setStoreData] = useState<StoreBoxSummary[]>([]);  
+    const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
 
     useEffect(() => {       
-    const sub = boxClient.models.Box.observeQuery().subscribe({ //Boxテーブルの変更をサブスクライブ
+    const sub = boxClient.models.Box.observeQuery({
+    filter: {
+        date: {
+        eq: selectedDate?.toISOString().split('T')[0] || ''
+        }
+    }
+    }).subscribe({ //Boxテーブルの変更をサブスクライブ
         next: ({ items }) => { //変更があった際に呼び出される処理、filterしてないのでBoxテーブル全体がitemsに入っている
             const storeMap = items.filter((item:Box)=>item !=null)
             .map(item => ({ //itemsの中身をこの画面で使いたい形にマッピング
@@ -52,7 +63,35 @@ export const FinalCheck = () => {
     });
 
     return () => sub.unsubscribe();
-    }, []);
+    }, [selectedDate]);
+
+    const DateSelector = () => { //カレンダーで日付指定
+
+    return (
+        <Box
+        sx={{
+            position: 'absolute',
+            top: 16,
+            right: 16,
+            zIndex: 1000,
+        }}
+        >
+        <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <DatePicker
+            label="日付を選択"
+            value={selectedDate}
+            onChange={(newDate) => setSelectedDate(newDate)}
+            slotProps={{
+                textField: {
+                size: 'small',
+                variant: 'outlined',
+                },
+            }}
+            />
+        </LocalizationProvider>
+        </Box>
+    );
+    };
 
 
   // 店舗データの集計
@@ -156,14 +195,17 @@ export const FinalCheck = () => {
     <Box sx={{ //表部分の親Box
         display: 'flex',
         flexDirection: 'row', // ← 横並びにする
-        justifyContent: 'flex-start',
-        alignItems: 'flex-start',
+        justifyContent: 'flex-end',
+        alignItems: 'flex-end',
         width: '100%',
         height: '100vh',
         pl: 0,
+        ml:'100px',
+        mt:'80px',
         gap: 3, // 間のスペース
 
     }}>
+        <DateSelector />
     <Box sx={{display: 'flex', //左表Box
         justifyContent: 'flex-start', flexDirection: 'column',
         alignItems: 'flex-start', minHeight:'100vh', width: '100%', p: 3,  }}>
