@@ -43,13 +43,16 @@ interface SortingCheckScreenProps {
   onComplete?: () => void;
   targetDate?: string; // 対象日付（YYYY-MM-DD形式）
   targetStoreId?: string; // 対象店舗ID
+    navigateTo: (pageKey: string) => void; // ← 追加
 }
+
 
 const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
   onProductClick = () => {},
   onComplete = () => {},
   targetDate = '2025-06-02', 
-  targetStoreId = '019' 
+  targetStoreId = '019', 
+  navigateTo // 
 }) => {
   const theme = useTheme();
   const isLandscape = useMediaQuery('(orientation: landscape)');
@@ -490,7 +493,7 @@ const fetchProducts = async () => {
                   size="large"
                   onClick={() => {
                     setAlertOpen(false);
-                    onComplete(); // 次の工程に進む
+                    navigateTo('BoxQuantityInput'); // 任意の画面キーへ遷移
                   }}
                   sx={{ minWidth: 140, fontSize: '1rem', px: 3, py: 1 }}
                 >
