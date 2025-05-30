@@ -288,7 +288,7 @@ export const BoxQuantityInput: React.FC = () => {
     setInputValue(value);
   };
 
-  // 次の店舗へ移動する関数
+  // 次の店舗へ移動する関数（修正版）
     const navigateToNextStore = async () => {
       if (!nextStore || !selectedStoreId || !storeData) return;
       
@@ -302,32 +302,57 @@ export const BoxQuantityInput: React.FC = () => {
         for (const productId of selectedProductIds) {
           const product = products.find(p => p.id === productId);
           if (product && product.quantity > 0) {
-            try {
-              // 箱数を更新
-              await dataClient.models.Box.update({
-                date: testDate,
-                storeId: selectedStoreId,
-                storeName: storeData.storeName,
-                storeTc: storeData.storeTc,
-                color: selectedColor,
-                boxCount: product.quantity,
-                boxCreatedBy: product.itemName
-              });
+            // 既存の箱データを検索
+            const { data: existingBoxes } = await dataClient.models.Box.list({
+              filter: { 
+                date: { eq: testDate },
+                storeId: { eq: selectedStoreId },
+                boxCreatedBy: { eq: product.itemName }
+              }
+            });
+            
+            // 箱データを準備
+            const boxData = {
+              date: testDate,
+              storeId: selectedStoreId,
+              storeName: storeData.storeName,
+              storeTc: storeData.storeTc,
+              color: selectedColor,
+              boxCount: product.quantity,
+              boxCreatedBy: product.itemName
+            };
+            
+            if (existingBoxes.length > 0) {
+              // 既存データがある場合は更新
+              console.log(`既存の箱データを更新: ${product.itemName}`);
               
-              console.log(`箱数を更新しました: ${product.itemName}, 数量: ${product.quantity}`);
-            } catch (updateError) {
-              // 更新に失敗した場合（レコードが存在しない場合）は新規作成
-              console.log(`更新に失敗したため新規作成します: ${product.itemName}`);
+              try {
+                // プライマリキーを使用して更新（date と storeId はプライマリキー）
+                await dataClient.models.Box.update({
+                  // プライマリキーを指定
+                  date: testDate,
+                  storeId: selectedStoreId,
+                  boxCreatedBy: product.itemName,
+                  // 更新したい値
+                  boxCount: product.quantity,
+                  color: selectedColor
+                });
+                console.log(`箱数を更新しました: ${product.itemName}, 数量: ${product.quantity}`);
+              } catch (updateError) {
+                console.error(`箱数の更新に失敗しました: ${product.itemName}`, updateError);
+                setError(`商品 ${product.itemName} の箱数更新に失敗しました`);
+              }
+            } else {
+              // 新規作成
+              console.log(`新規に箱データを作成: ${product.itemName}`);
               
-              await dataClient.models.Box.create({
-                date: testDate,
-                storeId: selectedStoreId,
-                storeName: storeData.storeName,
-                storeTc: storeData.storeTc,
-                color: selectedColor,
-                boxCount: product.quantity,
-                boxCreatedBy: product.itemName
-              });
+              try {
+                await dataClient.models.Box.create(boxData);
+                console.log(`箱数を新規登録しました: ${product.itemName}, 数量: ${product.quantity}`);
+              } catch (createError) {
+                console.error(`箱数の新規作成に失敗しました: ${product.itemName}`, createError);
+                setError(`商品 ${product.itemName} の箱数登録に失敗しました`);
+              }
             }
           }
         }
@@ -355,7 +380,7 @@ export const BoxQuantityInput: React.FC = () => {
         
       } catch (err) {
         setError('データの保存に失敗しました');
-        console.error(err);
+        console.error('データ保存エラー:', err);
       } finally {
         setSavingData(false);
         setShowConfirmDialog(false);

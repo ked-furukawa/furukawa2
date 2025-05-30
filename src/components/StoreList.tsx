@@ -121,18 +121,21 @@ const StoreList: React.FC<StoreListProps> = ({
     fetchBoxData();
     
     // リアルタイム更新のためのサブスクリプション設定
-    const subscription = dataClient.models.Box.observeQuery().subscribe({
-      next: ({ items }) => {
-        const formattedBoxData = items.map(box => ({
-          storeId: box.storeId,
-          boxCount: box.boxCount || 0,
-          color: (box.color as BoxColor) || 'green'
-        }));
-        
-        setBoxData(formattedBoxData);
-      },
-      error: (err) => console.error('箱数データの監視に失敗しました:', err)
-    });
+    const subscription = dataClient.models.Box.observeQuery({
+        filter: { date: { eq: "2025-06-02" } }
+      }).subscribe({
+        next: ({ items }) => {
+          console.log('Box データ更新を検知:', items);
+          const formattedBoxData = items.map(box => ({
+            storeId: box.storeId,
+            boxCount: box.boxCount || 0,
+            color: (box.color as BoxColor) || 'green'
+          }));
+          
+          setBoxData(formattedBoxData);
+        },
+        error: (err) => console.error('箱数データの監視に失敗しました:', err)
+      });
     
     // クリーンアップ関数
     return () => subscription.unsubscribe();
@@ -246,15 +249,14 @@ const StoreList: React.FC<StoreListProps> = ({
     }));
   };
 
-  // 店舗の箱数情報を取得する関数
   const getStoreBoxInfo = (storeId: string): BoxData | undefined => {
-    // まず自前で取得した箱数データから検索
-    const boxInfo = boxData.find(item => item.storeId === storeId);
-    if (boxInfo) return boxInfo;
-    
-    // なければpropsから渡されたcompletedStoresから検索
-    return completedStores.find(item => item.storeId === storeId);
-  };
+      // まずpropsから渡されたcompletedStoresから検索（最新の情報）
+      const completedStoreInfo = completedStores.find(item => item.storeId === storeId);
+      if (completedStoreInfo) return completedStoreInfo;
+      
+      // なければ自前で取得した箱数データから検索
+      return boxData.find(item => item.storeId === storeId);
+    };
 
   // ローディング表示
   if (loading) {
