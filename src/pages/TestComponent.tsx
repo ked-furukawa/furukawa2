@@ -94,7 +94,7 @@ const handleDeleteAll = async () => {
             );
         }
 
-        alert('全Orderデータを削除しました');
+        alert('全Boxデータを削除しました');
         } catch (err) {
         console.error('削除エラー:', err);
         alert('削除に失敗しました');
