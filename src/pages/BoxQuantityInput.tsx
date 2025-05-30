@@ -302,19 +302,33 @@ export const BoxQuantityInput: React.FC = () => {
         for (const productId of selectedProductIds) {
           const product = products.find(p => p.id === productId);
           if (product && product.quantity > 0) {
-            // 箱データを保存（色情報を追加）
-            const boxData = {
-              date: testDate,
-              storeId: selectedStoreId,
-              storeName: storeData.storeName,
-              storeTc: storeData.storeTc,
-              color: selectedColor, // 選択された色を使用
-              boxCount: product.quantity,
-              boxCreatedBy: product.itemName
-            };
-            
-            // DynamoDB に保存
-            await dataClient.models.Box.create(boxData);
+            try {
+              // 箱数を更新
+              await dataClient.models.Box.update({
+                date: testDate,
+                storeId: selectedStoreId,
+                storeName: storeData.storeName,
+                storeTc: storeData.storeTc,
+                color: selectedColor,
+                boxCount: product.quantity,
+                boxCreatedBy: product.itemName
+              });
+              
+              console.log(`箱数を更新しました: ${product.itemName}, 数量: ${product.quantity}`);
+            } catch (updateError) {
+              // 更新に失敗した場合（レコードが存在しない場合）は新規作成
+              console.log(`更新に失敗したため新規作成します: ${product.itemName}`);
+              
+              await dataClient.models.Box.create({
+                date: testDate,
+                storeId: selectedStoreId,
+                storeName: storeData.storeName,
+                storeTc: storeData.storeTc,
+                color: selectedColor,
+                boxCount: product.quantity,
+                boxCreatedBy: product.itemName
+              });
+            }
           }
         }
         
@@ -322,16 +336,13 @@ export const BoxQuantityInput: React.FC = () => {
         const totalBoxCount = parseInt(inputValue, 10) || 0;
         
         // 完了済み店舗リストに追加（既に追加されている場合は更新）
-        // この呼び出しは1回だけにする
         setCompletedStores(prev => {
-          // 既存の店舗を除外
           setRefreshKey(prev => prev + 1);
           const filteredStores = prev.filter(store => store.storeId !== selectedStoreId);
-          // 新しい店舗情報を追加（色情報も含める）
           return [...filteredStores, {
             storeId: selectedStoreId,
             boxCount: totalBoxCount,
-            color: selectedColor // 選択された色を保存
+            color: selectedColor
           }];
         });
         
@@ -341,7 +352,6 @@ export const BoxQuantityInput: React.FC = () => {
         // 選択をクリア
         setSelectedProductIds([]);
         setInputValue('');
-        // 色はリセットしない（次の入力でも同じ色を使用できるようにする）
         
       } catch (err) {
         setError('データの保存に失敗しました');
