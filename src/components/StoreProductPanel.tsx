@@ -1,0 +1,198 @@
+// src/components/StoreProductPanel.tsx
+import React from 'react';
+import {
+Box,
+Typography,
+Paper,
+Skeleton,
+Table,
+TableBody,
+TableCell,
+TableContainer,
+TableHead,
+TableRow,
+Checkbox,
+// Divider
+} from '@mui/material';
+
+// 商品の型定義
+interface Product {
+id: string;
+itemId: string;
+itemName: string;
+itemFormalName: string;
+orderCount: number;
+quantity: number;
+isChecked: boolean;
+}
+
+// コンポーネントのProps型定義
+interface StoreProductPanelProps {
+storeNumber: string;
+storeName: string;
+products: Product[];
+selectedProductIds?: string[];
+onProductSelect: (productId: string) => void;
+loading?: boolean;
+error?: string | null;
+}
+
+/**
+ * 店舗情報と商品リストを統合したパネルコンポーネント
+ */
+export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
+    storeNumber,
+    storeName,
+    products,
+    selectedProductIds = [],
+    onProductSelect,
+    loading = false,
+    error = null
+    }) => {
+    return (
+        <Paper
+        elevation={3}
+        sx={{
+            borderRadius: 2,
+            overflow: 'hidden',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column'
+        }}
+        >
+        {/* ヘッダー部分を直接追加 */}
+        <Box
+            sx={{
+            p: 1.5,
+            backgroundColor: '#1976d2', // MUIのprimary色
+            color: 'white',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.2)'
+            }}
+        >
+            <Typography variant="h6" fontWeight="medium">
+            商品管理
+            </Typography>
+        </Box>
+
+        {/* 店舗情報ヘッダー部分 */}
+        <Box
+            sx={{
+            p: 2,
+            backgroundColor: '#f5f5f5',
+            borderBottom: '1px solid rgba(224, 224, 224, 1)'
+            }}
+        >
+            {loading ? (
+            // ローディング中の表示
+            <Box>
+                <Skeleton variant="text" width="30%" height={40} />
+                <Skeleton variant="text" width="60%" height={30} />
+            </Box>
+            ) : (
+            // 店舗情報の表示
+            <Box>
+            <Box display="flex" alignItems="center" mb={1}>
+                {/* 店舗番号を太字で表示 */}
+                <Typography
+                variant="h4"  // サイズを大きくして目立たせる
+                component="span"
+                sx={{
+                    px: 1.5,
+                    py: 0.5,
+                    borderRadius: 1,
+                    fontWeight: 'bold',  // 太字に変更
+                    mr: 2
+                }}
+                >
+                {storeNumber || '不明'}
+                </Typography>
+                
+                {/* 店舗名を小さく表示 */}
+                <Typography
+                variant="subtitle1"  // サイズを小さく変更
+                component="h1"
+                fontWeight="medium"  // やや軽めの太さに
+                >
+                {storeName || '店舗名なし'}
+                </Typography>
+            </Box>
+            </Box>
+            )}
+        </Box>
+
+    {/* エラー表示 */}
+    {error && (
+        <Box sx={{ p: 2, color: 'error.main' }}>
+        <Typography>{error}</Typography>
+        </Box>
+    )}
+
+    {/* 商品リスト部分 */}
+    <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        {loading ? (
+        <Box sx={{ p: 2 }}>
+            <Typography>読み込み中...</Typography>
+        </Box>
+        ) : products.length === 0 ? (
+        <Box sx={{ p: 2 }}>
+            <Typography>商品がありません</Typography>
+        </Box>
+        ) : (
+        <TableContainer sx={{ flex: 1, overflowY: 'auto' }}>
+            <Table stickyHeader size="small">
+            <TableHead>
+                <TableRow>
+                <TableCell>商品名</TableCell>
+                <TableCell align="right">個数</TableCell>
+                <TableCell align="center">選択</TableCell>
+                </TableRow>
+            </TableHead>
+            <TableBody>
+                {products.map((product) => (
+                <TableRow
+                    key={product.id}
+                    hover
+                    selected={selectedProductIds.includes(product.id)}
+                    sx={{
+                        // bgcolor: !product.isChecked ? 'rgba(255, 244, 229, 0.7)' : 'inherit',
+                        cursor: 'pointer'
+                    }}
+                    onClick={() => onProductSelect(product.id)} // 行クリックでも選択できるようにする
+                    >
+                    <TableCell>
+                        <Typography variant="body2">
+                        {product.itemName}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                        {product.itemFormalName}
+                        </Typography>
+                    </TableCell>
+                    <TableCell align="right">{product.orderCount}</TableCell>
+                    <TableCell align="center" onClick={(e) => e.stopPropagation()}> {/* イベントの伝播を停止 */}
+                        <Checkbox
+                        checked={selectedProductIds.includes(product.id)}
+                        onChange={() => onProductSelect(product.id)} // チェックボックス単体でも選択できる
+                        />
+                    </TableCell>
+                    </TableRow>
+                ))}
+            </TableBody>
+            </Table>
+        </TableContainer>
+        )}
+
+        {/* フッター部分 - 合計情報 */}
+        <Box sx={{ p: 2, borderTop: '1px solid rgba(224, 224, 224, 1)', backgroundColor: '#fafafa' }}>
+        <Typography variant="body2">
+            合計商品数: {products.length} / 合計個数: {products.reduce((sum, product) => sum + product.orderCount, 0)}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+            選択中: {selectedProductIds.length} 商品
+        </Typography>
+        </Box>
+    </Box>
+    </Paper>
+);
+};
+
+export default StoreProductPanel;

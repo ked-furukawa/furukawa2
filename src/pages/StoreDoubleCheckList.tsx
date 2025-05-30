@@ -1,248 +1,245 @@
-    // src/pages/StoreDoubleCheckList.tsx
-    import React, { useState, useEffect, useCallback } from 'react';
-    import {
-    Paper,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Typography,
-    Checkbox,
-    Box,
-    Container,
-    Button,
-    Snackbar,
-    Alert,
-    Divider
-    } from '@mui/material';
-    import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-    import { Store } from '../types';
-    import { fetchStores, updateStoreCompletionStatus } from '../services/dataService';
+import React, { useState, useEffect } from 'react';
+import {
+Typography,
+Box,
+Container,
+Button,
+Snackbar,
+Alert,
+Divider,
+Paper
+} from '@mui/material';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import { StoreDoubleCheckList as StoreDoubleCheckListComponent } from '../components/StoreDoubleCheckList';
+import { Store } from '../types';
+import { generateClient } from 'aws-amplify/data';
+import type { Schema } from '../../amplify/data/resource';
 
-    const StoreDoubleCheckList: React.FC = () => {
-    // 状態管理
-    const [stores, setStores] = useState<Store[]>([]);
-    const [selectedStoreIds, setSelectedStoreIds] = useState<string[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
-    const [boxCounts, setBoxCounts] = useState<Record<string, Record<string, number>>>({});
-    const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
-    const [snackbarMessage, setSnackbarMessage] = useState<string>('');
-    // 全店舗が選択されているかチェックする関数を追加
-    const areAllStoresSelected = stores.length > 0 && selectedStoreIds.length === stores.length;
+// Amplify クライアントの生成
+const client = generateClient<Schema>();
 
-    // 店舗データを取得
-    const loadStores = useCallback(async () => {
-        try {
-        setLoading(true);
-        const storeData = await fetchStores();
-        setStores(storeData);
-        setError(null);
-        } catch (err) {
-        console.error('店舗データの取得に失敗しました', err);
-        setError('店舗データの取得に失敗しました');
-        } finally {
-        setLoading(false);
+const StoreDoubleCheckListPage: React.FC = () => {
+// 状態管理
+const [stores, setStores] = useState<Store[]>([]);
+const [selectedStoreIds, setSelectedStoreIds] = useState<string[]>([]);
+const [loading, setLoading] = useState<boolean>(true);
+const [error, setError] = useState<string | null>(null);
+const [boxCounts, setBoxCounts] = useState<Record<string, Record<string, number>>>({});
+const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
+const [snackbarMessage, setSnackbarMessage] = useState<string>('');
+const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+
+// データを取得
+useEffect(() => {
+    // テストデータの日付を指定 (2025-06-02)
+    const targetDate = "2025-06-02";
+    
+    // DynamoDBからのデータ取得をサブスクライブ
+    const subscription = client.models.Box.observeQuery({
+    filter: {
+        date: {
+        eq: targetDate
         }
-    }, []);
-
-    useEffect(() => {
-        loadStores();
-        
-        // 箱数データのモック（実際の実装では、APIから取得する）
-        const mockBoxCounts: Record<string, Record<string, number>> = {
-        'store-001': { 'prod-001': 2, 'prod-002': 3, 'prod-003': 1 },
-        'store-002': { 'prod-101': 1, 'prod-102': 2 },
-        'store-003': { 'prod-201': 4, 'prod-202': 1, 'prod-203': 2 },
-        'store-004': { 'prod-301': 3, 'prod-302': 2, 'prod-303': 1 }
-        };
-        setBoxCounts(mockBoxCounts);
-    }, [loadStores]);
-
-    // 店舗選択ハンドラー
-    const handleStoreSelect = (storeId: string) => {
-        setSelectedStoreIds(prev => 
-        prev.includes(storeId) 
-            ? prev.filter(id => id !== storeId)
-            : [...prev, storeId]
-        );
-    };
-
-    // 選択した店舗を確定済みにする
-    const handleConfirmSelected = async () => {
-        if (selectedStoreIds.length === 0) {
-        setSnackbarMessage('店舗が選択されていません');
-        setSnackbarOpen(true);
+    }
+    }).subscribe({
+    next: ({ items }) => {
+        if (items.length === 0) {
+        setError(`${targetDate}の箱データが見つかりませんでした`);
+        setLoading(false);
         return;
         }
-
-        try {
-        // 選択された各店舗を確定済みに更新
-        const updatePromises = selectedStoreIds.map(storeId => 
-            updateStoreCompletionStatus(storeId, true)
-        );
         
-        await Promise.all(updatePromises);
+        console.log(`${targetDate}のデータを${items.length}件取得しました`);
         
-        // 店舗リストを更新
-        setStores(prevStores => 
-            prevStores.map(store => 
-            selectedStoreIds.includes(store.id) 
-                ? { ...store, isCompleted: true } 
-                : store
-            )
-        );
+        const storeMap = new Map<string, Store>();
+        const boxCountsData: Record<string, Record<string, number>> = {};
         
-        setSnackbarMessage(`${selectedStoreIds.length}件の店舗を確定済みにしました`);
-        setSnackbarOpen(true);
-        setSelectedStoreIds([]);
-        } catch (err) {
-        console.error('店舗の確定に失敗しました', err);
-        setSnackbarMessage('店舗の確定に失敗しました');
-        setSnackbarOpen(true);
+        items.forEach(box => {
+        // 店舗情報を抽出
+        if (!storeMap.has(box.storeId)) {
+            storeMap.set(box.storeId, {
+            id: box.storeId,
+            storeName: box.storeName || '',
+            storeNumber: box.storeId,
+            storeTc: box.storeTc || '',
+            isChecked: false // デフォルト値を設定
+            });
         }
-    };
-
-    // スナックバーを閉じる
-    const handleCloseSnackbar = () => {
-        setSnackbarOpen(false);
-    };
-
-    // 各店舗の合計箱数を計算
-    const getStoreBoxCount = (storeId: string): number => {
-        const storeBoxCounts = boxCounts[storeId] || {};
-        return Object.values(storeBoxCounts).reduce((sum, count) => sum + count, 0);
-    };
-
-    // 全店舗の合計箱数
-    const totalBoxCount = stores.reduce((sum, store) => sum + getStoreBoxCount(store.id), 0);
-
-    // ローディング中の表示
-    if (loading) {
-        return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
-            <Typography align="center" py={3}>読み込み中...</Typography>
-        </Container>
-        );
+        
+        // 箱数情報を抽出
+        if (!boxCountsData[box.storeId]) {
+            boxCountsData[box.storeId] = {};
+        }
+        boxCountsData[box.storeId][box.color] = box.boxCount;
+        });
+        
+        // 店舗情報を配列に変換
+        const storesArray = Array.from(storeMap.values());
+        console.log(`${storesArray.length}件の店舗データを処理しました`);
+        
+        setStores(storesArray);
+        setBoxCounts(boxCountsData);
+        setError(null);
+        setLoading(false);
+    },
+    error: (err) => {
+        console.error('データの取得に失敗しました', err);
+        setError('データの取得に失敗しました');
+        setSnackbarMessage('データの取得に失敗しました');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+        setLoading(false);
     }
+    });
 
-    // エラー時の表示
-    if (error) {
-        return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
-            <Typography color="error" align="center" py={3}>{error}</Typography>
-        </Container>
-        );
-    }
+    return () => subscription.unsubscribe();
+}, []);
 
-    // 店舗がない場合の表示
-    if (stores.length === 0) {
-        return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
-            <Typography align="center" py={3}>店舗がありません</Typography>
-        </Container>
-        );
-    }
-
-    return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Box mb={4}>
-            <Typography variant="h4" component="h1" gutterBottom>
-            店舗ダブルチェック
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-            各店舗の箱数を確認し、問題がなければ確定してください。
-            </Typography>
-        </Box>
-        
-        <Divider sx={{ mb: 3 }} />
-        
-        <Paper
-            elevation={2}
-            sx={{
-            borderRadius: 2,
-            overflow: 'hidden'
-            }}
-        >
-            <TableContainer 
-            sx={{
-                maxHeight: 'calc(100vh - 300px)',
-                overflowY: 'auto',
-                '& .MuiTableCell-root': {
-                padding: '8px 16px'
-                }
-            }}
-            >
-            <Table stickyHeader>
-                <TableHead>
-                <TableRow>
-                    <TableCell>店舗名</TableCell>
-                    <TableCell align="center">店舗番号</TableCell>
-                    <TableCell align="center">箱数</TableCell>
-                    <TableCell align="center">選択</TableCell>
-                </TableRow>
-                </TableHead>
-                <TableBody>
-                {stores.map((store) => {
-                    const storeBoxCount = getStoreBoxCount(store.id);
-                    return (
-                    <TableRow 
-                        key={store.id} 
-                        hover 
-                        selected={selectedStoreIds.includes(store.id)}
-                        sx={{ 
-                        bgcolor: !store.isCompleted ? 'rgba(255, 244, 229, 0.7)' : 'inherit' 
-                        }}
-                    >
-                        <TableCell>{store.storeName}</TableCell>
-                        <TableCell align="center">{store.storeNumber}</TableCell>
-                        <TableCell align="center">{storeBoxCount}</TableCell>
-                        <TableCell align="center">
-                        <Checkbox 
-                            checked={selectedStoreIds.includes(store.id)} 
-                            onChange={() => handleStoreSelect(store.id)} 
-                        />
-                        </TableCell>
-                    </TableRow>
-                    );
-                })}
-                </TableBody>
-            </Table>
-            </TableContainer>
-            <Box sx={{ p: 2, borderTop: '1px solid rgba(224, 224, 224, 1)' }}>
-            <Typography variant="body2">
-                合計店舗数: {stores.length} / 合計箱数: {totalBoxCount}
-            </Typography>
-            </Box>
-        </Paper>
-        
-            <Box display="flex" justifyContent="flex-end" mt={3}>
-            <Button
-                variant="contained"
-                color="primary"
-                startIcon={<CheckCircleOutlineIcon />}
-                onClick={handleConfirmSelected}
-                // 全店舗が選択されている場合のみボタンを有効化
-                disabled={!areAllStoresSelected}
-            >
-                選択した店舗を確定する
-            </Button>
-            </Box>
-        
-        <Snackbar
-            open={snackbarOpen}
-            autoHideDuration={6000}
-            onClose={handleCloseSnackbar}
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        >
-            <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
-            {snackbarMessage}
-            </Alert>
-        </Snackbar>
-        </Container>
+// 店舗選択ハンドラー
+const handleStoreSelect = (storeId: string) => {
+    setSelectedStoreIds(prev => 
+    prev.includes(storeId) 
+        ? prev.filter(id => id !== storeId)
+        : [...prev, storeId]
     );
-    };
+};
 
-    export default StoreDoubleCheckList;
+// 選択した店舗を確定済みにする
+const handleConfirmSelected = async () => {
+    if (selectedStoreIds.length === 0) {
+    setSnackbarMessage('店舗が選択されていません');
+    setSnackbarSeverity('error');
+    setSnackbarOpen(true);
+    return;
+    }
+
+    try {
+    setLoading(true);
+    
+    // テストデータの日付を指定 (2025-06-02)
+    const targetDate = "2025-06-02";
+    
+    // 選択された店舗の箱データを取得して更新
+    for (const storeId of selectedStoreIds) {
+        // 店舗の全ての箱データを取得
+        const boxesResponse = await client.models.Box.list({
+        filter: {
+            date: { eq: targetDate },
+            storeId: { eq: storeId }
+        }
+        });
+
+        // 各箱データに対して更新
+        for (const box of boxesResponse.data) {
+        await client.models.Box.update({
+            date: box.date,
+            storeId: box.storeId,
+            color: box.color,
+            boxCount: box.boxCount,
+            storeName: box.storeName,
+            storeTc: box.storeTc,
+            boxCreatedBy: box.boxCreatedBy
+        });
+        }
+    }
+    
+    // 店舗リストを更新（UI上でのみisCheckedを管理）
+    setStores(prevStores => 
+        prevStores.map(store => 
+        selectedStoreIds.includes(store.id) 
+            ? { ...store, isChecked: true } 
+            : store
+        )
+    );
+    
+    setSnackbarMessage(`${selectedStoreIds.length}件の店舗を確定済みにしました`);
+    setSnackbarSeverity('success');
+    setSnackbarOpen(true);
+    setSelectedStoreIds([]);
+    } catch (err) {
+    console.error('店舗の確定に失敗しました', err);
+    setSnackbarMessage('店舗の確定に失敗しました');
+    setSnackbarSeverity('error');
+    setSnackbarOpen(true);
+    } finally {
+    setLoading(false);
+    }
+};
+
+// スナックバーを閉じる
+const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
+};
+
+return (
+    <Container maxWidth={false} disableGutters sx={{ 
+        height: '100vh', 
+        display: 'flex', 
+        flexDirection: 'column',
+        px: 2, 
+        py: 2,
+        }}>
+    <Paper elevation={1} sx={{ p: 3, mb: 2, borderRadius: 2 }}>
+    <Typography variant="h4" component="h1" gutterBottom sx={{ fontSize: '1.8rem' }}>
+        店舗ダブルチェック (2025年6月2日)
+    </Typography>
+    <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1.1rem' }}>
+        各店舗の箱数を確認し、問題がなければ確定してください。
+    </Typography>
+    </Paper>
+        
+    <Divider sx={{ mb: 3 }} />
+    
+    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+    <StoreDoubleCheckListComponent
+        stores={stores}
+        selectedStoreIds={selectedStoreIds}
+        onStoreSelect={handleStoreSelect}
+        loading={loading}
+        error={error}
+        boxCounts={boxCounts}
+    />
+    </Box>
+    
+    <Box display="flex" justifyContent="center" mt={1} mb={2}>
+    <Button
+    variant="contained"
+    color="primary"
+    size="large"
+    startIcon={<CheckCircleOutlineIcon />}
+    onClick={handleConfirmSelected}
+    disabled={selectedStoreIds.length !== stores.length || loading} // ここを変更
+    sx={{ 
+        py: 1.5, 
+        px: 4, 
+        fontSize: '1.2rem',
+        borderRadius: 2,
+        width: '80%',
+        maxWidth: '500px'
+    }}
+    >
+    {selectedStoreIds.length === stores.length 
+        ? '全店舗を確定する' 
+        : `全店舗を選択してください (${selectedStoreIds.length}/${stores.length})`}
+    </Button>
+    </Box>
+    
+    <Snackbar
+    open={snackbarOpen}
+    autoHideDuration={6000}
+    onClose={handleCloseSnackbar}
+    anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+    >
+    <Alert 
+        onClose={handleCloseSnackbar} 
+        severity={snackbarSeverity} 
+        sx={{ width: '100%', fontSize: '1.1rem' }}
+    >
+        {snackbarMessage}
+    </Alert>
+    </Snackbar>
+    </Container>
+);
+};
+
+export default StoreDoubleCheckListPage;
