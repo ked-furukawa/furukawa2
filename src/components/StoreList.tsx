@@ -97,35 +97,40 @@ const StoreList: React.FC<StoreListProps> = ({
   const [expandedDestinations, setExpandedDestinations] = useState<Record<string, boolean>>({});
   const [boxData, setBoxData] = useState<BoxData[]>([]); // 箱数データの状態を追加
 
-  // 箱数データを取得する関数
-  const fetchBoxData = async () => {
-    try {
-      // Box テーブルからデータを取得
-      const { data: boxItems } = await dataClient.models.Box.list();
-      
-      // 取得したデータを適切な形式に変換
-      const formattedBoxData = boxItems.map(box => ({
-        storeId: box.storeId,
-        boxCount: box.boxCount || 0,
-        color: (box.color as BoxColor) || 'green'
-      }));
-      
-      setBoxData(formattedBoxData);
-    } catch (err) {
-      console.error('箱数データの取得に失敗しました:', err);
-    }
-  };
+  // StoreList.tsx の fetchBoxData 関数を修正
+    const fetchBoxData = async () => {
+      try {
+        // テスト用固定日付
+        const testDate = "2025-06-02";
+        
+        // Box テーブルからデータを取得（日付フィルタを追加）
+        const { data: boxItems } = await dataClient.models.Box.list({
+          filter: { date: { eq: testDate } }
+        });
+        
+        // 取得したデータを適切な形式に変換
+        const formattedBoxData = boxItems.map(box => ({
+          storeId: box.storeId,
+          boxCount: box.boxCount || 0,
+          color: (box.color as BoxColor) || 'green'
+        }));
+        
+        setBoxData(formattedBoxData);
+      } catch (err) {
+        console.error('箱数データの取得に失敗しました:', err);
+      }
+    };
 
   // コンポーネントマウント時に箱数データを取得
   useEffect(() => {
     fetchBoxData();
     
     // リアルタイム更新のためのサブスクリプション設定
-    const subscription = dataClient.models.Box.observeQuery({
-        filter: { date: { eq: "2025-06-02" } }
+      const testDate = "2025-06-02";
+      const subscription = dataClient.models.Box.observeQuery({
+        filter: { date: { eq: testDate } }
       }).subscribe({
         next: ({ items }) => {
-          console.log('Box データ更新を検知:', items);
           const formattedBoxData = items.map(box => ({
             storeId: box.storeId,
             boxCount: box.boxCount || 0,
@@ -422,8 +427,8 @@ const StoreList: React.FC<StoreListProps> = ({
                         {hasBoxInfo && (
                           <Box 
                             sx={{ 
-                              bgcolor: getColorByBoxColor(boxInfo!.color),
-                              color: boxInfo!.color === 'yellow' ? 'black' : 'white',
+                              bgcolor: 'grey.300', // 箱数表示の背景色をグレーに固定
+                              color: 'text.primary', // テキスト色を標準に
                               px: 1, 
                               py: 0.5, 
                               borderRadius: 1,
@@ -436,7 +441,6 @@ const StoreList: React.FC<StoreListProps> = ({
                             <Typography 
                               variant="body2" 
                               fontWeight="bold"
-                              sx={{ color: 'inherit' }}
                             >
                               {boxInfo!.boxCount}
                             </Typography>

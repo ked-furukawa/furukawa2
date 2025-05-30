@@ -327,18 +327,19 @@ export const BoxQuantityInput: React.FC = () => {
               console.log(`既存の箱データを更新: ${product.itemName}`);
               
               try {
-                // プライマリキーを使用して更新（date と storeId はプライマリキー）
-                await dataClient.models.Box.update({
-                  // プライマリキーを指定
-                  date: testDate,
-                  storeId: selectedStoreId,
-                  boxCreatedBy: product.itemName,
-                  // 更新したい値
-                  boxCount: product.quantity,
-                  color: selectedColor
-                });
-                console.log(`箱数を更新しました: ${product.itemName}, 数量: ${product.quantity}`);
-              } catch (updateError) {
+                  // 箱数を更新
+                  const result = await dataClient.models.Box.update({
+                    date: testDate,
+                    storeId: selectedStoreId,
+                    storeName: storeData.storeName,
+                    storeTc: storeData.storeTc,
+                    color: selectedColor,
+                    boxCount: product.quantity,
+                    boxCreatedBy: product.itemName
+                  });
+                  
+                  console.log(`箱数を更新しました: ${product.itemName}, 数量: ${product.quantity}, 色: ${selectedColor}`, result);
+                } catch (updateError) {
                 console.error(`箱数の更新に失敗しました: ${product.itemName}`, updateError);
                 setError(`商品 ${product.itemName} の箱数更新に失敗しました`);
               }
