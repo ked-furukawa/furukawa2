@@ -101,7 +101,11 @@ useEffect(() => {
       
       // Order テーブルから店舗データを取得
       const { data: orderData } = await dataClient.models.Order.list({
-        filter: { date: { eq: testDate } }
+        filter: {
+          and:[
+          {date: { eq: testDate } ,
+          storeTc:{eq:'中之島'},
+          }]}
       });
 
       // 店舗情報を抽出して重複を排除
