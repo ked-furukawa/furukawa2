@@ -92,101 +92,99 @@ const StoreList: React.FC<StoreListProps> = ({
   const [expandedDestinations, setExpandedDestinations] = useState<Record<string, boolean>>({});
 
   // 送り先ごとの店舗データを取得
-  useEffect(() => {
-    const fetchStoresByDestination = async () => {
-      try {
-        setLoading(true);
-        
-        // 今日の日付を取得 (YYYY-MM-DD形式)
-        // const today = new Date().toISOString().split('T')[0];
-        const testDate = "2025-06-02"; // テスト用固定日付
-        
-        // Order テーブルから店舗データを取得
-        const { data: orderData } = await dataClient.models.Order.list({
-          filter: { date: { eq: testDate } }
-        });
+useEffect(() => {
+  const fetchStoresByDestination = async () => {
+    try {
+      setLoading(true);
+      
+      const testDate = "2025-06-02"; // テスト用固定日付
+      
+      // Order テーブルから店舗データを取得
+      const { data: orderData } = await dataClient.models.Order.list({
+        filter: { date: { eq: testDate } }
+      });
 
-        // 店舗情報を抽出して重複を排除
-        const storeMap = new Map<string, {
-          id: string;
-          storeNumber: string;
-          storeName: string;
-          storeTc: string;
-        }>();
-        
-        orderData.forEach(order => {
-          if (!storeMap.has(order.storeId)) {
-            storeMap.set(order.storeId, {
-              id: order.storeId,
-              storeNumber: order.storeId,
-              storeName: order.storeName || '不明な店舗',
-              storeTc: order.storeTc || '未分類'
-            });
-          }
-        });
-        
-        // 送り先（TC）ごとに店舗をグループ化
-        const destinationMap = new Map<string, {
-          id: string;
-          name: string;
-          stores: Store[];
-        }>();
-        
-        storeMap.forEach(store => {
-          const tcId = store.storeTc;
-          if (!destinationMap.has(tcId)) {
-            destinationMap.set(tcId, {
-              id: tcId,
-              name: tcId,
-              stores: []
-            });
-          }
-          
-          destinationMap.get(tcId)?.stores.push({
-            id: store.id,
-            storeNumber: store.storeNumber,
-            storeName: store.storeName,
-            isCompleted: completedStores?.some(item => item.storeId === store.id) || false
+      // 店舗情報を抽出して重複を排除
+      const storeMap = new Map<string, {
+        id: string;
+        storeNumber: string;
+        storeName: string;
+        storeTc: string;
+      }>();
+      
+      orderData.forEach(order => {
+        if (!storeMap.has(order.storeId)) {
+          storeMap.set(order.storeId, {
+            id: order.storeId,
+            storeNumber: order.storeId,
+            storeName: order.storeName || '不明な店舗',
+            storeTc: order.storeTc || '未分類'
           });
+        }
+      });
+      
+      // 送り先（TC）ごとに店舗をグループ化
+      const destinationMap = new Map<string, {
+        id: string;
+        name: string;
+        stores: Store[];
+      }>();
+      
+      storeMap.forEach(store => {
+        const tcId = store.storeTc;
+        if (!destinationMap.has(tcId)) {
+          destinationMap.set(tcId, {
+            id: tcId,
+            name: tcId,
+            stores: []
+          });
+        }
+        
+        destinationMap.get(tcId)?.stores.push({
+          id: store.id,
+          storeNumber: store.storeNumber,
+          storeName: store.storeName,
+          isCompleted: completedStores?.some(item => item.storeId === store.id) || false
         });
-        
-        // 各送り先内の店舗を店舗番号でソート
-        destinationMap.forEach(destination => {
-          destination.stores.sort((a, b) => 
-            a.storeNumber.localeCompare(b.storeNumber)
-          );
-        });
-        
-        // 結果を配列に変換
-        const result: StoresByDestination[] = Array.from(destinationMap.values()).map(dest => ({
-          destination: {
-            id: dest.id,
-            name: dest.name
-          },
-          stores: dest.stores
-        }));
-        
-        // カスタム順序でソート（上越を中之島より前に表示）
-        result.sort(sortDestinations);
-        
-        setStoresByDestination(result);
-        
-        // 初期状態ですべての送り先を展開
-        const initialExpandState: Record<string, boolean> = {};
-        result.forEach(item => {
-          initialExpandState[item.destination.id] = true;
-        });
-        setExpandedDestinations(initialExpandState);
-      } catch (err) {
-        console.error('店舗データの取得に失敗しました:', err);
-        setError('店舗データの読み込みに失敗しました');
-      } finally {
-        setLoading(false);
-      }
-    };
+      });
+      
+      // 各送り先内の店舗を店舗番号でソート
+      destinationMap.forEach(destination => {
+        destination.stores.sort((a, b) => 
+          a.storeNumber.localeCompare(b.storeNumber)
+        );
+      });
+      
+      // 結果を配列に変換
+      const result: StoresByDestination[] = Array.from(destinationMap.values()).map(dest => ({
+        destination: {
+          id: dest.id,
+          name: dest.name
+        },
+        stores: dest.stores
+      }));
+      
+      // カスタム順序でソート
+      result.sort(sortDestinations);
+      
+      setStoresByDestination(result);
+      
+      // 初期状態ですべての送り先を展開
+      const initialExpandState: Record<string, boolean> = {};
+      result.forEach(item => {
+        initialExpandState[item.destination.id] = true;
+      });
+      setExpandedDestinations(initialExpandState);
+    } catch (err) {
+      console.error('店舗データの取得に失敗しました:', err);
+      setError('店舗データの読み込みに失敗しました');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchStoresByDestination();
-  }, [completedStores]);
+  fetchStoresByDestination();
+}, [completedStores]); // completedStores が変更されたときだけ再取得
 
   // 送り先の展開/折りたたみを切り替え
   const toggleDestination = (destinationId: string) => {

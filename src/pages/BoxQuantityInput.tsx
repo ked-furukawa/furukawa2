@@ -66,7 +66,7 @@ export const BoxQuantityInput: React.FC = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   
   // 完了済み店舗IDのリスト（互換性のため）
-  const completedStoreIds = completedStores.map(item => item.storeId);
+ // const completedStoreIds = completedStores.map(item => item.storeId);
 
   // 全店舗データを取得する関数
   const fetchAllStores = async (): Promise<Store[]> => {

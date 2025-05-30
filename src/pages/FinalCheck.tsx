@@ -156,8 +156,8 @@ export const FinalCheck = () => {
     <Box sx={{ //表部分の親Box
         display: 'flex',
         flexDirection: 'row', // ← 横並びにする
-        justifyContent: 'flex-start',
-        alignItems: 'flex-start',
+        justifyContent: 'flex-end',
+        alignItems: 'flex-end',
         width: '100%',
         height: '100vh',
         pl: 0,

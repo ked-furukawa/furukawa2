@@ -3,6 +3,8 @@ import { TextField, Button, Box, Typography } from '@mui/material';
 import { Schema } from '../../amplify/data/resource';
 import { generateClient } from "aws-amplify/data";
 
+import testDataOrder from '../services/testDataOrder.json';
+
 const boxClient = generateClient<Schema>();
 
 export const TestComponent = () => {
@@ -45,7 +47,63 @@ export const TestComponent = () => {
         }
     };
 
-    return (
+      const saveDataToDBOrder = async (data: any[]) => { //DB保存用関数Order
+    try {
+    for (const item of data) {
+        await boxClient.models.Order.create({
+            date: item.date,
+            
+            storeId: item.storeId,
+            storeName: item.storeName,
+            storeTc: item.storeTc,
+            
+            itemId: item.itemId,
+            itemName: item.itemName,
+            itemFormalName: item.itemFormalName,
+            orderCount: item.orderCount
+        });
+    }
+        return true;
+    } catch (error) {
+        console.error('DB登録エラー:', error);
+        return false;
+    }
+};
+
+// ボタンクリックハンドラーDB保存用
+    const handleSaveClick = async () => {
+    const success = await saveDataToDBOrder(testDataOrder); // Order型
+    if (success) console.log("保存に成功しました");
+};
+
+const handleDeleteAll = async () => {
+    try {
+      // 1. 全 Box を取得
+        const { data: orders } = await boxClient.models.Box.list();
+
+      // 2. 各 Box を削除（id 必須）
+        if (orders) {
+            await Promise.all(
+            orders.map((box) =>
+                boxClient.models.Box.delete({
+                    date:'2025-06-02', 
+                    storeId:box.storeId, 
+                    color:box.color
+                })
+            )
+            );
+        }
+
+        alert('全Boxデータを削除しました');
+        } catch (err) {
+        console.error('削除エラー:', err);
+        alert('削除に失敗しました');
+        }
+    };
+
+
+return (
+        <>
         <Box display="flex" flexDirection="column" alignItems="center" gap={2} p={4}>
         <TextField
             label="内野店の箱数を変更"
@@ -61,6 +119,21 @@ export const TestComponent = () => {
         )}
         {message && <Typography color="error">{message}</Typography>}
         </Box>
+        <Box sx={{
+    position: "fixed",
+    bottom: 0,
+    right: 0,
+    margin: 2, 
+    borderRadius: 1,
+    }}>
+        <Button variant="contained" color="secondary" onClick={ handleSaveClick}> {/*DB保存用関数を呼び出す*/}
+        Orderテスト用ボタン
+        </Button>
+        <Button variant="contained" color="error" onClick={handleDeleteAll}>
+            Boxテーブル削除
+        </Button>
+        </Box>
+        </>
     );
 };
 
