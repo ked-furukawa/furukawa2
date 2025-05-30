@@ -196,7 +196,6 @@ return (
                 selectedColor={selectedColor}
                 onColorChange={handleColorChange}
                 />
-                <p>{getStoreBoxCount(String(selectedStoreId))}</p>
             </Typography>
             <Box mt={3} display="flex" justifyContent="flex-end">
                 <Button onClick={handleCloseModal} variant="outlined">
