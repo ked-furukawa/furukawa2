@@ -282,7 +282,7 @@ export const BoxQuantityInput: React.FC = () => {
             storeTc: storeData.storeTc,
             color: selectedColor, // 選択された色を使用
             boxCount: product.quantity,
-            boxCreatedBy: product.itemName
+            boxCreatedBy: 'test部門'
           };
           
           // DynamoDB に保存
@@ -350,6 +350,7 @@ export const BoxQuantityInput: React.FC = () => {
               onProductSelect={handleProductSelect}
               loading={loading}
               error={error}
+              completedStoreIds={completedStoreIds}
             />
           </Box>
 
