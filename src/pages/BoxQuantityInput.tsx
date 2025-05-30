@@ -11,18 +11,14 @@ import {
   DialogTitle, 
   Typography 
 } from '@mui/material';
-// import { StoreHeader } from '../components/StoreHeader';
-// import { ProductList } from '../components/ProductList';
 import { Keypad } from '../components/Keypad';
 import StoreList from '../components/StoreList';
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../../amplify/data/resource";
 import { StoreProductPanel } from '../components/StoreProductPanel';
 
-
 // 型定義に BoxColor を追加
 type BoxColor = 'green' | 'red' | 'blue' | 'yellow';
-
 
 // Amplify クライアントの生成
 const dataClient = generateClient<Schema>();
@@ -44,6 +40,13 @@ interface Product {
   isChecked: boolean;
 }
 
+// 完了済み店舗の型定義
+interface CompletedStore {
+  storeId: string;
+  boxCount: number;
+  color: BoxColor; // 色情報を追加
+}
+
 export const BoxQuantityInput: React.FC = () => {
   // 状態管理
   const [inputValue, setInputValue] = useState<string>('');
@@ -57,74 +60,78 @@ export const BoxQuantityInput: React.FC = () => {
   const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
   const [savingData, setSavingData] = useState<boolean>(false);
   const [checkError, setCheckError] = useState<string | null>(null);
-  const [completedStoreIds, setCompletedStoreIds] = useState<string[]>([]);
+  const [completedStores, setCompletedStores] = useState<CompletedStore[]>([]);
   const [allStores, setAllStores] = useState<Store[]>([]);
   const [selectedColor, setSelectedColor] = useState<BoxColor>('green');
+  const [refreshKey, setRefreshKey] = useState(0);
+  
+  // 完了済み店舗IDのリスト（互換性のため）
+  const completedStoreIds = completedStores.map(item => item.storeId);
 
   // 全店舗データを取得する関数
-const fetchAllStores = async (): Promise<Store[]> => {
-  try {
-    // テスト用固定日付
-    const testDate = "2025-06-02";
-    
-    // Order テーブルから店舗データを取得
-    const { data: orderData } = await dataClient.models.Order.list({
-      filter: { date: { eq: testDate } }
-    });
-    
-    // 店舗ごとにグループ化
-    const storeMap = new Map<string, Store>();
-    
-    orderData.forEach(order => {
-      if (!storeMap.has(order.storeId)) {
-        storeMap.set(order.storeId, {
-          storeId: order.storeId,
-          storeName: order.storeName || '不明な店舗',
-          storeTc: order.storeTc || '未分類'
-        });
-      }
-    });
-    
-    // 配列に変換
-    const stores = Array.from(storeMap.values());
-    
-    // 物流センター別にグループ化
-    const nakanoshimaStores = stores
-      .filter(store => store.storeTc === '中之島')
-      .sort((a, b) => a.storeId.localeCompare(b.storeId));
+  const fetchAllStores = async (): Promise<Store[]> => {
+    try {
+      // テスト用固定日付
+      const testDate = "2025-06-02";
       
-    const joetsuStores = stores
-      .filter(store => store.storeTc === '上越')
-      .sort((a, b) => a.storeId.localeCompare(b.storeId));
+      // Order テーブルから店舗データを取得
+      const { data: orderData } = await dataClient.models.Order.list({
+        filter: { date: { eq: testDate } }
+      });
       
-    // その他の物流センター（もしあれば）
-    const otherStores = stores
-      .filter(store => store.storeTc !== '中之島' && store.storeTc !== '上越')
-      .sort((a, b) => a.storeId.localeCompare(b.storeId));
-    
-    // 中之島 → 上越 → その他 の順に結合
-    return [...nakanoshimaStores, ...joetsuStores, ...otherStores];
-  } catch (err) {
-    console.error('店舗データの取得に失敗しました:', err);
-    throw err;
-  }
-};
+      // 店舗ごとにグループ化
+      const storeMap = new Map<string, Store>();
+      
+      orderData.forEach(order => {
+        if (!storeMap.has(order.storeId)) {
+          storeMap.set(order.storeId, {
+            storeId: order.storeId,
+            storeName: order.storeName || '不明な店舗',
+            storeTc: order.storeTc || '未分類'
+          });
+        }
+      });
+      
+      // 配列に変換
+      const stores = Array.from(storeMap.values());
+      
+      // 物流センター別にグループ化
+      const nakanoshimaStores = stores
+        .filter(store => store.storeTc === '中之島')
+        .sort((a, b) => a.storeId.localeCompare(b.storeId));
+        
+      const joetsuStores = stores
+        .filter(store => store.storeTc === '上越')
+        .sort((a, b) => a.storeId.localeCompare(b.storeId));
+        
+      // その他の物流センター（もしあれば）
+      const otherStores = stores
+        .filter(store => store.storeTc !== '中之島' && store.storeTc !== '上越')
+        .sort((a, b) => a.storeId.localeCompare(b.storeId));
+      
+      // 中之島 → 上越 → その他 の順に結合
+      return [...nakanoshimaStores, ...joetsuStores, ...otherStores];
+    } catch (err) {
+      console.error('店舗データの取得に失敗しました:', err);
+      throw err;
+    }
+  };
 
-// 次の店舗を取得する関数
-const getNextStore = (currentStoreId: string): Store | null => {
-  if (!allStores.length) return null;
-  
-  const currentIndex = allStores.findIndex(s => s.storeId === currentStoreId);
-  if (currentIndex === -1) return allStores[0];
-  
-  // 次の店舗を返す
-  if (currentIndex < allStores.length - 1) {
-    return allStores[currentIndex + 1];
-  }
-  
-  // 最後の店舗の場合は最初の店舗を返す
-  return allStores[0];
-};
+  // 次の店舗を取得する関数
+  const getNextStore = (currentStoreId: string): Store | null => {
+    if (!allStores.length) return null;
+    
+    const currentIndex = allStores.findIndex(s => s.storeId === currentStoreId);
+    if (currentIndex === -1) return allStores[0];
+    
+    // 次の店舗を返す
+    if (currentIndex < allStores.length - 1) {
+      return allStores[currentIndex + 1];
+    }
+    
+    // 最後の店舗の場合は最初の店舗を返す
+    return allStores[0];
+  };
 
   // 店舗選択時の処理
   const handleStoreSelect = async (storeId: string) => {
@@ -185,20 +192,21 @@ const getNextStore = (currentStoreId: string): Store | null => {
       setSelectedProductIds([]);
       setInputValue('');
       
-      // 次の店舗を取得 - この部分を修正
-    if (allStores.length === 0) {
-      const stores = await fetchAllStores();
-      setAllStores(stores);
-      setNextStore(getNextStore(storeId)); // 新しい関数を使用
-    } else {
-      setNextStore(getNextStore(storeId)); // 新しい関数を使用
+      // 次の店舗を取得
+      if (allStores.length === 0) {
+        const stores = await fetchAllStores();
+        setAllStores(stores);
+        setNextStore(getNextStore(storeId));
+      } else {
+        setNextStore(getNextStore(storeId));
+      }
+    } catch (err) {
+      console.error('店舗データの取得に失敗しました:', err);
+      setError('データの取得に失敗しました');
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    // エラー処理
-  } finally {
-    setLoading(false);
-  }
-};
+  };
   
   // 初期データの取得
   useEffect(() => {
@@ -281,115 +289,130 @@ const getNextStore = (currentStoreId: string): Store | null => {
   };
 
   // 次の店舗へ移動する関数
-  const navigateToNextStore = async () => {
-    if (!nextStore || !selectedStoreId || !storeData) return;
-    
-    try {
-      setSavingData(true);
+    const navigateToNextStore = async () => {
+      if (!nextStore || !selectedStoreId || !storeData) return;
       
-      // テスト用固定日付
-      const testDate = "2025-06-02";
-      
-      // 選択された商品と箱数のデータを作成
-      for (const productId of selectedProductIds) {
-        const product = products.find(p => p.id === productId);
-        if (product && product.quantity > 0) {
-          // 箱データを保存（色情報を追加）
-          const boxData = {
-            date: testDate,
-            storeId: selectedStoreId,
-            storeName: storeData.storeName,
-            storeTc: storeData.storeTc,
-            color: selectedColor, // 選択された色を使用
-            boxCount: product.quantity,
-            boxCreatedBy: product.itemName
-          };
-          
-          // DynamoDB に保存
-          await dataClient.models.Box.create(boxData);
+      try {
+        setSavingData(true);
+        
+        // テスト用固定日付
+        const testDate = "2025-06-02";
+        
+        // 選択された商品と箱数のデータを作成
+        for (const productId of selectedProductIds) {
+          const product = products.find(p => p.id === productId);
+          if (product && product.quantity > 0) {
+            // 箱データを保存（色情報を追加）
+            const boxData = {
+              date: testDate,
+              storeId: selectedStoreId,
+              storeName: storeData.storeName,
+              storeTc: storeData.storeTc,
+              color: selectedColor, // 選択された色を使用
+              boxCount: product.quantity,
+              boxCreatedBy: product.itemName
+            };
+            
+            // DynamoDB に保存
+            await dataClient.models.Box.create(boxData);
+          }
         }
+        
+        // 選択された商品の箱数の合計を計算
+        const totalBoxCount = parseInt(inputValue, 10) || 0;
+        
+        // 完了済み店舗リストに追加（既に追加されている場合は更新）
+        // この呼び出しは1回だけにする
+        setCompletedStores(prev => {
+          // 既存の店舗を除外
+          setRefreshKey(prev => prev + 1);
+          const filteredStores = prev.filter(store => store.storeId !== selectedStoreId);
+          // 新しい店舗情報を追加（色情報も含める）
+          return [...filteredStores, {
+            storeId: selectedStoreId,
+            boxCount: totalBoxCount,
+            color: selectedColor // 選択された色を保存
+          }];
+        });
+        
+        // 次の店舗に移動
+        await handleStoreSelect(nextStore.storeId);
+        
+        // 選択をクリア
+        setSelectedProductIds([]);
+        setInputValue('');
+        // 色はリセットしない（次の入力でも同じ色を使用できるようにする）
+        
+      } catch (err) {
+        setError('データの保存に失敗しました');
+        console.error(err);
+      } finally {
+        setSavingData(false);
+        setShowConfirmDialog(false);
       }
-      
-      // 現在の店舗を完了済みとしてマーク
-      setCompletedStoreIds(prev => [...prev, selectedStoreId]);
-      
-      // 次の店舗に移動
-      await handleStoreSelect(nextStore.storeId);
-      
-      // 選択をクリア
-      setSelectedProductIds([]);
-      setInputValue('');
-      // 色はリセットしない（次の入力でも同じ色を使用できるようにする）
-      
-    } catch (err) {
-      setError('データの保存に失敗しました');
-      console.error(err);
-    } finally {
-      setSavingData(false);
-      setShowConfirmDialog(false);
-    }
-  };
-    
-  // 確認ダイアログをキャンセルする関数
-  const handleDialogCancel = () => {
-    setShowConfirmDialog(false);
-  };
+    };
+            
+          // 確認ダイアログをキャンセルする関数
+          const handleDialogCancel = () => {
+            setShowConfirmDialog(false);
+          };
 
   return (
-  <Box display="flex" height="100vh">
-    {/* 左側：店舗リスト - 余白を小さく調整 */}
-    <Box sx={{ p: 1, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
-      <StoreList 
-        selectedStoreId={selectedStoreId} 
-        onSelectStore={handleStoreSelect} 
-        completedStoreIds={completedStoreIds}
-      />
-    </Box>
-    
-    <Box flex="1" display="flex" flexDirection="column" overflow="auto" p={1}>
-      <CssBaseline />
-      <Container maxWidth="lg" disableGutters> {/* guttersを無効化して余白を減らす */}
-        <Box 
-          display="flex"
-          flexDirection={{ xs: 'column', md: 'row' }}
-          justifyContent="space-between"
-          alignItems="flex-start"
-          gap={1} 
-          height="100%"
-        >
-          {/* 中央：統合された店舗情報と商品リスト */}
+    <Box display="flex" height="100vh">
+      {/* 左側：店舗リスト - 余白を小さく調整 */}
+      <Box sx={{ p: 1, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
+        <StoreList 
+          key={refreshKey}
+          selectedStoreId={selectedStoreId} 
+          onSelectStore={handleStoreSelect} 
+          completedStores={completedStores}
+        />
+      </Box>
+      
+      <Box flex="1" display="flex" flexDirection="column" overflow="auto" p={1}>
+        <CssBaseline />
+        <Container maxWidth="lg" disableGutters> {/* guttersを無効化して余白を減らす */}
           <Box 
-            width={{ xs: '100%', md: '55%' }} 
-            height={{ xs: 'auto', md: '600px' }}
+            display="flex"
+            flexDirection={{ xs: 'column', md: 'row' }}
+            justifyContent="space-between"
+            alignItems="flex-start"
+            gap={1} 
+            height="100%"
           >
-            <StoreProductPanel
-              storeNumber={storeData?.storeId || ''}
-              storeName={storeData?.storeName || ''}
-              products={products}
-              selectedProductIds={selectedProductIds}
-              onProductSelect={handleProductSelect}
-              loading={loading}
-              error={error}
-            />
-          </Box>
+            {/* 中央：統合された店舗情報と商品リスト */}
+            <Box 
+              width={{ xs: '100%', md: '55%' }} 
+              height={{ xs: 'auto', md: '600px' }}
+            >
+              <StoreProductPanel
+                storeNumber={storeData?.storeId || ''}
+                storeName={storeData?.storeName || ''}
+                products={products}
+                selectedProductIds={selectedProductIds}
+                onProductSelect={handleProductSelect}
+                loading={loading}
+                error={error}
+              />
+            </Box>
 
-          {/* 右側：テンキー */}
-          <Box 
-            width={{ xs: '100%', md: '43%' }}
-            height={{ xs: 'auto', md: '600px' }}
-          >
-            <Keypad 
-              value={inputValue}
-              onChange={handleInputChange}
-              onEnter={handleQuantityUpdate}
-              onClear={() => setInputValue('')}
-              selectedColor={selectedColor}
-              onColorChange={handleColorChange}
-            />
+            {/* 右側：テンキー */}
+            <Box 
+              width={{ xs: '100%', md: '43%' }}
+              height={{ xs: 'auto', md: '600px' }}
+            >
+              <Keypad 
+                value={inputValue}
+                onChange={handleInputChange}
+                onEnter={handleQuantityUpdate}
+                onClear={() => setInputValue('')}
+                selectedColor={selectedColor}
+                onColorChange={handleColorChange}
+              />
+            </Box>
           </Box>
-        </Box>
-      </Container>
-    </Box>
+        </Container>
+      </Box>
 
       {/* チェックエラーメッセージ */}
       {checkError && (

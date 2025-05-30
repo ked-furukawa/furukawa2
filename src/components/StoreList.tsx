@@ -15,7 +15,6 @@ import {
 } from '@mui/material';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../../amplify/data/resource";
 
@@ -40,16 +39,31 @@ interface StoresByDestination {
   stores: Store[];
 }
 
+// BoxColor 型の定義を追加
+type BoxColor = 'green' | 'red' | 'blue' | 'yellow';
+
+// props の型定義を更新
 interface StoreListProps {
   selectedStoreId: string | null;
   onSelectStore: (storeId: string) => void;
-  completedStoreIds: string[];
+  completedStores: {storeId: string, boxCount: number, color: BoxColor}[];
 }
+
+// getColorByBoxColor 関数を確認・修正
+const getColorByBoxColor = (color: BoxColor): string => {
+  switch (color) {
+    case 'green': return 'success.main';
+    case 'red': return 'error.main';
+    case 'blue': return 'primary.main';
+    case 'yellow': return 'warning.main';
+    default: return 'success.main'; // デフォルトは緑
+  }
+};
 
 // 送り先（TC）の優先順位を定義
 const TC_PRIORITY: Record<string, number> = {
-  "中之島": 1,   // 上越を最初に表示
-  "上越": 2,  // 中之島を2番目に表示
+  "中之島": 1,   // 中之島を最初に表示
+  "上越": 2,     // 上越を2番目に表示
   // 他のTCがあれば追加可能
 };
 
@@ -70,7 +84,7 @@ const sortDestinations = (a: StoresByDestination, b: StoresByDestination): numbe
 const StoreList: React.FC<StoreListProps> = ({ 
   selectedStoreId, 
   onSelectStore,
-  completedStoreIds
+  completedStores
 }) => {
   const [storesByDestination, setStoresByDestination] = useState<StoresByDestination[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -132,7 +146,7 @@ const StoreList: React.FC<StoreListProps> = ({
             id: store.id,
             storeNumber: store.storeNumber,
             storeName: store.storeName,
-            isCompleted: completedStoreIds.includes(store.id)
+            isCompleted: completedStores?.some(item => item.storeId === store.id) || false
           });
         });
         
@@ -172,7 +186,7 @@ const StoreList: React.FC<StoreListProps> = ({
     };
 
     fetchStoresByDestination();
-  }, [completedStoreIds]);
+  }, [completedStores]);
 
   // 送り先の展開/折りたたみを切り替え
   const toggleDestination = (destinationId: string) => {
@@ -318,7 +332,7 @@ const StoreList: React.FC<StoreListProps> = ({
                       onClick={() => onSelectStore(store.id)}
                       sx={{ 
                         pl: 4,
-                        bgcolor: completedStoreIds.includes(store.id) ? 'rgba(76, 175, 80, 0.15)' : 'inherit',
+                        bgcolor: completedStores?.some(item => item.storeId === store.id) ? 'rgba(76, 175, 80, 0.15)' : 'inherit',
                         '&.Mui-selected': {
                           bgcolor: 'primary.light',
                           '&:hover': {
@@ -338,8 +352,37 @@ const StoreList: React.FC<StoreListProps> = ({
                           fontSize: '0.8rem'   // 店舗名のフォントサイズを指定
                         }}
                       />
-                      {completedStoreIds.includes(store.id) && (
-                        <CheckCircleIcon color="success" fontSize="small" />
+                      {completedStores?.some(item => item.storeId === store.id) && (
+                        <Box 
+                          sx={{ 
+                            // 動的に色を設定
+                            bgcolor: getColorByBoxColor(
+                              completedStores.find(item => item.storeId === store.id)?.color || 'green'
+                            ),
+                            // 黄色の場合は黒テキスト、それ以外は白テキスト
+                            color: completedStores.find(item => item.storeId === store.id)?.color === 'yellow' 
+                              ? 'black' 
+                              : 'white',
+                            px: 1, 
+                            py: 0.5, 
+                            borderRadius: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            minWidth: '40px'
+                          }}
+                        >
+                          <Typography 
+                            variant="body2" 
+                            fontWeight="bold"
+                            // 黄色の場合は黒テキスト、それ以外は白テキスト
+                            sx={{ 
+                              color: 'inherit'
+                            }}
+                          >
+                            {completedStores.find(item => item.storeId === store.id)?.boxCount}
+                          </Typography>
+                        </Box>
                       )}
                     </ListItemButton>
                     
