@@ -161,7 +161,8 @@ export const FinalCheck = () => {
         width: '100%',
         height: '100vh',
         pl: 0,
-        ml:'70px',
+        ml:'100px',
+        mt:'80px',
         gap: 3, // 間のスペース
 
     }}>

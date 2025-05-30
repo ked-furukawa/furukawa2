@@ -90,6 +90,7 @@ const StoreList: React.FC<StoreListProps> = ({
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedDestinations, setExpandedDestinations] = useState<Record<string, boolean>>({});
+  // const showTc= tcFlag? '':'上越';
 
   // 送り先ごとの店舗データを取得
 useEffect(() => {
