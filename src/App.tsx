@@ -65,7 +65,7 @@ const App = () => {
       </IconButton>
 
       {/* サイドバー */}
-      <Drawer
+      <Drawer disableScrollLock
         anchor="left"
         open={drawerOpen}
         onClose={toggleDrawer}
