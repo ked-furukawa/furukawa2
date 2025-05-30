@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
 Paper,
 Table,
@@ -9,9 +9,17 @@ TableHead,
 TableRow,
 Typography,
 Checkbox,
-Box
+Box,
+Modal,
+Button
 } from '@mui/material';
-import { Store } from '../types';
+import {  Store } from '../types';
+import { Keypad } from './Keypad';
+
+import { generateClient } from "aws-amplify/data";
+import type { Schema } from "../../amplify/data/resource";
+
+const boxClient = generateClient<Schema>();
 
 interface StoreDoubleCheckListProps {
 stores: Store[];
@@ -21,6 +29,7 @@ loading?: boolean;
 error?: string | null;
 boxCounts?: Record<string, Record<string, number>>;
 }
+type BoxColor = 'green' | 'red' | 'blue' | 'yellow';
 
 export const StoreDoubleCheckList: React.FC<StoreDoubleCheckListProps> = ({
 stores,
@@ -41,15 +50,52 @@ if (error) {
 if (stores.length === 0) {
     return <Typography>店舗がありません</Typography>;
 }
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const handleCloseModal = () => setIsModalOpen(false);
+    const [inputValue, setInputValue] = useState<string>('');
+    const [selectedColor, setSelectedColor] = useState<BoxColor>('green');
+    const [selectedStoreId, setSelectedStoreId] = useState<string>('0');
+
+
 
 // 各店舗の合計箱数を計算
 const getStoreBoxCount = (storeId: string): number => {
     const storeBoxCounts = boxCounts[storeId] || {};
     return Object.values(storeBoxCounts).reduce((sum, count) => sum + count, 0);
 };
+  // テンキーからの入力を処理する関数
+const handleInputChange = (value: string) => {
+    setInputValue(value);
+};
+  // 箱数更新処理
+const handleQuantityUpdate  = async () => {
+    try {
+        const result = await boxClient.models.Box.update({ //DBの書き換え部分、今回はBoxテーブル
+            date: '2025-06-02', //実際は画面内のどこかに保持している変数などを使って必要情報を埋めていく
+            storeId: selectedStoreId, //必要情報=定義したテーブルの中身
+            storeName: '内野店',
+            storeTc: '中之島',
+            color: 'green',
+            boxCount: Number(inputValue),
+            boxCreatedBy: '肉',
+        });
+        console.log(result);
+        } catch (error) {
+        console.error('DB登録エラー:', error);
+        }
+
+  handleCloseModal(); // 入力後にモーダルを閉じるなど
+};
+
+
+const handleColorChange = (color: BoxColor) => {
+setSelectedColor(color);   
+};
 
 // 全店舗の合計箱数
 const totalBoxCount = stores.reduce((sum, store) => sum + getStoreBoxCount(store.id), 0);
+
 
 return (
     <Paper
@@ -72,16 +118,26 @@ return (
         <Table stickyHeader>
         <TableHead>
             <TableRow>
-            <TableCell>店舗名</TableCell>
+            <TableCell>物流センター</TableCell>
+            <TableCell align='center'>店舗名</TableCell>
             <TableCell align="center">店舗番号</TableCell>
             <TableCell align="center">箱数</TableCell>
             <TableCell align="center">選択</TableCell>
             </TableRow>
         </TableHead>
         <TableBody>
-            {stores.map((store) => {
-            const storeBoxCount = getStoreBoxCount(store.id);
-            return (
+            {[
+                // 1. 中之島のデータ（昇順）
+                ...stores
+                    .filter((s) => s.storeTc === '中之島')
+                    .sort((a, b) => Number(a.id) - Number(b.id)),
+
+                // 2. 上越のデータ（昇順）
+                ...stores
+                    .filter((s) => s.storeTc !== '中之島')
+                    .sort((a, b) => Number(a.id) - Number(b.id))
+                
+            ].map((store) => (
                 <TableRow 
                 key={store.id} 
                 hover 
@@ -91,9 +147,18 @@ return (
                     height: '60px' // 行の高さを大きくしてタップしやすく
                 }}
                 >
+                <TableCell>{store.storeTc}</TableCell>
                 <TableCell>{store.storeName}</TableCell>
                 <TableCell align="center">{store.storeNumber}</TableCell>
-                <TableCell align="center">{storeBoxCount}</TableCell>
+                <TableCell align="center"   onClick={() => {
+                    console.log(selectedStoreId)
+                    const currentValue = getStoreBoxCount(store.id);
+                    setSelectedStoreId(store.id);
+                    setInputValue(String(currentValue)); // ← 文字列として Keypad に渡す
+                    setIsModalOpen(true);
+                }}
+
+                    sx={{ cursor: 'pointer', textDecoration: 'underline' }}>{getStoreBoxCount(store.id)}</TableCell>
                 <TableCell align="center">
                     <Checkbox 
                     checked={selectedStoreIds.includes(store.id)} 
@@ -102,10 +167,44 @@ return (
                     />
                 </TableCell>
                 </TableRow>
-            );
-            })}
+            ))}
         </TableBody>
         </Table>
+        {/* モーダル */}
+        <Modal open={isModalOpen} onClose={handleCloseModal} disableScrollLock>
+            <Box
+            component={Paper}
+            sx={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: 400,
+                p: 4,
+                boxShadow: 24,
+            }}
+            >
+            <Typography variant="h6" component="h2" gutterBottom>
+                修正モーダル
+            </Typography>
+            <Typography>
+                <Keypad 
+                value={inputValue }
+                onChange={handleInputChange}
+                onEnter={handleQuantityUpdate}
+                onClear={() => setInputValue('')}
+                selectedColor={selectedColor}
+                onColorChange={handleColorChange}
+                />
+                <p>{getStoreBoxCount(String(selectedStoreId))}</p>
+            </Typography>
+            <Box mt={3} display="flex" justifyContent="flex-end">
+                <Button onClick={handleCloseModal} variant="outlined">
+                閉じる
+                </Button>
+            </Box>
+            </Box>
+        </Modal>
     </TableContainer>
     <Box sx={{ p: 2, borderTop: '1px solid rgba(224, 224, 224, 1)' }}>
         <Typography variant="body2">
