@@ -22,6 +22,7 @@ import {
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from "../../amplify/data/resource";
 
+
 const client = generateClient<Schema>();
 
 // 商品データの型定義（Orderモデルベース）
@@ -449,31 +450,68 @@ const fetchProducts = async () => {
           backgroundColor: 'rgba(0, 0, 0, 0.5)'
         }}
         open={alertOpen}
-        onClick={() => setAlertOpen(false)}
       >
         <Fade in={alertOpen}>
-          <Alert
-            severity={alertSeverity}
-            onClose={() => setAlertOpen(false)}
+          <Paper
+            elevation={6}
             sx={{
               width: isTablet ? '80%' : isLandscape ? '60%' : '90%',
-              maxWidth: '600px',
-              boxShadow: 6,
-              fontSize: isLandscape ? '1.5rem' : '1.3rem',
-              padding: isLandscape ? '20px 28px' : '16px 20px',
-              '& .MuiAlert-message': {
-                fontSize: isLandscape ? '1.4rem' : '1.2rem',
-                fontWeight: 'bold'
-              },
-              '& .MuiAlert-icon': {
-                fontSize: isLandscape ? '2.2rem' : '1.8rem'
-              }
+              maxWidth: 600,
+              p: isLandscape ? 4 : 3,
+              textAlign: 'center',
+              borderRadius: 2
             }}
           >
-            {alertMessage}
-          </Alert>
+            <Typography
+              variant="h6"
+              sx={{
+                fontSize: isLandscape ? '1.6rem' : '1.3rem',
+                fontWeight: 'bold',
+                mb: 3
+              }}
+            >
+              {alertMessage}
+            </Typography>
+
+            {alertSeverity === 'success' ? (
+              <Box display="flex" justifyContent="center" gap={3} mt={2}>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  size="large"
+                  onClick={() => setAlertOpen(false)}
+                  sx={{ minWidth: 120, fontSize: '1rem', px: 3, py: 1 }}
+                >
+                  戻る
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="large"
+                  onClick={() => {
+                    setAlertOpen(false);
+                    onComplete(); // 次の工程に進む
+                  }}
+                  sx={{ minWidth: 140, fontSize: '1rem', px: 3, py: 1 }}
+                >
+                  仕分け作業へ
+                </Button>
+              </Box>
+            ) : (
+              <Button
+                variant="contained"
+                color="error"
+                size="large"
+                onClick={() => setAlertOpen(false)}
+                sx={{ mt: 2, fontSize: '1rem', px: 3, py: 1 }}
+              >
+                閉じる
+              </Button>
+            )}
+          </Paper>
         </Fade>
       </Backdrop>
+
     </Box>
   );
 };
