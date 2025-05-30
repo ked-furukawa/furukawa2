@@ -244,14 +244,13 @@ const fetchProducts = async () => {
       flexDirection: 'column',
       pt: 0,
       pb: 0,
-      px: 0,
-      overflow: 'hidden'
+      px: 0
     }}>
       <Paper
         elevation={3}
         sx={{
           borderRadius: 0,
-          overflow: 'hidden',
+          overflow: 'auto',
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
@@ -263,10 +262,10 @@ const fetchProducts = async () => {
         <TableContainer
           ref={tableContainerRef}
           sx={{
-            flex: 1,
-            height:"100%",
-            width: '100%',
+            flexGrow: 1,
+            maxHeight: `calc(100dvh - ${navButtonHeight + 64}px)`, // Adjust based on actual footer height
             overflowY: 'auto',
+            width: '100%',
             '& .MuiTableCell-root': {
               padding: isLandscape ? '16px 20px' : '14px 16px',
             },
