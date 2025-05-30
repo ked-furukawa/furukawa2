@@ -118,20 +118,20 @@ export const BoxQuantityInput: React.FC = () => {
   };
 
   // 次の店舗を取得する関数
-  const getNextStore = (currentStoreId: string): Store | null => {
-    if (!allStores.length) return null;
-    
-    const currentIndex = allStores.findIndex(s => s.storeId === currentStoreId);
-    if (currentIndex === -1) return allStores[0];
-    
-    // 次の店舗を返す
-    if (currentIndex < allStores.length - 1) {
-      return allStores[currentIndex + 1];
-    }
-    
-    // 最後の店舗の場合は最初の店舗を返す
-    return allStores[0];
-  };
+  const getNextStore = (currentStoreId: string, storeList = allStores): Store | null => {
+  if (!storeList.length) return null;
+  
+  const currentIndex = storeList.findIndex(s => s.storeId === currentStoreId);
+  if (currentIndex === -1) return storeList[0];
+  
+  // 次の店舗を返す
+  if (currentIndex < storeList.length - 1) {
+    return storeList[currentIndex + 1];
+  }
+  
+  // 最後の店舗の場合は null を返す（または最初に戻る場合は storeList[0]）
+  return null; // または循環させたい場合は storeList[0]
+};
 
   // 店舗選択時の処理
   const handleStoreSelect = async (storeId: string) => {
@@ -196,7 +196,7 @@ export const BoxQuantityInput: React.FC = () => {
       if (allStores.length === 0) {
         const stores = await fetchAllStores();
         setAllStores(stores);
-        setNextStore(getNextStore(storeId));
+        setNextStore(getNextStore(storeId, stores));
       } else {
         setNextStore(getNextStore(storeId));
       }
