@@ -196,7 +196,8 @@ const completedStoreIds = completedStores.map(item => item.storeId);
           isChecked: shouldBeChecked
         };
       });
-      
+
+      // 商品データを設定
       setProducts(productList);
       
       // 商品選択をリセット
@@ -234,6 +235,36 @@ const completedStoreIds = completedStores.map(item => item.storeId);
       try {
         setLoading(true);
         
+        // テスト用固定日付
+      const testDate = "2025-06-02";
+      
+      // 完了済み店舗データを DynamoDB から取得
+      const { data: boxData } = await dataClient.models.Box.list({
+        filter: { date: { eq: testDate } }
+      });
+      
+      // 店舗ごとにグループ化
+      const storeBoxMap = new Map();
+      
+      boxData.forEach(box => {
+        if (!storeBoxMap.has(box.storeId)) {
+          storeBoxMap.set(box.storeId, {
+            storeId: box.storeId,
+            boxCount: 0,
+            color: box.color || 'green'
+          });
+        }
+        
+        // 箱数を加算
+        const storeData = storeBoxMap.get(box.storeId);
+        storeData.boxCount += box.boxCount;
+      });
+      
+      // 完了済み店舗リストを設定
+      const initialCompletedStores = Array.from(storeBoxMap.values());
+      console.log('初期化された完了済み店舗リスト:', initialCompletedStores);
+      setCompletedStores(initialCompletedStores);
+
         // 全店舗データを取得
         const stores = await fetchAllStores();
         setAllStores(stores);

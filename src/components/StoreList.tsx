@@ -57,15 +57,15 @@ interface StoreListProps {
 }
 
 // getColorByBoxColor 関数
-const getColorByBoxColor = (color: BoxColor): string => {
-  switch (color) {
-    case 'green': return 'success.main';
-    case 'red': return 'error.main';
-    case 'blue': return 'primary.main';
-    case 'yellow': return 'warning.main';
-    default: return 'success.main'; // デフォルトは緑
-  }
-};
+// const getColorByBoxColor = (color: BoxColor): string => {
+//   switch (color) {
+//     case 'green': return 'success.main';
+//     case 'red': return 'error.main';
+//     case 'blue': return 'primary.main';
+//     case 'yellow': return 'warning.main';
+//     default: return 'success.main'; // デフォルトは緑
+//   }
+// };
 
 // 送り先（TC）の優先順位を定義
 const TC_PRIORITY: Record<string, number> = {
