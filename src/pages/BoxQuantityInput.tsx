@@ -152,19 +152,6 @@ useEffect(() => {
   }
   console.log('ログ',extractStoresFromOrders(orders));
 
-    // 選択した店舗が完了済みかどうかをチェック
-  const isCompletedStore = completedStores.some(store => store.storeId === storeId);
-  
-
-    // 重要: 完了済み店舗の場合、すべての商品を選択状態にする
-    if (isCompletedStore) {
-      // 少し遅延させて確実に products の更新後に実行されるようにする
-      setTimeout(() => {
-        const allProductIds = productList.map(p => p.id);
-        setSelectedProductIds(allProductIds);
-      }, 100);
-    }
-
 }, [orders]); // ← orders が更新されたときだけ実行
 
 
@@ -214,10 +201,22 @@ const handleStoreSelect = async (storeId: string) => {
     });
 
     const productList = filtered.map(order => {
-      const box = boxData.find(b => b.boxCreatedBy === departmentId);
-  
-        // 完了済み店舗の場合は全商品をチェック済みにする
-        const shouldBeChecked = isCompletedStore || !!box;
+    const box = boxData.find(b => b.boxCreatedBy === departmentId);
+
+    
+      // 選択した店舗が完了済みかどうかをチェック
+    const isCompletedStore = completedStores.some(store => store.storeId === storeId);  
+      // 完了済み店舗の場合は全商品をチェック済みにする
+    const shouldBeChecked = isCompletedStore || !!box;
+
+        // 重要: 完了済み店舗の場合、すべての商品を選択状態にする
+    if (isCompletedStore) {
+      // 少し遅延させて確実に products の更新後に実行されるようにする
+      setTimeout(() => {
+        const allProductIds = productList.map(p => p.id);
+        setSelectedProductIds(allProductIds);
+      }, 100);
+    }
 
       return {
         id: order.itemId,
@@ -361,8 +360,6 @@ const handleProductSelect = (productId: string) => {
             };
             
             if (existingBoxes.length > 0) {
-              // 既存データがある場合は更新
-              console.log(`既存の箱データを更新: ${product.itemName}`);
               
               try {
                   // 箱数を更新
@@ -387,7 +384,7 @@ const handleProductSelect = (productId: string) => {
               
               try {
                 await dataClient.models.Box.create(boxData);
-                console.log(`箱数を新規登録しました: ${product.itemName}, 数量: ${product.quantity}`);
+                console.log(`箱数を新規登録しました: 数量: ${product.quantity}`);
               } catch (createError) {
                 console.error(`箱数の新規作成に失敗しました: ${product.itemName}`, createError);
                 setError(`商品 ${product.itemName} の箱数登録に失敗しました`);
