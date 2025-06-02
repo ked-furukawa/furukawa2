@@ -272,6 +272,19 @@ const completedStoreIds = completedStores.map(item => item.storeId);
         if (stores.length > 0) {
           // 最初の店舗を選択
           await handleStoreSelect(stores[0].storeId);
+
+        // 追加: 初期表示時に完了済み店舗の場合、全商品を選択状態にする
+        const firstStoreId = stores[0].storeId;
+        const isFirstStoreCompleted = initialCompletedStores.some(
+          store => store.storeId === firstStoreId
+        );
+        
+        if (isFirstStoreCompleted) {
+          setTimeout(() => {
+            const allProductIds = products.map(p => p.id);
+            setSelectedProductIds(allProductIds);
+          }, 200); // 少し長めの遅延を設定
+        }
         }
       } catch (err) {
         setError('データの読み込みに失敗しました');

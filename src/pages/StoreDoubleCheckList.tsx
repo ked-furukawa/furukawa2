@@ -181,7 +181,7 @@ return (
         }}>
     <Paper elevation={1} sx={{ p: 3, mb: 2, borderRadius: 2 }}>
     <Typography variant="h4" component="h1" gutterBottom sx={{ fontSize: '1.8rem' }}>
-        店舗ダブルチェック (2025年6月2日)
+        店舗ダブルチェック
     </Typography>
     <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1.1rem' }}>
         各店舗の箱数を確認し、問題がなければ確定してください。
