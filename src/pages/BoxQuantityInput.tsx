@@ -146,6 +146,10 @@ useEffect(() => {
   if (orders.length > 0) {
     const stores = extractStoresFromOrders(orders); // ここでstore情報を抽出
     setAllStores(stores); // allStores にセット
+
+    // orders から最初の storeId を取り出して表示する
+    const firstStoreId = orders[0].storeId;
+    handleStoreSelect(firstStoreId);
   }
   console.log('ログ',extractStoresFromOrders(orders));
 
@@ -394,7 +398,6 @@ const handleStoreSelect = async (storeId: string) => {
       <Box sx={{ p: 1, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
         <StoreList 
           key={refreshKey}
-          storesList={extractStoresFromOrders(orders)}
           selectedStoreId={selectedStoreId} 
           onSelectStore={handleStoreSelect} 
           completedStores={completedStores}
