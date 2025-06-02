@@ -77,6 +77,53 @@ const [orders, setOrders] = useState<Order[]>([]); //Orderテーブルの内容�
   const date = '2025-06-02';
   const departmentId = 'test';
 
+    // 初期データの取得
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        setLoading(true);
+        
+        // テスト用固定日付
+      const testDate = "2025-06-02";
+      
+      // 完了済み店舗データを DynamoDB から取得
+      const { data: boxData } = await dataClient.models.Box.list({
+        filter: { date: { eq: testDate } }
+      });
+      
+      // 店舗ごとにグループ化
+      const storeBoxMap = new Map();
+      
+      boxData.forEach(box => {
+        if (!storeBoxMap.has(box.storeId)) {
+          storeBoxMap.set(box.storeId, {
+            storeId: box.storeId,
+            boxCount: 0,
+            color: box.color || 'green'
+          });
+        }
+        
+        // 箱数を加算
+        const storeData = storeBoxMap.get(box.storeId);
+        storeData.boxCount += box.boxCount;
+      });
+      
+      // 完了済み店舗リストを設定
+      const initialCompletedStores = Array.from(storeBoxMap.values());
+      console.log('初期化された完了済み店舗リスト:', initialCompletedStores);
+      setCompletedStores(initialCompletedStores);
+      
+      } catch (err) {
+        setError('データの読み込みに失敗しました');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadInitialData();
+  }, []);
+
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
@@ -200,23 +247,16 @@ const handleStoreSelect = async (storeId: string) => {
       }
     });
 
+        
+      // 選択した店舗が完了済みかどうかをチェック
+    const isCompletedStore = completedStores.some(store => store.storeId === storeId);  
+
     const productList = filtered.map(order => {
     const box = boxData.find(b => b.boxCreatedBy === departmentId);
 
-    
-      // 選択した店舗が完了済みかどうかをチェック
-    const isCompletedStore = completedStores.some(store => store.storeId === storeId);  
+
       // 完了済み店舗の場合は全商品をチェック済みにする
     const shouldBeChecked = isCompletedStore || !!box;
-
-        // 重要: 完了済み店舗の場合、すべての商品を選択状態にする
-    if (isCompletedStore) {
-      // 少し遅延させて確実に products の更新後に実行されるようにする
-      setTimeout(() => {
-        const allProductIds = productList.map(p => p.id);
-        setSelectedProductIds(allProductIds);
-      }, 100);
-    }
 
       return {
         id: order.itemId,
@@ -235,7 +275,14 @@ const handleStoreSelect = async (storeId: string) => {
     setSelectedProductIds([]);
     setInputValue('');
 
-
+        // 重要: 完了済み店舗の場合、すべての商品を選択状態にする
+    if (isCompletedStore) {
+      // 少し遅延させて確実に products の更新後に実行されるようにする
+      setTimeout(() => {
+        const allProductIds = productList.map(p => p.id);
+        setSelectedProductIds(allProductIds);
+      }, 100);
+    }
 
     if (allStores.length > 0) {
       setNextStore(getNextStore(storeId));
@@ -293,9 +340,11 @@ const handleProductSelect = (productId: string) => {
   const product = products.find(p => p.id === productId);
   
   if (!product) return; // 商品が見つからない場合は何もしない
+
+  console.log(product.quantity)
   
   // チェック済み商品の場合（箱数が入力済みかつ0より大きい）
-  if (product.isChecked && product.quantity > 0) {
+  if (product.isChecked ) {
     console.log('チェック済み商品を選択:', product.itemName, product.quantity);
     
     // この商品だけを選択状態に設定（他の選択をクリア）
