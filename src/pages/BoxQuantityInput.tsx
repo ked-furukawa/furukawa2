@@ -48,7 +48,6 @@ interface CompletedStore {
   boxCount: number;
   color: BoxColor; // 色情報を追加
 }
-
 interface BoxQuantityInputProps {
   navigateTo: (key: string) => void;
 }//外部から受け取るprops定義
@@ -73,6 +72,7 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
   const [allStores, setAllStores] = useState<Store[]>([]);
   const [selectedColor, setSelectedColor] = useState<BoxColor>('green');
   const [refreshKey, setRefreshKey] = useState(0);
+  // const [completeState, setCompleteState] = useState<string>();
   
   // 完了済み店舗IDのリスト（互換性のため）
 const completedStoreIds = completedStores.map(item => item.storeId);
@@ -134,11 +134,11 @@ const [orders, setOrders] = useState<Order[]>([]); //Orderテーブルの内容�
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        // ✅ 完了フラグ取得
-        const { data: flag } = await dataClient.models.CompleteFlag.get({
-          date,
-          departmentId
-        });
+        // // ✅ 完了フラグ取得
+        // const { data: flag } = await dataClient.models.CompleteFlag.get({
+        //   date,
+        //   departmentId
+        // });
 
         // ✅ Order 全件取得
         const { data: allOrders } = await dataClient.models.Order.list({
@@ -147,24 +147,38 @@ const [orders, setOrders] = useState<Order[]>([]); //Orderテーブルの内容�
           }
         });
 
-        // ✅ 状態に応じたフィルタリング
-        const filteredOrders = (allOrders ?? []).filter((order) => {
-          const completeState = flag?.completeState ?? '未完了'; // ← ここで未定義時のフォールバック
+        // 並び替え：中之島 → それ以外、各グループ内で storeId 昇順
+        const sortedOrders = allOrders
+          .slice() // 元データを破壊しないためのコピー
+          .sort((a, b) => {
+            const isA_Nakanoshima = a.storeTc === '中之島';
+            const isB_Nakanoshima = b.storeTc === '中之島';
 
-          if (!order.date) return false;
+            if (isA_Nakanoshima && !isB_Nakanoshima) return -1;
+            if (!isA_Nakanoshima && isB_Nakanoshima) return 1;
 
-          if (completeState === '未完了') {
-            return order.date === date && order.storeTc == '中之島';
-          }
+            // 両方とも中之島 or 両方ともそれ以外 → storeId昇順
+            return a.storeId.localeCompare(b.storeId);
+          });
 
-          if (completeState === '中之島完了') {
-            return order.date === date && order.storeTc !== '中之島';
-          }
+        // // ✅ 状態に応じたフィルタリング
+        // const filteredOrders = (allOrders ?? []).filter((order) => {
+        //   setCompleteState(flag?.completeState ?? '未完了'); // ← ここで未定義時のフォールバック
 
-          // 「作業完了」などは非表示扱い
-          return false;
-        });
-        setOrders(filteredOrders);
+        //   if (!order.date) return false;
+
+        //   if (completeState === '未完了') {
+        //     return order.date === date && order.storeTc == '中之島';
+        //   }
+
+        //   if (completeState === '中之島完了') {
+        //     return order.date === date && order.storeTc !== '中之島';
+        //   }
+
+        //   // 「作業完了」などは非表示扱い
+        //   return false;
+        // });
+        setOrders(sortedOrders);
       } catch (error) {
         console.error('初期データ取得エラー:', error);
       } finally {
@@ -419,7 +433,7 @@ const handleProductSelect = (productId: string) => {
               
               try {
                   // 箱数を更新
-                  const result = await dataClient.models.Box.update({
+                  await dataClient.models.Box.update({
                     date: testDate,
                     storeId: selectedStoreId,
                     storeName: storeData.storeName,
@@ -428,19 +442,14 @@ const handleProductSelect = (productId: string) => {
                     boxCount: product.quantity,
                     boxCreatedBy: product.itemName
                   });
-                  
-                  console.log(`箱数を更新しました: ${product.itemName}, 数量: ${product.quantity}, 色: ${selectedColor}`, result);
                 } catch (updateError) {
                 console.error(`箱数の更新に失敗しました: ${product.itemName}`, updateError);
                 setError(`商品 ${product.itemName} の箱数更新に失敗しました`);
               }
             } else {
               // 新規作成
-              console.log(`新規に箱データを作成: ${product.itemName}`);
-              
               try {
                 await dataClient.models.Box.create(boxData);
-                console.log(`箱数を新規登録しました: 数量: ${product.quantity}`);
               } catch (createError) {
                 console.error(`箱数の新規作成に失敗しました: ${product.itemName}`, createError);
                 setError(`商品 ${product.itemName} の箱数登録に失敗しました`);
@@ -449,7 +458,8 @@ const handleProductSelect = (productId: string) => {
           }
         }
         
- const totalBoxCount = parseInt(inputValue, 10) || 0;
+        // 選択された商品の箱数の合計を計算
+        const totalBoxCount = parseInt(inputValue, 10) || 0;
         
         // 完了済み店舗リストに追加（既に追加されている場合は更新）
         setCompletedStores(prev => {
@@ -461,7 +471,7 @@ const handleProductSelect = (productId: string) => {
             color: selectedColor
           }];
         });
-
+        
         const nakanoshimaStores = allStores.filter(s => s.storeTc === '中之島');
         const completedNakanoshima = completedStores
         .filter(cs => nakanoshimaStores.some(ns => ns.storeId === cs.storeId))
@@ -470,7 +480,7 @@ const handleProductSelect = (productId: string) => {
         const newlyCompleted = [...new Set([...completedNakanoshima, selectedStoreId])];
 
         if (newlyCompleted.length >= nakanoshimaStores.length) {
-      // 全中之島店舗が完了 → 商品数確認外面へ遷移
+      // 全中之島店舗が完了 → 商品数確認画面へ遷移
           navigateTo('SortingCheckScreen');
           return;
         }
