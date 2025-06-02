@@ -118,13 +118,27 @@ return (
     >
         <Table stickyHeader>
         <TableHead>
-            <TableRow>
-            <TableCell>物流センター</TableCell>
-            <TableCell align='center'>店舗名</TableCell>
-            <TableCell align="center">店舗番号</TableCell>
-            <TableCell align="center">箱数</TableCell>
-            <TableCell align="center">選択</TableCell>
-            </TableRow>
+        <TableRow>
+            {[
+            { label: '物流センター', align: 'left' },
+            { label: '店舗名', align: 'center' },
+            { label: '店舗番号', align: 'center' },
+            { label: '箱数', align: 'center' },
+            { label: '選択', align: 'center' }
+            ].map((column, index) => (
+            <TableCell 
+                key={index}
+                align={column.align as any}
+                sx={{ 
+                backgroundColor: 'primary.main', 
+                color: 'white',
+                fontWeight: 'bold'
+                }}
+            >
+                {column.label}
+            </TableCell>
+            ))}
+        </TableRow>
         </TableHead>
         <TableBody>
             {[
