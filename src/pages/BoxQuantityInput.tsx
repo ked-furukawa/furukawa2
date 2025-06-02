@@ -122,20 +122,20 @@ const completedStoreIds = completedStores.map(item => item.storeId);
   };
 
   // 次の店舗を取得する関数
-  const getNextStore = (currentStoreId: string): Store | null => {
-    if (!allStores.length) return null;
-    
-    const currentIndex = allStores.findIndex(s => s.storeId === currentStoreId);
-    if (currentIndex === -1) return allStores[0];
-    
-    // 次の店舗を返す
-    if (currentIndex < allStores.length - 1) {
-      return allStores[currentIndex + 1];
-    }
-    
-    // 最後の店舗の場合は最初の店舗を返す
-    return allStores[0];
-  };
+  const getNextStore = (currentStoreId: string, storeList = allStores): Store | null => {
+  if (!storeList.length) return null;
+  
+  const currentIndex = storeList.findIndex(s => s.storeId === currentStoreId);
+  if (currentIndex === -1) return storeList[0];
+  
+  // 次の店舗を返す
+  if (currentIndex < storeList.length - 1) {
+    return storeList[currentIndex + 1];
+  }
+  
+  // 最後の店舗の場合は null を返す（または最初に戻る場合は storeList[0]）
+  return null; // または循環させたい場合は storeList[0]
+};
 
   // 店舗選択時の処理
   const handleStoreSelect = async (storeId: string) => {
@@ -200,7 +200,7 @@ const completedStoreIds = completedStores.map(item => item.storeId);
       if (allStores.length === 0) {
         const stores = await fetchAllStores();
         setAllStores(stores);
-        setNextStore(getNextStore(storeId));
+        setNextStore(getNextStore(storeId, stores));
       } else {
         setNextStore(getNextStore(storeId));
       }
@@ -292,7 +292,7 @@ const completedStoreIds = completedStores.map(item => item.storeId);
     setInputValue(value);
   };
 
-  // 次の店舗へ移動する関数
+  // 次の店舗へ移動する関数（修正版）
     const navigateToNextStore = async () => {
       if (!nextStore || !selectedStoreId || !storeData) return;
       
@@ -306,19 +306,59 @@ const completedStoreIds = completedStores.map(item => item.storeId);
         for (const productId of selectedProductIds) {
           const product = products.find(p => p.id === productId);
           if (product && product.quantity > 0) {
-            // 箱データを保存（色情報を追加）
+            // 既存の箱データを検索
+            const { data: existingBoxes } = await dataClient.models.Box.list({
+              filter: { 
+                date: { eq: testDate },
+                storeId: { eq: selectedStoreId },
+                boxCreatedBy: { eq: product.itemName }
+              }
+            });
+            
+            // 箱データを準備
             const boxData = {
               date: testDate,
               storeId: selectedStoreId,
               storeName: storeData.storeName,
               storeTc: storeData.storeTc,
-              color: selectedColor, // 選択された色を使用
+              color: selectedColor,
               boxCount: product.quantity,
               boxCreatedBy: product.itemName
             };
             
-            // DynamoDB に保存
-            await dataClient.models.Box.create(boxData);
+            if (existingBoxes.length > 0) {
+              // 既存データがある場合は更新
+              console.log(`既存の箱データを更新: ${product.itemName}`);
+              
+              try {
+                  // 箱数を更新
+                  const result = await dataClient.models.Box.update({
+                    date: testDate,
+                    storeId: selectedStoreId,
+                    storeName: storeData.storeName,
+                    storeTc: storeData.storeTc,
+                    color: selectedColor,
+                    boxCount: product.quantity,
+                    boxCreatedBy: product.itemName
+                  });
+                  
+                  console.log(`箱数を更新しました: ${product.itemName}, 数量: ${product.quantity}, 色: ${selectedColor}`, result);
+                } catch (updateError) {
+                console.error(`箱数の更新に失敗しました: ${product.itemName}`, updateError);
+                setError(`商品 ${product.itemName} の箱数更新に失敗しました`);
+              }
+            } else {
+              // 新規作成
+              console.log(`新規に箱データを作成: ${product.itemName}`);
+              
+              try {
+                await dataClient.models.Box.create(boxData);
+                console.log(`箱数を新規登録しました: ${product.itemName}, 数量: ${product.quantity}`);
+              } catch (createError) {
+                console.error(`箱数の新規作成に失敗しました: ${product.itemName}`, createError);
+                setError(`商品 ${product.itemName} の箱数登録に失敗しました`);
+              }
+            }
           }
         }
         
@@ -326,16 +366,13 @@ const completedStoreIds = completedStores.map(item => item.storeId);
         const totalBoxCount = parseInt(inputValue, 10) || 0;
         
         // 完了済み店舗リストに追加（既に追加されている場合は更新）
-        // この呼び出しは1回だけにする
         setCompletedStores(prev => {
-          // 既存の店舗を除外
           setRefreshKey(prev => prev + 1);
           const filteredStores = prev.filter(store => store.storeId !== selectedStoreId);
-          // 新しい店舗情報を追加（色情報も含める）
           return [...filteredStores, {
             storeId: selectedStoreId,
             boxCount: totalBoxCount,
-            color: selectedColor // 選択された色を保存
+            color: selectedColor
           }];
         });
         
@@ -345,11 +382,10 @@ const completedStoreIds = completedStores.map(item => item.storeId);
         // 選択をクリア
         setSelectedProductIds([]);
         setInputValue('');
-        // 色はリセットしない（次の入力でも同じ色を使用できるようにする）
         
       } catch (err) {
         setError('データの保存に失敗しました');
-        console.error(err);
+        console.error('データ保存エラー:', err);
       } finally {
         setSavingData(false);
         setShowConfirmDialog(false);
