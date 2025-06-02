@@ -9,7 +9,7 @@ import {
   ListItemText
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+// import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 
 import FinalCheck from "./pages/FinalCheck";
 import TestComponent from "./pages/TestComponent.tsx";
@@ -46,7 +46,7 @@ const App = () => {
     {
       key: 'BoxQuantityInput',
       label: '仕分け箱数入力',
-      component: () => <BoxQuantityInput />,
+      component: (props) => <BoxQuantityInput {...props} />,
     },
     {
       key: 'StoreDoubleCheckList',
@@ -103,13 +103,13 @@ const App = () => {
           },
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', px: 1 }}>
+        {/* <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', px: 1 }}>
           <IconButton onClick={toggleDrawer}>
             <ChevronLeftIcon />
           </IconButton>
-        </Box>
+        </Box> */}
 
-        <List>
+        <List sx={{ mt: 6 }}>
           {pageList.map((page) => (
             <ListItem key={page.key} disablePadding>
               <ListItemButton
