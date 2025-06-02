@@ -479,12 +479,12 @@ const handleProductSelect = (productId: string) => {
 
         const newlyCompleted = [...new Set([...completedNakanoshima, selectedStoreId])];
 
-        if (newlyCompleted.length >= nakanoshimaStores.length) {
+        if (newlyCompleted.length === nakanoshimaStores.length) {
       // 全中之島店舗が完了 → 商品数確認画面へ遷移
           navigateTo('SortingCheckScreen');
           return;
         }
-        
+        console.log('nextstoreid',nextStore.storeId);
         // 次の店舗に移動
         await handleStoreSelect(nextStore.storeId);
         
