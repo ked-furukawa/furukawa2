@@ -152,6 +152,19 @@ useEffect(() => {
   }
   console.log('ログ',extractStoresFromOrders(orders));
 
+    // 選択した店舗が完了済みかどうかをチェック
+  const isCompletedStore = completedStores.some(store => store.storeId === storeId);
+  
+
+    // 重要: 完了済み店舗の場合、すべての商品を選択状態にする
+    if (isCompletedStore) {
+      // 少し遅延させて確実に products の更新後に実行されるようにする
+      setTimeout(() => {
+        const allProductIds = productList.map(p => p.id);
+        setSelectedProductIds(allProductIds);
+      }, 100);
+    }
+
 }, [orders]); // ← orders が更新されたときだけ実行
 
 
@@ -202,6 +215,10 @@ const handleStoreSelect = async (storeId: string) => {
 
     const productList = filtered.map(order => {
       const box = boxData.find(b => b.boxCreatedBy === departmentId);
+  
+        // 完了済み店舗の場合は全商品をチェック済みにする
+        const shouldBeChecked = isCompletedStore || !!box;
+
       return {
         id: order.itemId,
         itemId: order.itemId,
@@ -209,7 +226,8 @@ const handleStoreSelect = async (storeId: string) => {
         itemFormalName: order.itemFormalName || '',
         orderCount: order.orderCount,
         quantity: box ? box.boxCount : 0,
-        isChecked: !!box
+        // 完了済み店舗の場合は全商品をチェック済みにする
+        isChecked: shouldBeChecked
       };
     });
 
@@ -217,6 +235,8 @@ const handleStoreSelect = async (storeId: string) => {
 
     setSelectedProductIds([]);
     setInputValue('');
+
+
 
     if (allStores.length > 0) {
       setNextStore(getNextStore(storeId));
@@ -268,17 +288,38 @@ const handleStoreSelect = async (storeId: string) => {
     setSelectedColor(color);
   };
     
-  // 商品の選択を処理する関数
-  const handleProductSelect = (productId: string) => {
-    setSelectedProductIds(prev => {
-      // すでに選択されている場合は削除、そうでなければ追加
-      if (prev.includes(productId)) {
-        return prev.filter(id => id !== productId);
-      } else {
-        return [...prev, productId];
-      }
-    });
-  };
+// 商品の選択を処理する関数
+const handleProductSelect = (productId: string) => {
+  // 選択された商品を取得
+  const product = products.find(p => p.id === productId);
+  
+  if (!product) return; // 商品が見つからない場合は何もしない
+  
+  // チェック済み商品の場合（箱数が入力済みかつ0より大きい）
+  if (product.isChecked && product.quantity > 0) {
+    console.log('チェック済み商品を選択:', product.itemName, product.quantity);
+    
+    // この商品だけを選択状態に設定（他の選択をクリア）
+    setSelectedProductIds([productId]);
+    
+    // 入力欄はクリアしておく（要件通り）
+    setInputValue('');
+    
+    return;
+  }
+  
+  console.log('未チェック商品または箱数0の商品を選択:', product.itemName);
+  
+  // 未チェック商品の場合は通常の選択処理
+  setSelectedProductIds(prev => {
+    // すでに選択されている場合は削除、そうでなければ追加
+    if (prev.includes(productId)) {
+      return prev.filter(id => id !== productId);
+    } else {
+      return [...prev, productId];
+    }
+  });
+};
 
   // テンキーからの入力を処理する関数
   const handleInputChange = (value: string) => {
