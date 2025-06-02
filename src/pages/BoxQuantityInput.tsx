@@ -23,8 +23,10 @@ type BoxColor = 'green' | 'red' | 'blue' | 'yellow';
 // Amplify クライアントの生成
 const dataClient = generateClient<Schema>();
 
+type Order = Schema['Order']['type'];
+
 // 型定義
-interface Store {
+export interface Store {
   storeId: string;
   storeName: string;
   storeTc: string;
@@ -68,58 +70,94 @@ export const BoxQuantityInput: React.FC = () => {
   // 完了済み店舗IDのリスト（互換性のため）
 const completedStoreIds = completedStores.map(item => item.storeId);
 
-  // 全店舗データを取得する関数
-  const fetchAllStores = async (): Promise<Store[]> => {
-    try {
-      // テスト用固定日付
-      const testDate = "2025-06-02";
-      
-      // Order テーブルから店舗データを取得
-      const { data: orderData } = await dataClient.models.Order.list({
-        filter: {
-          and:[
-          {date: { eq: testDate } ,
-          storeTc:{eq:'中之島'},
-          }]}
+
+const [orders, setOrders] = useState<Order[]>([]); //Orderテーブルの内容を全件入れる
+
+  // 仮定: date と departmentId は既に定義 or props から受け取る
+  const date = '2025-06-02';
+  const departmentId = 'test';
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        // ✅ 完了フラグ取得
+        const { data: flag } = await dataClient.models.CompleteFlag.get({
+          date,
+          departmentId
+        });
+
+        // ✅ Order 全件取得
+        const { data: allOrders } = await dataClient.models.Order.list({
+          filter: {
+            date: { eq: date }
+          }
+        });
+
+        // ✅ 状態に応じたフィルタリング
+        const filteredOrders = (allOrders ?? []).filter((order) => {
+          console.log('completeFlag:', flag);
+          const completeState = flag?.completeState ?? '未完了'; // ← ここで未定義時のフォールバック
+
+          if (!order.date) return false;
+
+          if (completeState === '未完了') {
+            return order.date === date && order.storeTc == '中之島';
+          }
+
+          if (completeState === '中之島完了') {
+            return order.date === date && order.storeTc !== '中之島';
+          }
+
+          // 「作業完了」などは非表示扱い
+          return false;
+        });
+
+        console.log('filteredOrders:',filteredOrders)
+        setOrders(filteredOrders);
+      } catch (error) {
+        console.error('初期データ取得エラー:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+
+
+    fetchInitialData();
+  }, [date, departmentId]);
+
+const extractStoresFromOrders = (orders: Order[]): Store[] => {
+  const storeMap = new Map<string, Store>();
+
+  orders.forEach(order => {
+    if (!order.storeId) return; // storeId がない場合はスキップ
+
+    // 同じ storeId の重複を防ぐ
+    if (!storeMap.has(order.storeId)) {
+      storeMap.set(order.storeId, {
+        storeId: order.storeId,
+        storeName: order.storeName ?? '',
+        storeTc: order.storeTc ?? ''
       });
-      
-      // 店舗ごとにグループ化
-      const storeMap = new Map<string, Store>();
-      
-      orderData.forEach(order => {
-        if (!storeMap.has(order.storeId)) {
-          storeMap.set(order.storeId, {
-            storeId: order.storeId,
-            storeName: order.storeName || '不明な店舗',
-            storeTc: order.storeTc || '未分類'
-          });
-        }
-      });
-      
-      // 配列に変換
-      const stores = Array.from(storeMap.values());
-      
-      // 物流センター別にグループ化
-      const nakanoshimaStores = stores
-        .filter(store => store.storeTc === '中之島')
-        .sort((a, b) => a.storeId.localeCompare(b.storeId));
-        
-      const joetsuStores = stores
-        .filter(store => store.storeTc === '上越')
-        .sort((a, b) => a.storeId.localeCompare(b.storeId));
-        
-      // その他の物流センター（もしあれば）
-      const otherStores = stores
-        .filter(store => store.storeTc !== '中之島' && store.storeTc !== '上越')
-        .sort((a, b) => a.storeId.localeCompare(b.storeId));
-      
-      // 中之島 → 上越 → その他 の順に結合
-      return [...nakanoshimaStores, ...joetsuStores, ...otherStores];
-    } catch (err) {
-      console.error('店舗データの取得に失敗しました:', err);
-      throw err;
     }
-  };
+  });
+  console.log('storeMap',storeMap)
+  return Array.from(storeMap.values());
+};
+
+useEffect(() => {
+  console.log('orders',orders);
+
+  if (orders.length > 0) {
+    const stores = extractStoresFromOrders(orders); // ここでstore情報を抽出
+    setAllStores(stores); // allStores にセット
+  }
+  console.log('allStores:', allStores);
+
+}, [orders]); // ← orders が更新されたときだけ実行
+
+
+
 
   // 次の店舗を取得する関数
   const getNextStore = (currentStoreId: string, storeList = allStores): Store | null => {
@@ -138,104 +176,61 @@ const completedStoreIds = completedStores.map(item => item.storeId);
 };
 
   // 店舗選択時の処理
-  const handleStoreSelect = async (storeId: string) => {
-    setSelectedStoreId(storeId);
-    setLoading(true);
-    try {
-      // テスト用固定日付
-      const testDate = "2025-06-02";
-      
-      // 選択した店舗の注文データを取得
-      const { data: orderData } = await dataClient.models.Order.list({
-        filter: { 
-          date: { eq: testDate },
-          storeId: { eq: storeId }
-        }
-      });
-      
-      if (orderData.length === 0) {
-        setError('店舗データが見つかりませんでした');
-        setLoading(false);
-        return;
-      }
-      
-      // 店舗データを設定
-      setStoreData({
-        storeId: storeId,
-        storeName: orderData[0].storeName || '',
-        storeTc: orderData[0].storeTc || ''
-      });
-      
-      // 選択した店舗の箱データを取得
-      const { data: boxData } = await dataClient.models.Box.list({
-        filter: { 
-          date: { eq: testDate },
-          storeId: { eq: storeId }
-        }
-      });
-      
-      // 商品データを変換
-      const productList = orderData.map(order => {
-        // 対応する箱データがあるかチェック
-        const box = boxData.find(b => b.boxCreatedBy === order.itemName);
-        
-        return {
-          id: order.itemId,
-          itemId: order.itemId,
-          itemName: order.itemName || '',
-          itemFormalName: order.itemFormalName || '',
-          orderCount: order.orderCount,
-          quantity: box ? box.boxCount : 0,
-          isChecked: !!box // 箱データがあればチェック済み
-        };
-      });
-      
-      setProducts(productList);
-      
-      // 商品選択をリセット
-      setSelectedProductIds([]);
-      setInputValue('');
-      
-      // 次の店舗を取得
-      if (allStores.length === 0) {
-        const stores = await fetchAllStores();
-        setAllStores(stores);
-        setNextStore(getNextStore(storeId, stores));
-      } else {
-        setNextStore(getNextStore(storeId));
-      }
-    } catch (err) {
-      console.error('店舗データの取得に失敗しました:', err);
-      setError('データの取得に失敗しました');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  // 初期データの取得
-  useEffect(() => {
-    const loadInitialData = async () => {
-      try {
-        setLoading(true);
-        
-        // 全店舗データを取得
-        const stores = await fetchAllStores();
-        setAllStores(stores);
-        
-        if (stores.length > 0) {
-          // 最初の店舗を選択
-          await handleStoreSelect(stores[0].storeId);
-        }
-      } catch (err) {
-        setError('データの読み込みに失敗しました');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
+const handleStoreSelect = async (storeId: string) => {
+  setSelectedStoreId(storeId);
+  setLoading(true);
+  try {
+    const filtered = orders.filter(order => order.storeId === storeId);
 
-    loadInitialData();
-  }, []);
+    if (filtered.length === 0) {
+      setError('店舗データが見つかりませんでした');
+      setLoading(false);
+      return;
+    }
+
+    const matchingOrder = filtered[0];
+    setStoreData({
+      storeId: matchingOrder.storeId,
+      storeName: matchingOrder.storeName || '',
+      storeTc: matchingOrder.storeTc || ''
+    });
+
+    const { data: boxData } = await dataClient.models.Box.list({
+      filter: {
+        date: { eq: date },
+        storeId: { eq: storeId }
+      }
+    });
+
+    const productList = filtered.map(order => {
+      const box = boxData.find(b => b.boxCreatedBy === departmentId);
+      return {
+        id: order.itemId,
+        itemId: order.itemId,
+        itemName: order.itemName || '',
+        itemFormalName: order.itemFormalName || '',
+        orderCount: order.orderCount,
+        quantity: box ? box.boxCount : 0,
+        isChecked: !!box
+      };
+    });
+
+    setProducts(productList);
+
+    setSelectedProductIds([]);
+    setInputValue('');
+
+    if (allStores.length > 0) {
+      setNextStore(getNextStore(storeId));
+    }
+
+  } catch (err) {
+    console.error('店舗データの取得に失敗しました:', err);
+    setError('データの取得に失敗しました');
+  } finally {
+    setLoading(false);
+  }
+};
 
   // 箱数更新処理
   const handleQuantityUpdate = () => {
@@ -294,6 +289,7 @@ const completedStoreIds = completedStores.map(item => item.storeId);
 
   // 次の店舗へ移動する関数（修正版）
     const navigateToNextStore = async () => {
+      console.log('nextStore',nextStore)
       if (!nextStore || !selectedStoreId || !storeData) return;
       
       try {
@@ -403,6 +399,7 @@ const completedStoreIds = completedStores.map(item => item.storeId);
       <Box sx={{ p: 1, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
         <StoreList 
           key={refreshKey}
+          storesList={extractStoresFromOrders(orders)}
           selectedStoreId={selectedStoreId} 
           onSelectStore={handleStoreSelect} 
           completedStores={completedStores}
