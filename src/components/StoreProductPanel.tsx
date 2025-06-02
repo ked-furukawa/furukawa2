@@ -35,6 +35,7 @@ selectedProductIds?: string[];
 onProductSelect: (productId: string) => void;
 loading?: boolean;
 error?: string | null;
+completedStoreIds?: string[];
 }
 
 /**
@@ -47,8 +48,10 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
     selectedProductIds = [],
     onProductSelect,
     loading = false,
-    error = null
+    error = null,
+    completedStoreIds,
     }) => {
+        
     return (
         <Paper
         elevation={3}
@@ -152,7 +155,7 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
                 <TableRow
                     key={product.id}
                     hover
-                    selected={selectedProductIds.includes(product.id)}
+                    selected={completedStoreIds?.includes(storeNumber)||selectedProductIds.includes(product.id)}
                     sx={{
                         // bgcolor: !product.isChecked ? 'rgba(255, 244, 229, 0.7)' : 'inherit',
                         cursor: 'pointer'
@@ -170,7 +173,7 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
                     <TableCell align="right">{product.orderCount}</TableCell>
                     <TableCell align="center" onClick={(e) => e.stopPropagation()}> {/* イベントの伝播を停止 */}
                         <Checkbox
-                        checked={selectedProductIds.includes(product.id)}
+                        checked={completedStoreIds?.includes(storeNumber)||selectedProductIds.includes(product.id)}
                         onChange={() => onProductSelect(product.id)} // チェックボックス単体でも選択できる
                         />
                     </TableCell>

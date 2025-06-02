@@ -88,7 +88,8 @@ const App = () => {
         <MenuIcon />
       </IconButton>
 
-      <Drawer
+      {/* サイドバー */}
+      <Drawer disableScrollLock
         anchor="left"
         open={drawerOpen}
         onClose={toggleDrawer}
