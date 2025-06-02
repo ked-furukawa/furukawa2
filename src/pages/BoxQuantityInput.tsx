@@ -95,7 +95,6 @@ const [orders, setOrders] = useState<Order[]>([]); //Orderテーブルの内容�
 
         // ✅ 状態に応じたフィルタリング
         const filteredOrders = (allOrders ?? []).filter((order) => {
-          console.log('completeFlag:', flag);
           const completeState = flag?.completeState ?? '未完了'; // ← ここで未定義時のフォールバック
 
           if (!order.date) return false;
@@ -288,7 +287,6 @@ const handleStoreSelect = async (storeId: string) => {
 
   // 次の店舗へ移動する関数（修正版）
     const navigateToNextStore = async () => {
-      console.log('nextStore',nextStore)
       if (!nextStore || !selectedStoreId || !storeData) return;
       
       try {
