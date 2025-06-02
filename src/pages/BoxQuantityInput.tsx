@@ -234,7 +234,7 @@ const completedStoreIds = completedStores.map(item => item.storeId);
     const loadInitialData = async () => {
       try {
         setLoading(true);
-        
+
         // テスト用固定日付
       const testDate = "2025-06-02";
       
@@ -264,7 +264,7 @@ const completedStoreIds = completedStores.map(item => item.storeId);
       const initialCompletedStores = Array.from(storeBoxMap.values());
       console.log('初期化された完了済み店舗リスト:', initialCompletedStores);
       setCompletedStores(initialCompletedStores);
-
+        
         // 全店舗データを取得
         const stores = await fetchAllStores();
         setAllStores(stores);
