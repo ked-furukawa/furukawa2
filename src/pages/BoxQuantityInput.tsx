@@ -111,8 +111,6 @@ const [orders, setOrders] = useState<Order[]>([]); //Orderテーブルの内容�
           // 「作業完了」などは非表示扱い
           return false;
         });
-
-        console.log('filteredOrders:',filteredOrders)
         setOrders(filteredOrders);
       } catch (error) {
         console.error('初期データ取得エラー:', error);
@@ -141,18 +139,15 @@ const extractStoresFromOrders = (orders: Order[]): Store[] => {
       });
     }
   });
-  console.log('storeMap',storeMap)
   return Array.from(storeMap.values());
 };
 
 useEffect(() => {
-  console.log('orders',orders);
-
   if (orders.length > 0) {
     const stores = extractStoresFromOrders(orders); // ここでstore情報を抽出
     setAllStores(stores); // allStores にセット
   }
-  console.log('allStores:', allStores);
+  console.log('ログ',extractStoresFromOrders(orders));
 
 }, [orders]); // ← orders が更新されたときだけ実行
 
