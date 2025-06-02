@@ -11,12 +11,14 @@ export const schema = a.schema({
     itemId: a.string().required(), // 商品コードが使えそう '210039'
     itemName: a.string(), //社内呼称 '大エビ'
     itemFormalName: a.string(), //商品名・規格 '大エビ天重キット'
+
     resDeptId: a.string(), //部門から生成する担当部門ID 'niku1'
     resDeptName: a.string(), //担当部門名 '肉１'
     orderCount: a.integer().required(), // 商品注文数 '3'
   })
   .identifier(['date', 'storeId', 'itemId']) // PKとSK
   .authorization((allow) => [allow.publicApiKey()]), //認証情報の設定
+
 
   Box: a.model({ //店舗-箱色のテーブル　←箱数情報、主に書き用(最後はこれを読む)
     date: a.string().required(),    // 注文日 '2025-05-22'
@@ -30,6 +32,18 @@ export const schema = a.schema({
     boxCreatedBy: a.string() // 箱を作った部門
   })
   .identifier(['date', 'storeId', 'color']) //PKとSK
+  .authorization((allow) => [allow.publicApiKey()]), //認証情報の設定
+
+
+  CompleteFlag: a.model({ //その日の作業完了フラグ　←このフラグで表示されるデータのフィルタリングを決める
+    date: a.string().required(),    // 注文日 '2025-05-22'
+
+    departmentId: a.string().required(), // 部門ID(仮) 'test'
+    departmentName: a.string(), //部門名(仮) 'test部門'
+
+    completeState: a.string(), //完了段階のフラグ '未完了'or'中之島完了'or'作業完了'
+  })
+  .identifier(['date', 'departmentId']) //PKとSK
   .authorization((allow) => [allow.publicApiKey()]) //認証情報の設定
 });
 
