@@ -484,7 +484,13 @@ const handleProductSelect = (productId: string) => {
           navigateTo('SortingCheckScreen');
           return;
         }
-        console.log('nextstoreid',nextStore.storeId);
+        console.log('completedStores.length',completedStores.length);
+        console.log('allStores.length',allStores.length);
+        if (completedStores.length === allStores.length){
+          navigateTo('StoreDoubleCheckList');
+          return;
+        }
+
         // 次の店舗に移動
         await handleStoreSelect(nextStore.storeId);
         
@@ -597,8 +603,15 @@ const handleProductSelect = (productId: string) => {
         <DialogTitle>次の店舗に進みますか？</DialogTitle>
         <DialogContent>
           <Typography variant="body1">
-            {`${storeData?.storeName || '現在の店舗'}の処理を完了し、`}
-            {nextStore ? `${nextStore.storeName}に進みます。` : '最後の店舗です。'}
+            {`${storeData?.storeName || '現在の店舗'}の処理を完了します。`}
+            {
+              !nextStore
+                ? '最後の店舗です。'
+                : storeData?.storeTc === '中之島' && nextStore.storeTc !== '中之島'
+                ? '中之島の作業が完了しました。商品数確認画面に進みます。'
+                : `${nextStore.storeName}に進みます。`
+            }
+
           </Typography>
           <Typography variant="body2" sx={{ mt: 1 }} color="text.secondary">
             ・選択した商品数: {selectedProductIds.length}
