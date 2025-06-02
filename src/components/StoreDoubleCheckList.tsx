@@ -56,6 +56,7 @@ if (stores.length === 0) {
     const [inputValue, setInputValue] = useState<string>('');
     const [selectedColor, setSelectedColor] = useState<BoxColor>('green');
     const [selectedStoreId, setSelectedStoreId] = useState<string>('0');
+    const [selectedIndex, setSelectedIndex] = useState<number>(0);
 
 
 
@@ -69,13 +70,13 @@ const handleInputChange = (value: string) => {
     setInputValue(value);
 };
   // 箱数更新処理
-const handleQuantityUpdate  = async () => {
+const handleQuantityUpdate  = async (selectedIndex:number) => {
     try {
         const result = await boxClient.models.Box.update({ //DBの書き換え部分、今回はBoxテーブル
             date: '2025-06-02', //実際は画面内のどこかに保持している変数などを使って必要情報を埋めていく
             storeId: selectedStoreId, //必要情報=定義したテーブルの中身
-            storeName: '内野店',
-            storeTc: '中之島',
+            storeName: stores[selectedIndex].storeName,
+            storeTc: stores[selectedIndex].storeTc,
             color: 'green',
             boxCount: Number(inputValue),
             boxCreatedBy: '肉',
@@ -151,7 +152,7 @@ return (
                     .filter((s) => s.storeTc !== '中之島')
                     .sort((a, b) => Number(a.id) - Number(b.id))
                 
-            ].map((store) => (
+            ].map((store, index) => (
                 <TableRow 
                 key={store.id} 
                 hover 
@@ -164,12 +165,14 @@ return (
                 <TableCell>{store.storeTc}</TableCell>
                 <TableCell>{store.storeName}</TableCell>
                 <TableCell align="center">{store.storeNumber}</TableCell>
-                <TableCell align="center"   onClick={() => {
+                <TableCell align="center"  onClick={() => {
                     console.log(selectedStoreId)
                     const currentValue = getStoreBoxCount(store.id);
                     setSelectedStoreId(store.id);
                     setInputValue(String(currentValue)); // ← 文字列として Keypad に渡す
                     setIsModalOpen(true);
+
+                    setSelectedIndex(index);
                 }}
 
                     sx={{ cursor: 'pointer', textDecoration: 'underline' }}>{getStoreBoxCount(store.id)}</TableCell>
@@ -201,16 +204,16 @@ return (
             <Typography variant="h6" component="h2" gutterBottom>
                 修正モーダル
             </Typography>
-            <Typography>
+            <div>
                 <Keypad 
                 value={inputValue }
                 onChange={handleInputChange}
-                onEnter={handleQuantityUpdate}
+                onEnter={() => handleQuantityUpdate(selectedIndex)}
                 onClear={() => setInputValue('')}
                 selectedColor={selectedColor}
                 onColorChange={handleColorChange}
                 />
-            </Typography>
+            </div>
             <Box mt={3} display="flex" justifyContent="flex-end">
                 <Button onClick={handleCloseModal} variant="outlined">
                 閉じる

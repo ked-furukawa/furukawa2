@@ -12,6 +12,8 @@ export const TestComponent = () => {
     const [submittedValue, setSubmittedValue] = useState<number | null>(null);
     const [message, setMessage] = useState<string>('');
 
+    
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const inputValue = e.target.value;
         // 数値か空欄のみ許容
@@ -76,6 +78,28 @@ export const TestComponent = () => {
     if (success) console.log("保存に成功しました");
 };
 
+
+const createTestFlag = async (): Promise<boolean> => {
+    try {
+        await boxClient.models.CompleteFlag.create({
+        date: '2025-06-02',
+        departmentId: 'test',
+        departmentName: 'テスト部門',
+        completeState: '未完了', // 他に '中之島完了', '作業完了' も可
+        });
+        return true;
+    } catch (error) {
+        console.error('CompleteFlag 作成エラー:', error);
+        return false;
+    }
+};
+
+// ボタンクリックハンドラーtestフラグ作成用
+    const handleCreateFlag = async () => {
+    const success = await createTestFlag(); 
+    if (success) console.log("保存に成功しました");
+};
+
 const handleDeleteAll = async () => {
     try {
       // 1. 全 Box を取得
@@ -128,6 +152,9 @@ return (
     }}>
         <Button variant="contained" color="secondary" onClick={ handleSaveClick}> {/*DB保存用関数を呼び出す*/}
         Orderテスト用ボタン
+        </Button>
+        <Button variant="contained" color="secondary" onClick={ handleCreateFlag }> {/*test部門用の完了フラグを作る*/}
+            test部門未完了
         </Button>
         <Button variant="contained" color="error" onClick={handleDeleteAll}>
             Boxテーブル削除

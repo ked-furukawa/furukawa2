@@ -76,6 +76,8 @@ useEffect(() => {
         // 店舗情報を配列に変換
         const storesArray = Array.from(storeMap.values());
         console.log(`${storesArray.length}件の店舗データを処理しました`);
+
+            console.log('stores',storesArray);
         
         setStores(storesArray);
         setBoxCounts(boxCountsData);
@@ -91,6 +93,8 @@ useEffect(() => {
         setLoading(false);
     }
     });
+
+
 
     return () => subscription.unsubscribe();
 }, []);
