@@ -47,7 +47,14 @@ interface CompletedStore {
   color: BoxColor; // 色情報を追加
 }
 
-export const BoxQuantityInput: React.FC = () => {
+interface BoxQuantityInputProps {
+  navigateTo: (key: string) => void;
+}//外部から受け取るprops定義
+
+
+
+
+export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }) => {//navigaToをpropsとして受け取る
   // 状態管理
   const [inputValue, setInputValue] = useState<string>('');
   const [storeData, setStoreData] = useState<Store | null>(null);
@@ -322,8 +329,7 @@ const completedStoreIds = completedStores.map(item => item.storeId);
           }
         }
         
-        // 選択された商品の箱数の合計を計算
-        const totalBoxCount = parseInt(inputValue, 10) || 0;
+
         
         // 完了済み店舗リストに追加（既に追加されている場合は更新）
         // この呼び出しは1回だけにする
@@ -334,10 +340,23 @@ const completedStoreIds = completedStores.map(item => item.storeId);
           // 新しい店舗情報を追加（色情報も含める）
           return [...filteredStores, {
             storeId: selectedStoreId,
-            boxCount: totalBoxCount,
+            boxCount: parseInt(inputValue, 10) || 0,
             color: selectedColor // 選択された色を保存
           }];
         });
+
+        const nakanoshimaStores = allStores.filter(s => s.storeTc === '中之島');
+        const completedNakanoshima = completedStores
+        .filter(cs => nakanoshimaStores.some(ns => ns.storeId === cs.storeId))
+        .map(cs => cs.storeId);
+
+        const newlyCompleted = [...new Set([...completedNakanoshima, selectedStoreId])];
+
+        if (newlyCompleted.length >= nakanoshimaStores.length) {
+      // 全中之島店舗が完了 → 商品数確認外面へ遷移
+          navigateTo('SortingCheckScreen');
+          return;
+        }
         
         // 次の店舗に移動
         await handleStoreSelect(nextStore.storeId);
