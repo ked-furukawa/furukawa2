@@ -44,6 +44,7 @@ interface SortingCheckScreenProps {
   targetDate?: string; // 対象日付（YYYY-MM-DD形式）
   targetStoreId?: string; // 対象店舗ID
     navigateTo: (pageKey: string) => void; // ← 追加
+  //  fromPageA?: boolean;(to上越)
 }
 
 
@@ -151,12 +152,10 @@ const fetchProducts = async () => {
       setAlertOpen(true);
 
       setTimeout(() => {
-        setAlertOpen(false);
-        setTimeout(() => {
-          onComplete();
-        }, 300);
+        onComplete();
       }, 1500);
-    } else {
+    }
+    else {
       const uncheckedProducts = products
         .filter(product => !product.isChecked)
         .map(product => product.name)
@@ -344,7 +343,7 @@ const fetchProducts = async () => {
                   selected={product.isChecked}
                   sx={{
                     cursor: 'pointer',
-                    bgcolor: !product.isChecked ? 'rgba(255, 244, 229, 0.7)' : 'inherit',
+                    // bgcolor: !product.isChecked ? 'rgba(255, 244, 229, 0.7)' : 'inherit',
                     '&:last-child td, &:last-child th': { border: 0 },
                     height: rowHeight,
                     '&.Mui-selected': {
