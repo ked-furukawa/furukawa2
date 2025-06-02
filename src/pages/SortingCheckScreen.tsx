@@ -22,13 +22,13 @@ import {
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from "../../amplify/data/resource";
 
-// Amplifyクライアントの初期化
+
 const client = generateClient<Schema>();
 
 // 商品データの型定義（Orderモデルベース）
 interface Product {
   id: string; // date-storeId-itemIdの組み合わせ
-  name: string; // itemNameまたはitemFormalName
+  name: string; // itemNameまたはitemName
   expectedCount: number; // orderCount
   isChecked: boolean; // ローカル状態で管理
   itemId: string;
@@ -43,13 +43,16 @@ interface SortingCheckScreenProps {
   onComplete?: () => void;
   targetDate?: string; // 対象日付（YYYY-MM-DD形式）
   targetStoreId?: string; // 対象店舗ID
+    navigateTo: (pageKey: string) => void; // ← 追加
 }
+
 
 const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
   onProductClick = () => {},
   onComplete = () => {},
   targetDate = '2025-06-02', 
-  targetStoreId = '019' 
+  targetStoreId = '019', 
+  navigateTo // 
 }) => {
   const theme = useTheme();
   const isLandscape = useMediaQuery('(orientation: landscape)');
@@ -89,7 +92,7 @@ const fetchProducts = async () => {
       const groupedMap = new Map<string, Product>();
 
       for (const order of data) {
-        const key = order.itemFormalName || `商品ID: ${order.itemId}`;
+        const key = order.itemName || `商品ID: ${order.itemId}`;
 
         if (groupedMap.has(key)) {
           const existing = groupedMap.get(key)!;
@@ -239,16 +242,15 @@ const fetchProducts = async () => {
       width: '100vw',
       display: 'flex',
       flexDirection: 'column',
-      pt: `${navButtonHeight}px`,
+      pt: 0,
       pb: 0,
-      px: 0,
-      overflow: 'hidden'
+      px: 0
     }}>
       <Paper
         elevation={3}
         sx={{
           borderRadius: 0,
-          overflow: 'hidden',
+          overflow: 'auto',
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
@@ -260,10 +262,10 @@ const fetchProducts = async () => {
         <TableContainer
           ref={tableContainerRef}
           sx={{
-            flex: 1,
-            height:"100%",
-            width: '100%',
+            flexGrow: 1,
+            maxHeight: `calc(100dvh - ${navButtonHeight + 64}px)`, // Adjust based on actual footer height
             overflowY: 'auto',
+            width: '100%',
             '& .MuiTableCell-root': {
               padding: isLandscape ? '16px 20px' : '14px 16px',
             },
@@ -282,30 +284,57 @@ const fetchProducts = async () => {
         >
           <Table stickyHeader size="medium" sx={{ width: '100%' }}>
             <TableHead>
-              <TableRow>
-                <TableCell sx={{
-                  fontWeight: 'bold',
-                  width: '40%',
-                  backgroundColor: theme.palette.primary.main,
-                  color: 'white',
-                  fontSize: headerFontSize
-                }}>食品名</TableCell>
-                <TableCell align="right" sx={{
-                  fontWeight: 'bold',
-                  width: '30%',
-                  backgroundColor: theme.palette.primary.main,
-                  color: 'white',
-                  fontSize: headerFontSize
-                }}>商品数</TableCell>
-                <TableCell padding="checkbox" align="center" sx={{
-                  fontWeight: 'bold',
-                  width: '30%',
-                  backgroundColor: theme.palette.primary.main,
-                  color: 'white',
-                  fontSize: headerFontSize
-                }}>確認</TableCell>
+              <TableRow
+                sx={{
+                  height: isLandscape ? '120px' : '64px',
+                }}
+              >
+                <TableCell
+                  sx={{
+                    fontWeight: 'bold',
+                    width: '40%',
+                    backgroundColor: theme.palette.primary.main,
+                    color: 'white',
+                    fontSize: headerFontSize,
+                    verticalAlign: 'bottom', 
+                    paddingBottom: '12px', 
+                  }}
+                >
+                  食品名
+                </TableCell>
+                <TableCell
+                  align="right"
+                  sx={{
+                    fontWeight: 'bold',
+                    width: '30%',
+                    backgroundColor: theme.palette.primary.main,
+                    color: 'white',
+                    fontSize: headerFontSize,
+                    verticalAlign: 'bottom', 
+                    paddingBottom: '12px',
+                  }}
+                >
+                  商品数
+                </TableCell>
+                <TableCell
+                  padding="checkbox"
+                  align="center"
+                  sx={{
+                    fontWeight: 'bold',
+                    width: '30%',
+                    backgroundColor: theme.palette.primary.main,
+                    color: 'white',
+                    fontSize: headerFontSize,
+                    verticalAlign: 'bottom', 
+                    paddingBottom: '12px',
+                  }}
+                >
+                  確認
+                </TableCell>
               </TableRow>
             </TableHead>
+
+
             <TableBody>
               {products.map((product) => (
                 <TableRow
@@ -371,7 +400,7 @@ const fetchProducts = async () => {
 
         <Box
           p={isLandscape ? 2 : 1.5}
-          bgcolor="#f5f5f5"
+          //bgcolor="#f5f5f5"
           sx={{
             display: 'flex',
             justifyContent: 'space-between',
@@ -394,12 +423,15 @@ const fetchProducts = async () => {
             color="primary"
             size="large"
             onClick={handleComplete}
+            disabled={!products.every(product => product.isChecked)} // ✅ 追加
             sx={{
               py: isLandscape ? 1.5 : 1,
               px: isLandscape ? 6 : 4,
               fontSize: isLandscape ? '1.4rem' : '1.2rem',
               fontWeight: 'bold',
-              minWidth: isLandscape ? '220px' : '180px'
+              minWidth: isLandscape ? '220px' : '180px',
+              opacity: !products.every(p => p.isChecked) ? 0.5 : 1, // グレーアウト風見た目（任意）
+              pointerEvents: !products.every(p => p.isChecked) ? 'none' : 'auto' // 任意
             }}
           >
             確認完了
@@ -420,31 +452,68 @@ const fetchProducts = async () => {
           backgroundColor: 'rgba(0, 0, 0, 0.5)'
         }}
         open={alertOpen}
-        onClick={() => setAlertOpen(false)}
       >
         <Fade in={alertOpen}>
-          <Alert
-            severity={alertSeverity}
-            onClose={() => setAlertOpen(false)}
+          <Paper
+            elevation={6}
             sx={{
               width: isTablet ? '80%' : isLandscape ? '60%' : '90%',
-              maxWidth: '600px',
-              boxShadow: 6,
-              fontSize: isLandscape ? '1.5rem' : '1.3rem',
-              padding: isLandscape ? '20px 28px' : '16px 20px',
-              '& .MuiAlert-message': {
-                fontSize: isLandscape ? '1.4rem' : '1.2rem',
-                fontWeight: 'bold'
-              },
-              '& .MuiAlert-icon': {
-                fontSize: isLandscape ? '2.2rem' : '1.8rem'
-              }
+              maxWidth: 600,
+              p: isLandscape ? 4 : 3,
+              textAlign: 'center',
+              borderRadius: 2
             }}
           >
-            {alertMessage}
-          </Alert>
+            <Typography
+              variant="h6"
+              sx={{
+                fontSize: isLandscape ? '1.6rem' : '1.3rem',
+                fontWeight: 'bold',
+                mb: 3
+              }}
+            >
+              {alertMessage}
+            </Typography>
+
+            {alertSeverity === 'success' ? (
+              <Box display="flex" justifyContent="center" gap={3} mt={2}>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  size="large"
+                  onClick={() => setAlertOpen(false)}
+                  sx={{ minWidth: 120, fontSize: '1rem', px: 3, py: 1 }}
+                >
+                  戻る
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="large"
+                  onClick={() => {
+                    setAlertOpen(false);
+                    navigateTo('BoxQuantityInput'); // 任意の画面キーへ遷移
+                  }}
+                  sx={{ minWidth: 140, fontSize: '1rem', px: 3, py: 1 }}
+                >
+                  仕分け作業へ
+                </Button>
+              </Box>
+            ) : (
+              <Button
+                variant="contained"
+                color="error"
+                size="large"
+                onClick={() => setAlertOpen(false)}
+                sx={{ mt: 2, fontSize: '1rem', px: 3, py: 1 }}
+              >
+                閉じる
+              </Button>
+            )}
+          </Paper>
         </Fade>
       </Backdrop>
+
     </Box>
   );
 };

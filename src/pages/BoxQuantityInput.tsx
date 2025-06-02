@@ -66,7 +66,7 @@ export const BoxQuantityInput: React.FC = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   
   // 完了済み店舗IDのリスト（互換性のため）
- // const completedStoreIds = completedStores.map(item => item.storeId);
+const completedStoreIds = completedStores.map(item => item.storeId);
 
   // 全店舗データを取得する関数
   const fetchAllStores = async (): Promise<Store[]> => {
@@ -76,7 +76,11 @@ export const BoxQuantityInput: React.FC = () => {
       
       // Order テーブルから店舗データを取得
       const { data: orderData } = await dataClient.models.Order.list({
-        filter: { date: { eq: testDate } }
+        filter: {
+          and:[
+          {date: { eq: testDate } ,
+          storeTc:{eq:'中之島'},
+          }]}
       });
       
       // 店舗ごとにグループ化
@@ -429,6 +433,7 @@ export const BoxQuantityInput: React.FC = () => {
                 onProductSelect={handleProductSelect}
                 loading={loading}
                 error={error}
+                completedStoreIds={completedStoreIds}
               />
             </Box>
 
