@@ -104,6 +104,8 @@ const StoreList: React.FC<StoreListProps> = ({
   // コンポーネントマウント時に箱数データを取得
   useEffect(() => {
     fetchBoxData();
+
+    console.log('test');
     
     // リアルタイム更新のためのサブスクリプション設定
       const testDate = "2025-06-02";

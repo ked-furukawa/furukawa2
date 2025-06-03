@@ -334,13 +334,9 @@ const handleProductSelect = (productId: string) => {
   const product = products.find(p => p.id === productId);
   
   if (!product) return; // 商品が見つからない場合は何もしない
-
-  console.log(product.quantity)
   
   // チェック済み商品の場合（箱数が入力済みかつ0より大きい）
   if (product.isChecked ) {
-    console.log('チェック済み商品を選択:', product.itemName, product.quantity);
-    
     // この商品だけを選択状態に設定（他の選択をクリア）
     setSelectedProductIds([productId]);
     
@@ -349,8 +345,6 @@ const handleProductSelect = (productId: string) => {
     
     return;
   }
-  
-  console.log('未チェック商品または箱数0の商品を選択:', product.itemName);
   
   // 未チェック商品の場合は通常の選択処理
   setSelectedProductIds(prev => {
@@ -387,7 +381,7 @@ const handleProductSelect = (productId: string) => {
               filter: { 
                 date: { eq: testDate },
                 storeId: { eq: selectedStoreId },
-                boxCreatedBy: { eq: product.itemName }
+                boxCreatedBy: { eq: 'test部門' }
               }
             });
             
@@ -399,9 +393,9 @@ const handleProductSelect = (productId: string) => {
               storeTc: storeData.storeTc,
               color: selectedColor,
               boxCount: product.quantity,
-              boxCreatedBy: product.itemName
+              boxCreatedBy: 'test部門'
             };
-            
+
             if (existingBoxes.length > 0) {
               
               try {
@@ -413,19 +407,19 @@ const handleProductSelect = (productId: string) => {
                     storeTc: storeData.storeTc,
                     color: selectedColor,
                     boxCount: product.quantity,
-                    boxCreatedBy: product.itemName
+                    boxCreatedBy: 'test部門'
                   });
                 } catch (updateError) {
-                console.error(`箱数の更新に失敗しました: ${product.itemName}`, updateError);
-                setError(`商品 ${product.itemName} の箱数更新に失敗しました`);
+                console.error(`箱数の更新に失敗しました`, updateError);
+                setError(`箱数更新に失敗しました`);
               }
             } else {
               // 新規作成
               try {
                 await dataClient.models.Box.create(boxData);
               } catch (createError) {
-                console.error(`箱数の新規作成に失敗しました: ${product.itemName}`, createError);
-                setError(`商品 ${product.itemName} の箱数登録に失敗しました`);
+                console.error(`箱数の新規作成に失敗しました`, createError);
+                setError(`箱数登録に失敗しました`);
               }
             }
           }
