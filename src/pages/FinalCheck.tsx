@@ -195,12 +195,12 @@ export const FinalCheck = () => {
     <Box sx={{ //表部分の親Box
         display: 'flex',
         flexDirection: 'row', // ← 横並びにする
-        justifyContent: 'flex-end',
+        justifyContent: 'flex-start',
         alignItems: 'flex-start',
         width: '100%',
         height: '100vh',
-        pl: 0,
-        ml:'100px',
+        pl: 3,
+        ml:0,
         mt:'80px',
         gap: 3, // 間のスペース
 
@@ -213,7 +213,7 @@ export const FinalCheck = () => {
         店舗別箱数一覧
     </Typography>
     
-    <TableContainer component={Paper} sx={{ width: '100%',maxHeight: '600px',  overflowY: 'auto', mt: 2 }}>
+<TableContainer component={Paper} sx={{ width: '100%', maxHeight: '600px', overflowY: 'auto', overflowX: 'hidden', mt: 2 }}>
         <Table stickyHeader aria-label="店舗データテーブル" >
             <TableHead>
             <TableRow> 
