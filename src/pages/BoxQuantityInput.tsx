@@ -210,7 +210,7 @@ const completedStoreIds = completedStores.map(item => item.storeId);
           setTimeout(() => {
             const allProductIds = productList.map(p => p.id);
             setSelectedProductIds(allProductIds);
-          }, 100);
+          }, 1);
         }
       
       // 次の店舗を取得
@@ -339,7 +339,7 @@ const completedStoreIds = completedStores.map(item => item.storeId);
           setTimeout(() => {
             const allProductIds = productList.map(p => p.id);
             setSelectedProductIds(allProductIds);
-          }, 200); // 少し長めの遅延を設定
+          }, 1); // 少し長めの遅延を設定
         }
         }
       } catch (err) {
