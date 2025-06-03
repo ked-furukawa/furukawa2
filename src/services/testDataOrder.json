@@ -51,6 +51,54 @@
         {
         "date": "2025-06-02",
 
+        "storeId": "020",
+        "storeName": "吉田店",
+        "storeTc": "中之島",
+
+        "itemId": "210030",
+        "itemName": "ナス",
+        "itemFormalName": "天ぷら用ナス",
+        "orderCount": 1
+    },
+        {
+        "date": "2025-06-02",
+
+        "storeId": "020",
+        "storeName": "吉田店",
+        "storeTc": "中之島",
+
+        "itemId": "210110",
+        "itemName": "あんかけ",
+        "itemFormalName": "あんかけ用野菜4点セット",
+        "orderCount": 1
+    },
+        {
+        "date": "2025-06-02",
+
+        "storeId": "020",
+        "storeName": "吉田店",
+        "storeTc": "中之島",
+
+        "itemId": "210152",
+        "itemName": "天小",
+        "itemFormalName": "天ぷら御前キット夏",
+        "orderCount": 1
+    },
+        {
+        "date": "2025-06-02",
+
+        "storeId": "020",
+        "storeName": "吉田店",
+        "storeTc": "中之島",
+
+        "itemId": "210057",
+        "itemName": "天重",
+        "itemFormalName": "天重(夏) キット",
+        "orderCount": 1
+    },
+        {
+        "date": "2025-06-02",
+
         "storeId": "121",
         "storeName": "川崎店",
         "storeTc": "中之島",

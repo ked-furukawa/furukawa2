@@ -188,6 +188,7 @@ useEffect(() => {
     // orders から最初の storeId を取り出して表示する
     const firstStoreId = orders[0].storeId;
     handleStoreSelect(firstStoreId);
+    setNextStore(getNextStore(orders[0].storeId));
   }
   console.log('ログ',extractStoresFromOrders(orders));
 
