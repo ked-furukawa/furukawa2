@@ -71,7 +71,7 @@ export const FinalCheck = () => {
         <Box
         sx={{
             position: 'absolute',
-            top: 16,
+            top: 30,
             right: 16,
             zIndex: 1000,
         }}
@@ -196,7 +196,7 @@ export const FinalCheck = () => {
         display: 'flex',
         flexDirection: 'row', // ← 横並びにする
         justifyContent: 'flex-end',
-        alignItems: 'flex-end',
+        alignItems: 'flex-start',
         width: '100%',
         height: '100vh',
         pl: 0,
@@ -285,13 +285,16 @@ export const FinalCheck = () => {
     sx={{
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
     minHeight: '100vh',
     width:'450px',
-    pt: 3,
+    pt:8,    
+    px: 3,
     gap: 2,
     }}
->
+>       <Typography variant="h5" component="h2" sx={{fontSize: '1.5rem', fontWeight: 'bold', mb: 1,mt:-14, visibility: 'hidden'}}>
+        非表示タイトル（高さ調整用）
+    </Typography>
     <SummaryTable title="全体 合計" total={totalAll} />
     <SummaryTable title="中之島物流センター 合計" total={totalNakanoshima} />
     <SummaryTable title="上越物流センター 合計" total={totalJyoetsu} />
