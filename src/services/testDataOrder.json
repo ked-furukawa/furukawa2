@@ -1,30 +1,18 @@
 
 [
     {
-        "date": "2025-06-02",
+        "date": "2025-06-04",
 
         "storeId": "019",
         "storeName": "内野店",
         "storeTc": "中之島",
 
-        "itemId": "210001",
-        "itemName": "かぼちゃ",
-        "itemFormalName": "カボチャスライス",
-        "orderCount": 1
+        "itemId": "210283",
+        "itemName": "ごはん",
+        "itemFormalName": "あさりの炊き込みご飯キット",
+        "orderCount": 99
     },
     {
-        "date": "2025-06-02",
-
-        "storeId": "019",
-        "storeName": "内野店",
-        "storeTc": "中之島",
-
-        "itemId": "210004",
-        "itemName": "トマト",
-        "itemFormalName": "ミニトマト",
-        "orderCount": 20
-    },
-        {
         "date": "2025-06-02",
 
         "storeId": "019",
@@ -63,23 +51,71 @@
         {
         "date": "2025-06-02",
 
-        "storeId": "021",
-        "storeName": "四日町店",
+        "storeId": "020",
+        "storeName": "吉田店",
         "storeTc": "中之島",
 
         "itemId": "210030",
-        "itemName": "大エビ",
-        "itemFormalName": "大エビ天重キット",
-        "orderCount": 2
+        "itemName": "ナス",
+        "itemFormalName": "天ぷら用ナス",
+        "orderCount": 1
     },
         {
         "date": "2025-06-02",
 
-        "storeId": "021",
-        "storeName": "四日町店",
+        "storeId": "020",
+        "storeName": "吉田店",
         "storeTc": "中之島",
 
-        "itemId": "210030",
+        "itemId": "210110",
+        "itemName": "あんかけ",
+        "itemFormalName": "あんかけ用野菜4点セット",
+        "orderCount": 1
+    },
+        {
+        "date": "2025-06-02",
+
+        "storeId": "020",
+        "storeName": "吉田店",
+        "storeTc": "中之島",
+
+        "itemId": "210152",
+        "itemName": "天小",
+        "itemFormalName": "天ぷら御前キット夏",
+        "orderCount": 1
+    },
+        {
+        "date": "2025-06-02",
+
+        "storeId": "020",
+        "storeName": "吉田店",
+        "storeTc": "中之島",
+
+        "itemId": "210057",
+        "itemName": "天重",
+        "itemFormalName": "天重(夏) キット",
+        "orderCount": 1
+    },
+        {
+        "date": "2025-06-02",
+
+        "storeId": "121",
+        "storeName": "川崎店",
+        "storeTc": "中之島",
+
+        "itemId": "210039",
+        "itemName": "大エビ",
+        "itemFormalName": "大エビ天重キット",
+        "orderCount": 1
+    },
+        {
+        "date": "2025-06-02",
+
+        "storeId": "121",
+        "storeName": "川崎店",
+        "storeTc": "中之島",
+
+        "itemId": "210039",
         "itemName": "大エビ",
         "itemFormalName": "大エビ天重キット",
         "orderCount": 3
@@ -87,38 +123,14 @@
         {
         "date": "2025-06-02",
 
-        "storeId": "021",
-        "storeName": "四日町店",
+        "storeId": "121",
+        "storeName": "川崎店",
         "storeTc": "中之島",
 
         "itemId": "210040",
         "itemName": "てり",
         "itemFormalName": "チキンステーキ（照焼き）１０枚",
         "orderCount": 1
-    },
-    {
-        "date": "2025-06-02",
-
-        "storeId": "101",
-        "storeName": "関原店",
-        "storeTc": "中之島",
-
-        "itemId": "210040",
-        "itemName": "てり",
-        "itemFormalName": "チキンステーキ（照焼き）１０枚",
-        "orderCount": 2
-    },
-    {
-        "date": "2025-06-02",
-
-        "storeId": "025",
-        "storeName": "春日山店",
-        "storeTc": "上越",
-
-        "itemId": "210005",
-        "itemName": "レモンスライス",
-        "itemFormalName": "レモン",
-        "orderCount": 3
     },
     {
         "date": "2025-06-02",
@@ -139,122 +151,50 @@
         "storeName": "黒部店",
         "storeTc": "上越",
 
-        "itemId": "210030",
+        "itemId": "210039",
         "itemName": "大エビ",
         "itemFormalName": "大エビ天重キット",
         "orderCount": 1
     },
     {
         "date": "2025-06-02",
-
-        "storeId": "137",
-        "storeName": "魚津店",
-        "storeTc": "上越",
-
-        "itemId": "210030",
+        "storeId": "020",
+        "storeName": "吉田店",
+        "storeTc": "中之島",
+        "itemId": "210082",
         "itemName": "バジル",
         "itemFormalName": "バジルチキンと根菜キット",
-        "orderCount": 2
+        "orderCount": 4
     },
     {
-    "date": "2025-06-02",
-    "storeId": "026",
-    "storeName": "能生店",
-    "storeTc": "上越",
-    "itemId": "210091",
-    "itemName": "親子",
-    "itemFormalName": "だし香る親子丼",
-    "orderCount": 3
+        "date": "2025-06-02",
+        "storeId": "133",
+        "storeName": "糸魚川東店",
+        "storeTc": "上越",
+        "itemId": "210001",
+        "itemName": "かぼちゃ",
+        "itemFormalName": "カボチャスライス",
+        "orderCount": 5
     },
     {
-    "date": "2025-06-02",
-    "storeId": "017",
-    "storeName": "青山店",
-    "storeTc": "中之島",
-    "itemId": "210004",
-    "itemName": "トマト",
-    "itemFormalName": "ミニトマト",
-    "orderCount": 2
+        "date": "2025-06-02",
+        "storeId": "133",
+        "storeName": "糸魚川東店",
+        "storeTc": "上越",
+        "itemId": "210068",
+        "itemName": "とりてん",
+        "itemFormalName": "弁当用とり天キット",
+        "orderCount": 4
     },
     {
-    "date": "2025-06-02",
-    "storeId": "020",
-    "storeName": "吉田店",
-    "storeTc": "中之島",
-    "itemId": "210082",
-    "itemName": "バジル",
-    "itemFormalName": "バジルチキンと根菜キット",
-    "orderCount": 4
-    },
-    {
-    "date": "2025-06-02",
-    "storeId": "018",
-    "storeName": "寺尾店",
-    "storeTc": "中之島",
-    "itemId": "210068",
-    "itemName": "とりてん",
-    "itemFormalName": "弁当用とり天キット",
-    "orderCount": 1
-    },
-    {
-    "date": "2025-06-02",
-    "storeId": "028",
-    "storeName": "妙高店",
-    "storeTc": "上越",
-    "itemId": "210001",
-    "itemName": "かぼちゃ",
-    "itemFormalName": "カボチャスライス",
-    "orderCount": 2
-    },
-    {
-    "date": "2025-06-02",
-    "storeId": "015",
-    "storeName": "新発田店",
-    "storeTc": "中之島",
-    "itemId": "210004",
-    "itemName": "トマト",
-    "itemFormalName": "ミニトマト",
-    "orderCount": 3
-    },
-    {
-    "date": "2025-06-02",
-    "storeId": "025",
-    "storeName": "直江津店",
-    "storeTc": "上越",
-    "itemId": "210001",
-    "itemName": "かぼちゃ",
-    "itemFormalName": "カボチャスライス",
-    "orderCount": 5
-    },
-    {
-    "date": "2025-06-02",
-    "storeId": "019",
-    "storeName": "内野店",
-    "storeTc": "中之島",
-    "itemId": "210082",
-    "itemName": "バジル",
-    "itemFormalName": "バジルチキンと根菜キット",
-    "orderCount": 1
-    },
-    {
-    "date": "2025-06-02",
-    "storeId": "022",
-    "storeName": "巻店",
-    "storeTc": "中之島",
-    "itemId": "210091",
-    "itemName": "親子",
-    "itemFormalName": "だし香る親子丼",
-    "orderCount": 2
-    },
-    {
-    "date": "2025-06-02",
-    "storeId": "222",
-    "storeName": "高田店",
-    "storeTc": "上越",
-    "itemId": "210068",
-    "itemName": "とりてん",
-    "itemFormalName": "弁当用とり天キット",
-    "orderCount": 4
+        "date": "2025-06-02",
+        "storeId": "133",
+        "storeName": "糸魚川東店",
+        "storeTc": "上越",
+        "itemId": "210126",
+        "itemName": "あまから",
+        "itemFormalName": "豚肉の甘辛揚げ",
+        "orderCount": 1
     }
 
 ]
