@@ -62,7 +62,7 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
   const [storeData, setStoreData] = useState<Store | null>(null);
   const [nextStore, setNextStore] = useState<Store | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [_loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
@@ -89,7 +89,7 @@ const [orders, setOrders] = useState<Order[]>([]); //Orderテーブルの内容�
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        setLoading(true);
+        // setLoading(true);
         
         // テスト用固定日付
       const testDate = "2025-06-02";
@@ -129,7 +129,7 @@ const [orders, setOrders] = useState<Order[]>([]); //Orderテーブルの内容�
         setError('データの読み込みに失敗しました');
         console.error(err);
       } finally {
-        setLoading(false);
+        // setLoading(false);
       }
     };
 
@@ -188,6 +188,7 @@ useEffect(() => {
     // orders から最初の storeId を取り出して表示する
     const firstStoreId = orders[0].storeId;
     handleStoreSelect(firstStoreId);
+    setNextStore(getNextStore(orders[0].storeId));
   }
   console.log('ログ',extractStoresFromOrders(orders));
 
@@ -215,13 +216,13 @@ useEffect(() => {
   // 店舗選択時の処理
 const handleStoreSelect = async (storeId: string) => {
   setSelectedStoreId(storeId);
-  setLoading(true);
+  // setLoading(true);
   try {
     const filtered = orders.filter(order => order.storeId === storeId);
 
     if (filtered.length === 0) {
       setError('店舗データが見つかりませんでした');
-      setLoading(false);
+      // setLoading(false);
       return;
     }
 
@@ -286,7 +287,7 @@ const handleStoreSelect = async (storeId: string) => {
     console.error('店舗データの取得に失敗しました:', err);
     setError('データの取得に失敗しました');
   } finally {
-    setLoading(false);
+    // setLoading(false);
   }
 };
 
@@ -334,13 +335,9 @@ const handleProductSelect = (productId: string) => {
   const product = products.find(p => p.id === productId);
   
   if (!product) return; // 商品が見つからない場合は何もしない
-
-  console.log(product.quantity)
   
   // チェック済み商品の場合（箱数が入力済みかつ0より大きい）
   if (product.isChecked ) {
-    console.log('チェック済み商品を選択:', product.itemName, product.quantity);
-    
     // この商品だけを選択状態に設定（他の選択をクリア）
     setSelectedProductIds([productId]);
     
@@ -349,8 +346,6 @@ const handleProductSelect = (productId: string) => {
     
     return;
   }
-  
-  console.log('未チェック商品または箱数0の商品を選択:', product.itemName);
   
   // 未チェック商品の場合は通常の選択処理
   setSelectedProductIds(prev => {
@@ -387,7 +382,7 @@ const handleProductSelect = (productId: string) => {
               filter: { 
                 date: { eq: testDate },
                 storeId: { eq: selectedStoreId },
-                boxCreatedBy: { eq: product.itemName }
+                boxCreatedBy: { eq: 'test部門' }
               }
             });
             
@@ -399,9 +394,9 @@ const handleProductSelect = (productId: string) => {
               storeTc: storeData.storeTc,
               color: selectedColor,
               boxCount: product.quantity,
-              boxCreatedBy: product.itemName
+              boxCreatedBy: 'test部門'
             };
-            
+
             if (existingBoxes.length > 0) {
               
               try {
@@ -413,19 +408,19 @@ const handleProductSelect = (productId: string) => {
                     storeTc: storeData.storeTc,
                     color: selectedColor,
                     boxCount: product.quantity,
-                    boxCreatedBy: product.itemName
+                    boxCreatedBy: 'test部門'
                   });
                 } catch (updateError) {
-                console.error(`箱数の更新に失敗しました: ${product.itemName}`, updateError);
-                setError(`商品 ${product.itemName} の箱数更新に失敗しました`);
+                console.error(`箱数の更新に失敗しました`, updateError);
+                setError(`箱数更新に失敗しました`);
               }
             } else {
               // 新規作成
               try {
                 await dataClient.models.Box.create(boxData);
               } catch (createError) {
-                console.error(`箱数の新規作成に失敗しました: ${product.itemName}`, createError);
-                setError(`商品 ${product.itemName} の箱数登録に失敗しました`);
+                console.error(`箱数の新規作成に失敗しました`, createError);
+                setError(`箱数登録に失敗しました`);
               }
             }
           }
@@ -509,14 +504,14 @@ const handleProductSelect = (productId: string) => {
           <Box 
             display="flex"
             flexDirection={{ xs: 'column', md: 'row' }}
-            justifyContent="space-between"
+            justifyContent="flex-start"
             alignItems="flex-start"
-            gap={1} 
+            gap={2} 
             height="100%"
           >
             {/* 中央：統合された店舗情報と商品リスト */}
             <Box 
-              width={{ xs: '100%', md: '55%' }} 
+              width={{ xs: '100%', md: '45%' }} 
               height={{ xs: 'auto', md: '600px' }}
             >
               <StoreProductPanel
@@ -525,7 +520,7 @@ const handleProductSelect = (productId: string) => {
                 products={products}
                 selectedProductIds={selectedProductIds}
                 onProductSelect={handleProductSelect}
-                loading={loading}
+                loading={false}
                 error={error}
                 completedStoreIds={completedStoreIds}
               />
@@ -533,7 +528,7 @@ const handleProductSelect = (productId: string) => {
 
             {/* 右側：テンキー */}
             <Box 
-              width={{ xs: '100%', md: '43%' }}
+              width={{ xs: '100%', md: '35%' }}
               height={{ xs: 'auto', md: '600px' }}
             >
               <Keypad 

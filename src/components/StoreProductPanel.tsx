@@ -142,7 +142,7 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
         </Box>
         ) : (
         <TableContainer sx={{ flex: 1, overflowY: 'auto' }}>
-            <Table stickyHeader size="small">
+            <Table stickyHeader size="small" sx={{ tableLayout: 'fixed' }}>
             <TableHead>
                 <TableRow>
                 <TableCell>商品名</TableCell>
@@ -162,14 +162,35 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
                     }}
                     onClick={() => onProductSelect(product.id)} // 行クリックでも選択できるようにする
                     >
-                    <TableCell>
-                        <Typography variant="body2">
-                        {product.itemName}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                        {product.itemFormalName}
-                        </Typography>
-                    </TableCell>
+                    <TableCell sx={{ 
+                    maxWidth: 0, // これが重要: テキストの省略を強制
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                }}>
+                    <Typography 
+                    variant="body2" 
+                    sx={{ 
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                    }}
+                    >
+                    {product.itemName}
+                    </Typography>
+                    <Typography 
+                    variant="caption" 
+                    color="text.secondary"
+                    sx={{ 
+                        display: 'block',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                    }}
+                    >
+                    {product.itemFormalName}
+                    </Typography>
+                </TableCell>
                     <TableCell align="right">{product.orderCount}</TableCell>
                     <TableCell align="center" onClick={(e) => e.stopPropagation()}> {/* イベントの伝播を停止 */}
                         <Checkbox
