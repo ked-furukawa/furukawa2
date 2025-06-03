@@ -509,14 +509,14 @@ const handleProductSelect = (productId: string) => {
           <Box 
             display="flex"
             flexDirection={{ xs: 'column', md: 'row' }}
-            justifyContent="space-between"
+            justifyContent="flex-start"
             alignItems="flex-start"
-            gap={1} 
+            gap={2} 
             height="100%"
           >
             {/* 中央：統合された店舗情報と商品リスト */}
             <Box 
-              width={{ xs: '100%', md: '55%' }} 
+              width={{ xs: '100%', md: '45%' }} 
               height={{ xs: 'auto', md: '600px' }}
             >
               <StoreProductPanel
@@ -533,7 +533,7 @@ const handleProductSelect = (productId: string) => {
 
             {/* 右側：テンキー */}
             <Box 
-              width={{ xs: '100%', md: '43%' }}
+              width={{ xs: '100%', md: '35%' }}
               height={{ xs: 'auto', md: '600px' }}
             >
               <Keypad 
