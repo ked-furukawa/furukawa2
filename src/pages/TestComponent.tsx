@@ -81,7 +81,7 @@ export const TestComponent = () => {
 
 const createTestFlag = async (): Promise<boolean> => {
     try {
-        await boxClient.models.CompleteFlag.create({
+        await boxClient.models.CompleteFlag.update({
         date: '2025-06-02',
         departmentId: 'test',
         departmentName: 'テスト部門',
