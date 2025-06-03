@@ -16,6 +16,7 @@ import StoreList from '../components/StoreList';
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../../amplify/data/resource";
 import { StoreProductPanel } from '../components/StoreProductPanel';
+import { filterByCompleteFlag } from '../components/filterByCompleteFlag';
 
 // 型定義に BoxColor を追加
 type BoxColor = 'green' | 'red' | 'blue' | 'yellow';
@@ -97,11 +98,14 @@ const [orders, setOrders] = useState<Order[]>([]); //Orderテーブルの内容�
       const { data: boxData } = await dataClient.models.Box.list({
         filter: { date: { eq: testDate } }
       });
+
+        //フィルター関数に渡す
+      const filteredBoxData = await filterByCompleteFlag(testDate,'test',boxData);
       
       // 店舗ごとにグループ化
       const storeBoxMap = new Map();
       
-      boxData.forEach(box => {
+      filteredBoxData.forEach(box => {
         if (!storeBoxMap.has(box.storeId)) {
           storeBoxMap.set(box.storeId, {
             storeId: box.storeId,
@@ -109,6 +113,7 @@ const [orders, setOrders] = useState<Order[]>([]); //Orderテーブルの内容�
             color: box.color || 'green'
           });
         }
+      
         
         // 箱数を加算
         const storeData = storeBoxMap.get(box.storeId);
@@ -134,12 +139,6 @@ const [orders, setOrders] = useState<Order[]>([]); //Orderテーブルの内容�
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        // // ✅ 完了フラグ取得
-        // const { data: flag } = await dataClient.models.CompleteFlag.get({
-        //   date,
-        //   departmentId
-        // });
-
         // ✅ Order 全件取得
         const { data: allOrders } = await dataClient.models.Order.list({
           filter: {
@@ -147,38 +146,10 @@ const [orders, setOrders] = useState<Order[]>([]); //Orderテーブルの内容�
           }
         });
 
-        // 並び替え：中之島 → それ以外、各グループ内で storeId 昇順
-        const sortedOrders = allOrders
-          .slice() // 元データを破壊しないためのコピー
-          .sort((a, b) => {
-            const isA_Nakanoshima = a.storeTc === '中之島';
-            const isB_Nakanoshima = b.storeTc === '中之島';
+      //フィルター関数に渡す
+      const filteredOrders = await filterByCompleteFlag(date,'test',allOrders);
 
-            if (isA_Nakanoshima && !isB_Nakanoshima) return -1;
-            if (!isA_Nakanoshima && isB_Nakanoshima) return 1;
-
-            // 両方とも中之島 or 両方ともそれ以外 → storeId昇順
-            return a.storeId.localeCompare(b.storeId);
-          });
-
-        // // ✅ 状態に応じたフィルタリング
-        // const filteredOrders = (allOrders ?? []).filter((order) => {
-        //   setCompleteState(flag?.completeState ?? '未完了'); // ← ここで未定義時のフォールバック
-
-        //   if (!order.date) return false;
-
-        //   if (completeState === '未完了') {
-        //     return order.date === date && order.storeTc == '中之島';
-        //   }
-
-        //   if (completeState === '中之島完了') {
-        //     return order.date === date && order.storeTc !== '中之島';
-        //   }
-
-        //   // 「作業完了」などは非表示扱い
-        //   return false;
-        // });
-        setOrders(sortedOrders);
+        setOrders(filteredOrders as Order[]);
       } catch (error) {
         console.error('初期データ取得エラー:', error);
       } finally {
@@ -268,12 +239,14 @@ const handleStoreSelect = async (storeId: string) => {
       }
     });
 
+      //フィルター関数に渡す
+    const filteredBoxData = await filterByCompleteFlag(date,'test',boxData);
         
       // 選択した店舗が完了済みかどうかをチェック
     const isCompletedStore = completedStores.some(store => store.storeId === storeId);  
 
     const productList = filtered.map(order => {
-    const box = boxData.find(b => b.boxCreatedBy === departmentId);
+    const box = filteredBoxData.find(b => b.boxCreatedBy === departmentId);
 
 
       // 完了済み店舗の場合は全商品をチェック済みにする
@@ -397,7 +370,7 @@ const handleProductSelect = (productId: string) => {
 
   // 次の店舗へ移動する関数（修正版）
     const navigateToNextStore = async () => {
-      if (!nextStore || !selectedStoreId || !storeData) return;
+      if ( !selectedStoreId || !storeData) return;
       
       try {
         setSavingData(true);
@@ -482,11 +455,17 @@ const handleProductSelect = (productId: string) => {
         if (newlyCompleted.length === nakanoshimaStores.length) {
       // 全中之島店舗が完了 → 商品数確認画面へ遷移
           navigateTo('SortingCheckScreen');
+          await dataClient.models.CompleteFlag.update({
+                    date: testDate,
+                    departmentId: 'test',
+                    departmentName: 'test部門',
+                    completeState: '中之島完了'
+                  });
           return;
         }
         console.log('completedStores.length',completedStores.length);
-        console.log('allStores.length',allStores.length);
-        if (completedStores.length === allStores.length){
+        console.log('nextstore',nextStore?.storeId);
+        if (!nextStore){
           navigateTo('StoreDoubleCheckList');
           return;
         }

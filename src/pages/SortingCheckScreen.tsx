@@ -21,6 +21,7 @@ import {
 
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from "../../amplify/data/resource";
+import { filterByCompleteFlag } from '../components/filterByCompleteFlag';
 
 
 const client = generateClient<Schema>();
@@ -85,14 +86,16 @@ const fetchProducts = async () => {
         date: { eq: targetDate }
       }
     });
+      //フィルター関数に渡す
+    const filteredData = await filterByCompleteFlag(targetDate,'test',data);
 
-    console.log(data);
+    console.log(filteredData);
 
-    if (data) {
+    if (filteredData) {
       // 商品名（itemFormalName）でグループ化して集計
       const groupedMap = new Map<string, Product>();
 
-      for (const order of data) {
+      for (const order of filteredData) {
         const key = order.itemName || `商品ID: ${order.itemId}`;
 
         if (groupedMap.has(key)) {
