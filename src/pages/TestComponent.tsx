@@ -79,24 +79,44 @@ export const TestComponent = () => {
 };
 
 
-const createTestFlag = async (): Promise<boolean> => {
-    try {
-        await boxClient.models.CompleteFlag.update({
-        date: '2025-06-02',
-        departmentId: 'test',
-        departmentName: 'テスト部門',
-        completeState: '未完了', // 他に '中之島完了', '作業完了' も可
+const createOrUpdateTestFlag = async (): Promise<boolean> => {
+  try {
+    const date = '2025-06-02';
+    const departmentId = 'test';
+
+    // 既存データを取得
+    const { data: existingFlag } = await boxClient.models.CompleteFlag.get({
+        date,
+        departmentId,
         });
+
+    if (existingFlag) {
+    // データが存在する場合は update
+    await boxClient.models.CompleteFlag.update({
+        date,
+        departmentId,
+        completeState: '未完了', // 必要なフィールドだけ更新
+    });
+    } else {
+    // データが存在しない場合は create
+    await boxClient.models.CompleteFlag.create({
+        date,
+        departmentId,
+        departmentName: 'テスト部門',
+        completeState: '未完了',
+    });
+    }
+
         return true;
     } catch (error) {
-        console.error('CompleteFlag 作成エラー:', error);
+        console.error('CompleteFlag 作成/更新エラー:', error);
         return false;
     }
 };
 
 // ボタンクリックハンドラーtestフラグ作成用
     const handleCreateFlag = async () => {
-    const success = await createTestFlag(); 
+    const success = await createOrUpdateTestFlag(); 
     if (success) console.log("保存に成功しました");
 };
 
@@ -153,7 +173,7 @@ return (
         <Button variant="contained" color="secondary" onClick={ handleSaveClick}> {/*DB保存用関数を呼び出す*/}
         Orderテスト用ボタン
         </Button>
-        <Button variant="contained" color="secondary" onClick={ handleCreateFlag }> {/*test部門用の完了フラグを作る*/}
+        <Button variant="contained" color="error" onClick={ handleCreateFlag }> {/*test部門用の完了フラグを作る*/}
             test部門未完了
         </Button>
         <Button variant="contained" color="error" onClick={handleDeleteAll}>
