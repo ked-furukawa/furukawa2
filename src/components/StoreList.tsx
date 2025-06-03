@@ -100,25 +100,25 @@ const StoreList: React.FC<StoreListProps> = ({
   useEffect(() => {
     fetchBoxData();
     
-    // // リアルタイム更新のためのサブスクリプション設定
-    //   const testDate = "2025-06-02";
-    //   const subscription = dataClient.models.Box.observeQuery({
-    //     filter: { date: { eq: testDate } }
-    //   }).subscribe({
-    //     next: ({ items }) => {
-    //       const formattedBoxData = items.map(box => ({
-    //         storeId: box.storeId,
-    //         boxCount: box.boxCount || 0,
-    //         color: (box.color as BoxColor) || 'green'
-    //       }));
+    // リアルタイム更新のためのサブスクリプション設定
+      const testDate = "2025-06-02";
+      const subscription = dataClient.models.Box.observeQuery({
+        filter: { date: { eq: testDate } }
+      }).subscribe({
+        next: ({ items }) => {
+          const formattedBoxData = items.map(box => ({
+            storeId: box.storeId,
+            boxCount: box.boxCount || 0,
+            color: (box.color as BoxColor) || 'green'
+          }));
           
-    //       setBoxData(formattedBoxData);
-    //     },
-    //     error: (err) => console.error('箱数データの監視に失敗しました:', err)
-    //   });
+          setBoxData(formattedBoxData);
+        },
+        error: (err) => console.error('箱数データの監視に失敗しました:', err)
+      });
     
-    // // クリーンアップ関数
-    // return () => subscription.unsubscribe();
+    // クリーンアップ関数
+    return () => subscription.unsubscribe();
   }, []);
 
   // 送り先ごとの店舗データを取得
