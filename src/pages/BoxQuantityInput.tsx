@@ -27,7 +27,7 @@ const dataClient = generateClient<Schema>();
 type Order = Schema['Order']['type'];
 
 // 型定義
-export interface Store {
+interface Store {
   storeId: string;
   storeName: string;
   storeTc: string;
