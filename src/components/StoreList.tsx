@@ -1,5 +1,5 @@
 // src/components/StoreList.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Box, 
   List, 
@@ -96,6 +96,11 @@ const StoreList: React.FC<StoreListProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [expandedDestinations, setExpandedDestinations] = useState<Record<string, boolean>>({});
   const [boxData, setBoxData] = useState<BoxData[]>([]); // 箱数データの状態を追加
+
+  // 店舗要素への参照を保持するためのオブジェクト
+  const storeRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  // リストコンテナへの参照
+  const listContainerRef = useRef<HTMLDivElement | null>(null);
 
   // StoreList.tsx の fetchBoxData 関数を修正
     const fetchBoxData = async () => {
@@ -246,6 +251,51 @@ const StoreList: React.FC<StoreListProps> = ({
     fetchStoresByDestination();
   }, [boxData, completedStores]); // boxDataとcompletedStoresが変更されたときに再取得
 
+// 選択された店舗が変更されたときに自動スクロール
+  useEffect(() => {
+    if (selectedStoreId && !loading) {
+      // 選択された店舗の要素を取得
+      const selectedStoreElement = storeRefs.current[selectedStoreId];
+      
+      if (selectedStoreElement) {
+        // 選択された店舗が属する送り先を見つける
+        const destinationGroup = storesByDestination.find(group => 
+          group.stores.some(store => store.id === selectedStoreId)
+        );
+        
+        // 送り先が見つかり、折りたたまれている場合は展開
+        if (destinationGroup && !expandedDestinations[destinationGroup.destination.id]) {
+          setExpandedDestinations(prev => ({
+            ...prev,
+            [destinationGroup.destination.id]: true
+          }));
+          
+          // 展開後にスクロールするために少し遅延
+          setTimeout(() => {
+            scrollToSelectedStore(selectedStoreId);
+          }, 300);
+        } else {
+          // 送り先が既に展開されている場合は即座にスクロール
+          scrollToSelectedStore(selectedStoreId);
+        }
+      }
+    }
+  }, [selectedStoreId, loading, storesByDestination, expandedDestinations]);
+  
+  // 選択された店舗にスクロールする関数
+  const scrollToSelectedStore = (storeId: string) => {
+    const selectedElement = storeRefs.current[storeId];
+    const container = listContainerRef.current;
+    
+    if (selectedElement && container) {
+      // スムーズにスクロール
+      selectedElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center', // 画面真ん中に出るようにスクロール
+      });
+    }
+  };
+  
   // 送り先の展開/折りたたみを切り替え
   const toggleDestination = (destinationId: string) => {
     setExpandedDestinations(prev => ({
@@ -289,6 +339,7 @@ const StoreList: React.FC<StoreListProps> = ({
             店舗一覧
           </Typography>
         </Box>
+        
         
         <Box sx={{ 
           flex: 1,
@@ -363,8 +414,11 @@ const StoreList: React.FC<StoreListProps> = ({
         </Typography>
       </Box>
       
-      {/* リスト部分 */}
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
+      {/* リスト部分 - ref を追加 */}
+      <Box 
+        ref={listContainerRef} 
+        sx={{ flex: 1, overflow: 'auto' }}
+      >
         <List component="nav" dense disablePadding>
           {storesByDestination.map((group) => (
             <React.Fragment key={group.destination.id}>
@@ -400,6 +454,8 @@ const StoreList: React.FC<StoreListProps> = ({
                     return (
                       <ListItemButton
                         key={store.id}
+                        // ref を設定
+                        ref={(el) => storeRefs.current[store.id] = el}
                         selected={selectedStoreId === store.id}
                         onClick={() => onSelectStore(store.id)}
                         sx={{ 
