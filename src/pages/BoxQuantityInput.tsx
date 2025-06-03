@@ -16,6 +16,7 @@ import StoreList from '../components/StoreList';
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../../amplify/data/resource";
 import { StoreProductPanel } from '../components/StoreProductPanel';
+import { filterByCompleteFlag } from '../components/filterByCompleteFlag';
 
 // 型定義に BoxColor を追加
 type BoxColor = 'green' | 'red' | 'blue' | 'yellow';
@@ -26,7 +27,7 @@ const dataClient = generateClient<Schema>();
 type Order = Schema['Order']['type'];
 
 // 型定義
-export interface Store {
+interface Store {
   storeId: string;
   storeName: string;
   storeTc: string;
@@ -48,7 +49,6 @@ interface CompletedStore {
   boxCount: number;
   color: BoxColor; // 色情報を追加
 }
-
 interface BoxQuantityInputProps {
   navigateTo: (key: string) => void;
 }//外部から受け取るprops定義
@@ -73,6 +73,7 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
   const [allStores, setAllStores] = useState<Store[]>([]);
   const [selectedColor, setSelectedColor] = useState<BoxColor>('green');
   const [refreshKey, setRefreshKey] = useState(0);
+  // const [completeState, setCompleteState] = useState<string>();
   
   // 完了済み店舗IDのリスト（互換性のため）
 const completedStoreIds = completedStores.map(item => item.storeId);
@@ -84,15 +85,60 @@ const [orders, setOrders] = useState<Order[]>([]); //Orderテーブルの内容�
   const date = '2025-06-02';
   const departmentId = 'test';
 
+    // 初期データの取得
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        setLoading(true);
+        
+        // テスト用固定日付
+      const testDate = "2025-06-02";
+      
+      // 完了済み店舗データを DynamoDB から取得
+      const { data: boxData } = await dataClient.models.Box.list({
+        filter: { date: { eq: testDate } }
+      });
+
+        //フィルター関数に渡す
+      const filteredBoxData = await filterByCompleteFlag(testDate,'test',boxData);
+      
+      // 店舗ごとにグループ化
+      const storeBoxMap = new Map();
+      
+      filteredBoxData.forEach(box => {
+        if (!storeBoxMap.has(box.storeId)) {
+          storeBoxMap.set(box.storeId, {
+            storeId: box.storeId,
+            boxCount: 0,
+            color: box.color || 'green'
+          });
+        }
+      
+        
+        // 箱数を加算
+        const storeData = storeBoxMap.get(box.storeId);
+        storeData.boxCount += box.boxCount;
+      });
+      
+      // 完了済み店舗リストを設定
+      const initialCompletedStores = Array.from(storeBoxMap.values());
+      console.log('初期化された完了済み店舗リスト:', initialCompletedStores);
+      setCompletedStores(initialCompletedStores);
+      
+      } catch (err) {
+        setError('データの読み込みに失敗しました');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadInitialData();
+  }, []);
+
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        // ✅ 完了フラグ取得
-        const { data: flag } = await dataClient.models.CompleteFlag.get({
-          date,
-          departmentId
-        });
-
         // ✅ Order 全件取得
         const { data: allOrders } = await dataClient.models.Order.list({
           filter: {
@@ -100,24 +146,10 @@ const [orders, setOrders] = useState<Order[]>([]); //Orderテーブルの内容�
           }
         });
 
-        // ✅ 状態に応じたフィルタリング
-        const filteredOrders = (allOrders ?? []).filter((order) => {
-          const completeState = flag?.completeState ?? '未完了'; // ← ここで未定義時のフォールバック
+      //フィルター関数に渡す
+      const filteredOrders = await filterByCompleteFlag(date,'test',allOrders);
 
-          if (!order.date) return false;
-
-          if (completeState === '未完了') {
-            return order.date === date && order.storeTc == '中之島';
-          }
-
-          if (completeState === '中之島完了') {
-            return order.date === date && order.storeTc !== '中之島';
-          }
-
-          // 「作業完了」などは非表示扱い
-          return false;
-        });
-        setOrders(filteredOrders);
+        setOrders(filteredOrders as Order[]);
       } catch (error) {
         console.error('初期データ取得エラー:', error);
       } finally {
@@ -207,8 +239,19 @@ const handleStoreSelect = async (storeId: string) => {
       }
     });
 
+      //フィルター関数に渡す
+    const filteredBoxData = await filterByCompleteFlag(date,'test',boxData);
+        
+      // 選択した店舗が完了済みかどうかをチェック
+    const isCompletedStore = completedStores.some(store => store.storeId === storeId);  
+
     const productList = filtered.map(order => {
-      const box = boxData.find(b => b.boxCreatedBy === departmentId);
+    const box = filteredBoxData.find(b => b.boxCreatedBy === departmentId);
+
+
+      // 完了済み店舗の場合は全商品をチェック済みにする
+    const shouldBeChecked = isCompletedStore || !!box;
+
       return {
         id: order.itemId,
         itemId: order.itemId,
@@ -216,7 +259,8 @@ const handleStoreSelect = async (storeId: string) => {
         itemFormalName: order.itemFormalName || '',
         orderCount: order.orderCount,
         quantity: box ? box.boxCount : 0,
-        isChecked: !!box
+        // 完了済み店舗の場合は全商品をチェック済みにする
+        isChecked: shouldBeChecked
       };
     });
 
@@ -224,6 +268,15 @@ const handleStoreSelect = async (storeId: string) => {
 
     setSelectedProductIds([]);
     setInputValue('');
+
+        // 重要: 完了済み店舗の場合、すべての商品を選択状態にする
+    if (isCompletedStore) {
+      // 少し遅延させて確実に products の更新後に実行されるようにする
+      setTimeout(() => {
+        const allProductIds = productList.map(p => p.id);
+        setSelectedProductIds(allProductIds);
+      }, 100);
+    }
 
     if (allStores.length > 0) {
       setNextStore(getNextStore(storeId));
@@ -275,17 +328,40 @@ const handleStoreSelect = async (storeId: string) => {
     setSelectedColor(color);
   };
     
-  // 商品の選択を処理する関数
-  const handleProductSelect = (productId: string) => {
-    setSelectedProductIds(prev => {
-      // すでに選択されている場合は削除、そうでなければ追加
-      if (prev.includes(productId)) {
-        return prev.filter(id => id !== productId);
-      } else {
-        return [...prev, productId];
-      }
-    });
-  };
+// 商品の選択を処理する関数
+const handleProductSelect = (productId: string) => {
+  // 選択された商品を取得
+  const product = products.find(p => p.id === productId);
+  
+  if (!product) return; // 商品が見つからない場合は何もしない
+
+  console.log(product.quantity)
+  
+  // チェック済み商品の場合（箱数が入力済みかつ0より大きい）
+  if (product.isChecked ) {
+    console.log('チェック済み商品を選択:', product.itemName, product.quantity);
+    
+    // この商品だけを選択状態に設定（他の選択をクリア）
+    setSelectedProductIds([productId]);
+    
+    // 入力欄はクリアしておく（要件通り）
+    setInputValue('');
+    
+    return;
+  }
+  
+  console.log('未チェック商品または箱数0の商品を選択:', product.itemName);
+  
+  // 未チェック商品の場合は通常の選択処理
+  setSelectedProductIds(prev => {
+    // すでに選択されている場合は削除、そうでなければ追加
+    if (prev.includes(productId)) {
+      return prev.filter(id => id !== productId);
+    } else {
+      return [...prev, productId];
+    }
+  });
+};
 
   // テンキーからの入力を処理する関数
   const handleInputChange = (value: string) => {
@@ -294,7 +370,7 @@ const handleStoreSelect = async (storeId: string) => {
 
   // 次の店舗へ移動する関数（修正版）
     const navigateToNextStore = async () => {
-      if (!nextStore || !selectedStoreId || !storeData) return;
+      if ( !selectedStoreId || !storeData) return;
       
       try {
         setSavingData(true);
@@ -327,12 +403,10 @@ const handleStoreSelect = async (storeId: string) => {
             };
             
             if (existingBoxes.length > 0) {
-              // 既存データがある場合は更新
-              console.log(`既存の箱データを更新: ${product.itemName}`);
               
               try {
                   // 箱数を更新
-                  const result = await dataClient.models.Box.update({
+                  await dataClient.models.Box.update({
                     date: testDate,
                     storeId: selectedStoreId,
                     storeName: storeData.storeName,
@@ -341,19 +415,14 @@ const handleStoreSelect = async (storeId: string) => {
                     boxCount: product.quantity,
                     boxCreatedBy: product.itemName
                   });
-                  
-                  console.log(`箱数を更新しました: ${product.itemName}, 数量: ${product.quantity}, 色: ${selectedColor}`, result);
                 } catch (updateError) {
                 console.error(`箱数の更新に失敗しました: ${product.itemName}`, updateError);
                 setError(`商品 ${product.itemName} の箱数更新に失敗しました`);
               }
             } else {
               // 新規作成
-              console.log(`新規に箱データを作成: ${product.itemName}`);
-              
               try {
                 await dataClient.models.Box.create(boxData);
-                console.log(`箱数を新規登録しました: ${product.itemName}, 数量: ${product.quantity}`);
               } catch (createError) {
                 console.error(`箱数の新規作成に失敗しました: ${product.itemName}`, createError);
                 setError(`商品 ${product.itemName} の箱数登録に失敗しました`);
@@ -362,7 +431,8 @@ const handleStoreSelect = async (storeId: string) => {
           }
         }
         
- const totalBoxCount = parseInt(inputValue, 10) || 0;
+        // 選択された商品の箱数の合計を計算
+        const totalBoxCount = parseInt(inputValue, 10) || 0;
         
         // 完了済み店舗リストに追加（既に追加されている場合は更新）
         setCompletedStores(prev => {
@@ -374,7 +444,7 @@ const handleStoreSelect = async (storeId: string) => {
             color: selectedColor
           }];
         });
-
+        
         const nakanoshimaStores = allStores.filter(s => s.storeTc === '中之島');
         const completedNakanoshima = completedStores
         .filter(cs => nakanoshimaStores.some(ns => ns.storeId === cs.storeId))
@@ -382,12 +452,24 @@ const handleStoreSelect = async (storeId: string) => {
 
         const newlyCompleted = [...new Set([...completedNakanoshima, selectedStoreId])];
 
-        if (newlyCompleted.length >= nakanoshimaStores.length) {
-      // 全中之島店舗が完了 → 商品数確認外面へ遷移
+        if (newlyCompleted.length === nakanoshimaStores.length) {
+      // 全中之島店舗が完了 → 商品数確認画面へ遷移
           navigateTo('SortingCheckScreen');
+          await dataClient.models.CompleteFlag.update({
+                    date: testDate,
+                    departmentId: 'test',
+                    departmentName: 'test部門',
+                    completeState: '中之島完了'
+                  });
           return;
         }
-        
+        console.log('completedStores.length',completedStores.length);
+        console.log('nextstore',nextStore?.storeId);
+        if (!nextStore){
+          navigateTo('StoreDoubleCheckList');
+          return;
+        }
+
         // 次の店舗に移動
         await handleStoreSelect(nextStore.storeId);
         
@@ -500,8 +582,15 @@ const handleStoreSelect = async (storeId: string) => {
         <DialogTitle>次の店舗に進みますか？</DialogTitle>
         <DialogContent>
           <Typography variant="body1">
-            {`${storeData?.storeName || '現在の店舗'}の処理を完了し、`}
-            {nextStore ? `${nextStore.storeName}に進みます。` : '最後の店舗です。'}
+            {`${storeData?.storeName || '現在の店舗'}の処理を完了します。`}
+            {
+              !nextStore
+                ? '最後の店舗です。'
+                : storeData?.storeTc === '中之島' && nextStore.storeTc !== '中之島'
+                ? '中之島の作業が完了しました。商品数確認画面に進みます。'
+                : `${nextStore.storeName}に進みます。`
+            }
+
           </Typography>
           <Typography variant="body2" sx={{ mt: 1 }} color="text.secondary">
             ・選択した商品数: {selectedProductIds.length}

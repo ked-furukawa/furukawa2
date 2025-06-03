@@ -1,5 +1,5 @@
 // src/components/StoreList.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Box, 
   List, 
@@ -17,6 +17,8 @@ import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../../amplify/data/resource";
+
+import { filterByCompleteFlag } from './filterByCompleteFlag';
 
 // Amplify クライアントの生成
 const dataClient = generateClient<Schema>();
@@ -56,35 +58,6 @@ interface StoreListProps {
   completedStores?: {storeId: string, boxCount: number, color: BoxColor}[]; // オプショナルに変更
 }
 
-// getColorByBoxColor 関数
-// const getColorByBoxColor = (color: BoxColor): string => {
-//   switch (color) {
-//     case 'green': return 'success.main';
-//     case 'red': return 'error.main';
-//     case 'blue': return 'primary.main';
-//     case 'yellow': return 'warning.main';
-//     default: return 'success.main'; // デフォルトは緑
-//   }
-// };
-
-// 送り先（TC）の優先順位を定義
-const TC_PRIORITY: Record<string, number> = {
-  "中之島": 1,   // 中之島を最初に表示
-  "上越": 2,     // 上越を2番目に表示
-  // 他のTCがあれば追加可能
-};
-
-// 送り先（TC）のソート関数
-const sortDestinations = (a: StoresByDestination, b: StoresByDestination): number => {
-  const priorityA = TC_PRIORITY[a.destination.name] || 999;
-  const priorityB = TC_PRIORITY[b.destination.name] || 999;
-  
-  if (priorityA !== priorityB) {
-    return priorityA - priorityB;
-  }
-  
-  return a.destination.name.localeCompare(b.destination.name);
-};
 
 const StoreList: React.FC<StoreListProps> = ({ 
   selectedStoreId, 
@@ -97,6 +70,11 @@ const StoreList: React.FC<StoreListProps> = ({
   const [expandedDestinations, setExpandedDestinations] = useState<Record<string, boolean>>({});
   const [boxData, setBoxData] = useState<BoxData[]>([]); // 箱数データの状態を追加
 
+  // 店舗要素への参照を保持するためのオブジェクト
+  const storeRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  // リストコンテナへの参照
+  const listContainerRef = useRef<HTMLDivElement | null>(null);
+
   // StoreList.tsx の fetchBoxData 関数を修正
     const fetchBoxData = async () => {
       try {
@@ -107,9 +85,11 @@ const StoreList: React.FC<StoreListProps> = ({
         const { data: boxItems } = await dataClient.models.Box.list({
           filter: { date: { eq: testDate } }
         });
+
+        const filteredBoxItems = await filterByCompleteFlag(testDate,'test',boxItems);
         
         // 取得したデータを適切な形式に変換
-        const formattedBoxData = boxItems.map(box => ({
+        const formattedBoxData = filteredBoxItems.map(box => ({
           storeId: box.storeId,
           boxCount: box.boxCount || 0,
           color: (box.color as BoxColor) || 'green'
@@ -159,6 +139,9 @@ const StoreList: React.FC<StoreListProps> = ({
           filter: { date: { eq: testDate } }
         });
 
+          //フィルター関数に渡す
+        const filteredOrderData = await filterByCompleteFlag(testDate,'test',orderData);
+
         // 店舗情報を抽出して重複を排除
         const storeMap = new Map<string, {
           id: string;
@@ -167,7 +150,7 @@ const StoreList: React.FC<StoreListProps> = ({
           storeTc: string;
         }>();
         
-        orderData.forEach(order => {
+        filteredOrderData.forEach(order => {
           if (!storeMap.has(order.storeId)) {
             storeMap.set(order.storeId, {
               id: order.storeId,
@@ -208,13 +191,6 @@ const StoreList: React.FC<StoreListProps> = ({
           });
         });
         
-        // 各送り先内の店舗を店舗番号でソート
-        destinationMap.forEach(destination => {
-          destination.stores.sort((a, b) => 
-            a.storeNumber.localeCompare(b.storeNumber)
-          );
-        });
-        
         // 結果を配列に変換
         const result: StoresByDestination[] = Array.from(destinationMap.values()).map(dest => ({
           destination: {
@@ -223,9 +199,6 @@ const StoreList: React.FC<StoreListProps> = ({
           },
           stores: dest.stores
         }));
-        
-        // カスタム順序でソート
-        result.sort(sortDestinations);
         
         setStoresByDestination(result);
         
@@ -246,6 +219,51 @@ const StoreList: React.FC<StoreListProps> = ({
     fetchStoresByDestination();
   }, [boxData, completedStores]); // boxDataとcompletedStoresが変更されたときに再取得
 
+// 選択された店舗が変更されたときに自動スクロール
+  useEffect(() => {
+    if (selectedStoreId && !loading) {
+      // 選択された店舗の要素を取得
+      const selectedStoreElement = storeRefs.current[selectedStoreId];
+      
+      if (selectedStoreElement) {
+        // 選択された店舗が属する送り先を見つける
+        const destinationGroup = storesByDestination.find(group => 
+          group.stores.some(store => store.id === selectedStoreId)
+        );
+        
+        // 送り先が見つかり、折りたたまれている場合は展開
+        if (destinationGroup && !expandedDestinations[destinationGroup.destination.id]) {
+          setExpandedDestinations(prev => ({
+            ...prev,
+            [destinationGroup.destination.id]: true
+          }));
+          
+          // 展開後にスクロールするために少し遅延
+          setTimeout(() => {
+            scrollToSelectedStore(selectedStoreId);
+          }, 300);
+        } else {
+          // 送り先が既に展開されている場合は即座にスクロール
+          scrollToSelectedStore(selectedStoreId);
+        }
+      }
+    }
+  }, [selectedStoreId, loading, storesByDestination, expandedDestinations]);
+  
+  // 選択された店舗にスクロールする関数
+  const scrollToSelectedStore = (storeId: string) => {
+    const selectedElement = storeRefs.current[storeId];
+    const container = listContainerRef.current;
+    
+    if (selectedElement && container) {
+      // スムーズにスクロール
+      selectedElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center', // 画面真ん中に出るようにスクロール
+      });
+    }
+  };
+  
   // 送り先の展開/折りたたみを切り替え
   const toggleDestination = (destinationId: string) => {
     setExpandedDestinations(prev => ({
@@ -289,6 +307,7 @@ const StoreList: React.FC<StoreListProps> = ({
             店舗一覧
           </Typography>
         </Box>
+        
         
         <Box sx={{ 
           flex: 1,
@@ -363,8 +382,11 @@ const StoreList: React.FC<StoreListProps> = ({
         </Typography>
       </Box>
       
-      {/* リスト部分 */}
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
+      {/* リスト部分 - ref を追加 */}
+      <Box 
+        ref={listContainerRef} 
+        sx={{ flex: 1, overflow: 'auto' }}
+      >
         <List component="nav" dense disablePadding>
           {storesByDestination.map((group) => (
             <React.Fragment key={group.destination.id}>
@@ -400,6 +422,8 @@ const StoreList: React.FC<StoreListProps> = ({
                     return (
                       <ListItemButton
                         key={store.id}
+                        // ref を設定
+                        ref={(el) => storeRefs.current[store.id] = el}
                         selected={selectedStoreId === store.id}
                         onClick={() => onSelectStore(store.id)}
                         sx={{ 

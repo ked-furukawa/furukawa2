@@ -180,7 +180,7 @@
     "date": "2025-06-02",
     "storeId": "020",
     "storeName": "吉田店",
-    "storeTc": "上越",
+    "storeTc": "中之島",
     "itemId": "210082",
     "itemName": "バジル",
     "itemFormalName": "バジルチキンと根菜キット",
@@ -248,7 +248,7 @@
     },
     {
     "date": "2025-06-02",
-    "storeId": "021",
+    "storeId": "222",
     "storeName": "高田店",
     "storeTc": "上越",
     "itemId": "210068",
