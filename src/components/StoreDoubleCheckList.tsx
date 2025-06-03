@@ -75,13 +75,11 @@ const handleQuantityUpdate  = async (selectedIndex:number) => {
         const result = await boxClient.models.Box.update({ //DBの書き換え部分、今回はBoxテーブル
             date: '2025-06-02', //実際は画面内のどこかに保持している変数などを使って必要情報を埋めていく
             storeId: selectedStoreId, //必要情報=定義したテーブルの中身
-            storeName: stores[selectedIndex].storeName,
-            storeTc: stores[selectedIndex].storeTc,
+
             color: 'green',
             boxCount: Number(inputValue),
-            boxCreatedBy: '肉',
         });
-        console.log(result);
+        console.log('result',result);
         } catch (error) {
         console.error('DB登録エラー:', error);
         }
