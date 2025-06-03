@@ -177,8 +177,8 @@ return (
         height: '100vh', 
         display: 'flex', 
         flexDirection: 'column',
-        px: 2, 
-        py: 2,
+        // px: 2, 
+        // py: 2,
         }}>
     <Paper elevation={1} sx={{ p: 3, mb: 2, borderRadius: 2 }}>
     <Typography variant="h4" component="h1" gutterBottom sx={{ fontSize: '1.8rem' }}>
