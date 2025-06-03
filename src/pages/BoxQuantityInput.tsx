@@ -62,7 +62,7 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
   const [storeData, setStoreData] = useState<Store | null>(null);
   const [nextStore, setNextStore] = useState<Store | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [_loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
@@ -89,7 +89,7 @@ const [orders, setOrders] = useState<Order[]>([]); //Orderテーブルの内容�
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        setLoading(true);
+        // setLoading(true);
         
         // テスト用固定日付
       const testDate = "2025-06-02";
@@ -129,7 +129,7 @@ const [orders, setOrders] = useState<Order[]>([]); //Orderテーブルの内容�
         setError('データの読み込みに失敗しました');
         console.error(err);
       } finally {
-        setLoading(false);
+        // setLoading(false);
       }
     };
 
@@ -216,13 +216,13 @@ useEffect(() => {
   // 店舗選択時の処理
 const handleStoreSelect = async (storeId: string) => {
   setSelectedStoreId(storeId);
-  setLoading(true);
+  // setLoading(true);
   try {
     const filtered = orders.filter(order => order.storeId === storeId);
 
     if (filtered.length === 0) {
       setError('店舗データが見つかりませんでした');
-      setLoading(false);
+      // setLoading(false);
       return;
     }
 
@@ -287,7 +287,7 @@ const handleStoreSelect = async (storeId: string) => {
     console.error('店舗データの取得に失敗しました:', err);
     setError('データの取得に失敗しました');
   } finally {
-    setLoading(false);
+    // setLoading(false);
   }
 };
 
@@ -504,14 +504,14 @@ const handleProductSelect = (productId: string) => {
           <Box 
             display="flex"
             flexDirection={{ xs: 'column', md: 'row' }}
-            justifyContent="space-between"
+            justifyContent="flex-start"
             alignItems="flex-start"
-            gap={1} 
+            gap={2} 
             height="100%"
           >
             {/* 中央：統合された店舗情報と商品リスト */}
             <Box 
-              width={{ xs: '100%', md: '55%' }} 
+              width={{ xs: '100%', md: '45%' }} 
               height={{ xs: 'auto', md: '600px' }}
             >
               <StoreProductPanel
@@ -520,7 +520,7 @@ const handleProductSelect = (productId: string) => {
                 products={products}
                 selectedProductIds={selectedProductIds}
                 onProductSelect={handleProductSelect}
-                loading={loading}
+                loading={false}
                 error={error}
                 completedStoreIds={completedStoreIds}
               />
@@ -528,7 +528,7 @@ const handleProductSelect = (productId: string) => {
 
             {/* 右側：テンキー */}
             <Box 
-              width={{ xs: '100%', md: '43%' }}
+              width={{ xs: '100%', md: '35%' }}
               height={{ xs: 'auto', md: '600px' }}
             >
               <Keypad 
