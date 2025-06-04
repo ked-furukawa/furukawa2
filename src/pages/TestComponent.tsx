@@ -62,8 +62,10 @@ export const TestComponent = () => {
             itemId: item.itemId,
             itemName: item.itemName,
             itemFormalName: item.itemFormalName,
-            orderCount: item.orderCount
+            orderCount: item.orderCount,
+            resDeptId: item.resDeptId
         });
+        console.log('item',item);
     }
         return true;
     } catch (error) {

@@ -24,7 +24,7 @@ import type { Schema } from "../../amplify/data/resource";
 import { filterByCompleteFlag } from '../components/filterByCompleteFlag';
 import { CompleteState } from '../components/filterByCompleteFlag';
 
-
+import { fetchUserAttributes } from 'aws-amplify/auth';
 
 const client= generateClient<Schema>();
 
@@ -82,12 +82,17 @@ const fetchProducts = async () => {
     setLoading(true);
     setError(null);
 
+    const attrs = await fetchUserAttributes();
+    console.log('ログインユーザーの departmentId:', attrs['custom:departmentId']);
+
     // 店舗IDは指定せず、日付のみで取得
     const { data } = await client.models.Order.list({
       filter: {
         date: { eq: targetDate }
-      }
+      },
+      authMode: 'userPool'
     });
+    console.log('data',data);
       //フィルター関数に渡す
     const filteredData = await filterByCompleteFlag(targetDate,'test',data);
     const result = await client.models.CompleteFlag.get({ date: targetDate, departmentId: 'test' });

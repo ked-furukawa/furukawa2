@@ -235,6 +235,17 @@
         "itemName": "むね",
         "itemFormalName": "若鶏ムネ肉あんかけセット",
         "orderCount": 1
+    },
+            {
+        "date": "2025-06-02",
+        "storeId": "223",
+        "storeName": "にしやま店",
+        "storeTc": "上越",
+        "itemId": "210105",
+        "itemName": "生姜",
+        "itemFormalName": "野菜たっぷり豚生姜焼きキット",
+        "orderCount": 99,
+        "resDeptId": "test"
     }
 
 ]
