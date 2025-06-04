@@ -56,7 +56,6 @@ if (stores.length === 0) {
     const [inputValue, setInputValue] = useState<string>('');
     const [selectedColor, setSelectedColor] = useState<BoxColor>('green');
     const [selectedStoreId, setSelectedStoreId] = useState<string>('0');
-    const [selectedIndex, setSelectedIndex] = useState<number>(0);
 
 
 
@@ -70,7 +69,7 @@ const handleInputChange = (value: string) => {
     setInputValue(value);
 };
   // 箱数更新処理
-const handleQuantityUpdate  = async (selectedIndex:number) => {
+const handleQuantityUpdate  = async () => {
     try {
         const result = await boxClient.models.Box.update({ //DBの書き換え部分、今回はBoxテーブル
             date: '2025-06-02', //実際は画面内のどこかに保持している変数などを使って必要情報を埋めていく
@@ -150,7 +149,7 @@ return (
                     .filter((s) => s.storeTc !== '中之島')
                     .sort((a, b) => Number(a.id) - Number(b.id))
                 
-            ].map((store, index) => (
+            ].map((store) => (
                 <TableRow 
                 key={store.id} 
                 hover 
@@ -169,8 +168,6 @@ return (
                     setSelectedStoreId(store.id);
                     setInputValue(String(currentValue)); // ← 文字列として Keypad に渡す
                     setIsModalOpen(true);
-
-                    setSelectedIndex(index);
                 }}
 
                     sx={{ cursor: 'pointer', textDecoration: 'underline' }}>{getStoreBoxCount(store.id)}</TableCell>
@@ -206,7 +203,7 @@ return (
                 <Keypad 
                 value={inputValue }
                 onChange={handleInputChange}
-                onEnter={() => handleQuantityUpdate(selectedIndex)}
+                onEnter={() => handleQuantityUpdate}
                 onClear={() => setInputValue('')}
                 selectedColor={selectedColor}
                 onColorChange={handleColorChange}
