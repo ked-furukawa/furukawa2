@@ -40,7 +40,7 @@ const App = () => {
     },
     {
       key: 'SortingCheckScreen',
-      label: '仕分け前商品数確認',
+      label: '商品数確認',
       component: (props) => <SortingCheckScreen {...props} />,
     },
     {
