@@ -33,11 +33,7 @@ const App = () => {
     label: string;
     component: (props: { navigateTo: (key: string) => void }) => JSX.Element;
   }[] = [
-    {
-      key: 'Test',
-      label: 'テスト画面',
-      component: () => <TestComponent />,
-    },
+
     {
       key: 'SortingCheckScreen',
       label: '商品数確認',
@@ -57,6 +53,11 @@ const App = () => {
       key: 'FinalCheck',
       label: '最終確認',
       component: () => <FinalCheck />,
+    },
+    {
+      key: 'Test',
+      label: 'テスト画面',
+      component: () => <TestComponent />,
     },
 
   ];
