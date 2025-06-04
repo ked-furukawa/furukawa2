@@ -429,7 +429,7 @@ try {
   return (
     <Box display="flex" height="100vh">
       {/* 左側：店舗リスト */}
-      <Box sx={{ pl: 15,py:4,pr:1, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
+      <Box sx={{ pl: 15,py:10.5,pr:1, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
         <StoreList
           key={refreshKey}
           selectedStoreId={selectedStoreId}
