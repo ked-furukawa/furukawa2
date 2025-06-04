@@ -205,7 +205,7 @@ export const FinalCheck = () => {
         <DateSelector />
     <Box sx={{display: 'flex', //左表Box
         justifyContent: 'flex-start', flexDirection: 'column',
-        alignItems: 'flex-start', minHeight:'100vh', width: '100%', pt:10}}>
+        alignItems: 'flex-start', minHeight:'100vh', width: '100%', pt:10, pl:8}}>
     <Typography variant="h5" component="h2" gutterBottom sx={{ alignSelf: 'flex-start' }}>
         店舗別箱数一覧
     </Typography>
@@ -286,6 +286,7 @@ export const FinalCheck = () => {
     minHeight: '100vh',
     width:'450px',
     pt: 10,
+    pr: 8,
     gap: 2,
     }}
 >
