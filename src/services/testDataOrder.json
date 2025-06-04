@@ -20,8 +20,8 @@
         "storeTc": "中之島",
 
         "itemId": "210005",
-        "itemName": "レモンスライス",
-        "itemFormalName": "レモン",
+        "itemName": "レモン",
+        "itemFormalName": "レモンスライス",
         "orderCount": 5
     },
         {
@@ -194,6 +194,46 @@
         "itemId": "210126",
         "itemName": "あまから",
         "itemFormalName": "豚肉の甘辛揚げ",
+        "orderCount": 1
+    },
+        {
+        "date": "2025-06-02",
+        "storeId": "217",
+        "storeName": "国府店",
+        "storeTc": "上越",
+        "itemId": "210068",
+        "itemName": "とりてん",
+        "itemFormalName": "弁当用とり天キット",
+        "orderCount": 4
+    },
+        {
+        "date": "2025-06-02",
+        "storeId": "223",
+        "storeName": "にしやま店",
+        "storeTc": "上越",
+        "itemId": "210068",
+        "itemName": "とりてん",
+        "itemFormalName": "弁当用とり天キット",
+        "orderCount": 4
+    },
+        {
+        "date": "2025-06-02",
+        "storeId": "223",
+        "storeName": "にしやま店",
+        "storeTc": "上越",
+        "itemId": "210200",
+        "itemName": "すぶた",
+        "itemFormalName": "極醸黒酢のまろコク酢豚",
+        "orderCount": 2
+    },
+        {
+        "date": "2025-06-02",
+        "storeId": "223",
+        "storeName": "にしやま店",
+        "storeTc": "上越",
+        "itemId": "210205",
+        "itemName": "むね",
+        "itemFormalName": "若鶏ムネ肉あんかけセット",
         "orderCount": 1
     }
 

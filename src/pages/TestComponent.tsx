@@ -80,7 +80,7 @@ export const TestComponent = () => {
 
 
 const createOrUpdateTestFlag = async (): Promise<boolean> => {
-  try {
+try {
     const date = '2025-06-02';
     const departmentId = 'test';
 
