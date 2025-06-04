@@ -26,7 +26,7 @@ import { CompleteState } from '../components/filterByCompleteFlag';
 
 
 
-const client = generateClient<Schema>();
+const client= generateClient<Schema>();
 
 // 商品データの型定義（Orderモデルベース）
 interface Product {
@@ -47,7 +47,7 @@ interface SortingCheckScreenProps {
   targetDate?: string; // 対象日付（YYYY-MM-DD形式）
   targetStoreId?: string; // 対象店舗ID
     navigateTo: (pageKey: string) => void; // ← 追加
-  //  fromPageA?: boolean;(to上越)
+  //    A?: boolean;(to上越)
 }
 
 const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
@@ -244,30 +244,32 @@ const fetchProducts = async () => {
   }
 
   return (
-    <Box
-      sx={{
-        height: '100vh',
-        width: '100%',
-        maxWidth: 600, // 最大幅を指定（縦画面サイズ）
-        margin: '0 auto', // 中央寄せ
-        display: 'flex',
-        flexDirection: 'column',
-        pt: 0,
-        pb: 0,
-        px: 0,
-        backgroundColor: '#fff', // optional: 背景色で中央表示を際立たせる
-      }}
-    >
-          {completeState === "未完了" && (
-          <Box sx={{ p: 2, textAlign: 'center', backgroundColor: '#ffebee' }}>
-            <Typography variant="h6" color="error">A</Typography>
-          </Box>
-        )}
-          {completeState === "中之島完了" && (
-          <Box sx={{ p: 2, textAlign: 'center', backgroundColor: '#e8f5e9' }}>
-            <Typography variant="h6" color="primary">B</Typography>
-          </Box>
-        )}
+    <Box display="flex" flexDirection="column" height="100vh">
+{completeState && (
+        <Box
+          sx={{
+            p: 0.5,
+            textAlign: 'center',
+            backgroundColor: completeState === '未完了' ? '#ffebee' : '#e8f5e9',
+          }}
+        >
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 'bold',
+              fontSize: isPortrait ? '1.6rem' : '1.4rem',
+              color: completeState === '未完了' ? 'error.main' : 'primary.main',
+            }}
+          >
+            {completeState === '未完了'
+              ? '仕分け作業前確認'
+              : completeState === '中之島完了'
+              ? '上越センター前確認'
+              : ''}
+          </Typography>
+        </Box>
+      )}
+      
 
       <Paper
         elevation={3}
@@ -356,7 +358,8 @@ const fetchProducts = async () => {
                     cursor: 'pointer',
                     // bgcolor: !product.isChecked ? 'rgba(255, 244, 229, 0.7)' : 'inherit',
                     '&:last-child td, &:last-child th': { border: 0 },
-                    height: rowHeight,
+                    height: 
+rowHeight,
                     '&.Mui-selected': {
                       backgroundColor: 'rgba(25, 118, 210, 0.12)'
                     },
@@ -526,6 +529,7 @@ const fetchProducts = async () => {
 
     </Box>
   );
+  
 };
 
 export default SortingCheckScreen;
