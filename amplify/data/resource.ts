@@ -17,7 +17,11 @@ export const schema = a.schema({
     orderCount: a.integer().required(), // 商品注文数 '3'
   })
   .identifier(['date', 'storeId', 'itemId']) // PKとSK
-  .authorization((allow) => [allow.publicApiKey()]), //認証情報の設定
+  .authorization((allow) => [
+    allow.publicApiKey().to(['create','update','delete']),
+    allow.ownerDefinedIn('resDeptId').identityClaim('custom:departmentId')
+  ])
+, //認証情報の設定
 
 
   Box: a.model({ //店舗-箱色のテーブル　←箱数情報、主に書き用(最後はこれを読む)
@@ -54,7 +58,7 @@ export type Schema = ClientSchema<typeof schema>;
 export const data = defineData({ 
   schema, //↑のa.schemaで定義したテーブルたち
   authorizationModes: { //認可情報の設定
-    defaultAuthorizationMode: "apiKey", //デフォルトをapiKey(誰でもアクセス可能)に設定←ここをuserPoolとかiamとかにしてアクセス制限する
+    defaultAuthorizationMode: 'apiKey', //デフォルトをapiKey(誰でもアクセス可能)に設定←ここをuserPoolとかiamとかにしてアクセス制限する
     apiKeyAuthorizationMode: { 
       expiresInDays: 30, //apiKeyの設定、ここでは有効期限30日
     },
