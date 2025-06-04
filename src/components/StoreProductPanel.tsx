@@ -160,7 +160,7 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
                         // bgcolor: !product.isChecked ? 'rgba(255, 244, 229, 0.7)' : 'inherit',
                         cursor: 'pointer'
                     }}
-                    onClick={() => onProductSelect(product.id)} // 行クリックでも選択できるようにする
+                    // onClick={() => onProductSelect(product.id)} // 行クリックでも選択できるようにする
                     >
                     <TableCell sx={{ 
                     maxWidth: 0, // これが重要: テキストの省略を強制
@@ -210,9 +210,9 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
         <Typography variant="body2">
             合計商品数: {products.length} / 合計個数: {products.reduce((sum, product) => sum + product.orderCount, 0)}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        {/* <Typography variant="body2" color="text.secondary">
             選択中: {selectedProductIds.length} 商品
-        </Typography>
+        </Typography> */}
         </Box>
     </Box>
     </Paper>
