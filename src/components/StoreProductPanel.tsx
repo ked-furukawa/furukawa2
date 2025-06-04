@@ -160,7 +160,7 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
                         // bgcolor: !product.isChecked ? 'rgba(255, 244, 229, 0.7)' : 'inherit',
                         cursor: 'pointer'
                     }}
-                    onClick={() => onProductSelect(product.id)} // 行クリックでも選択できるようにする
+                    // onClick={() => onProductSelect(product.id)} // 行クリックでも選択できるようにする
                     >
                     <TableCell sx={{ 
                     maxWidth: 0, // これが重要: テキストの省略を強制
