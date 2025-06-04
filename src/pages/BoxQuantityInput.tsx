@@ -429,7 +429,7 @@ try {
   return (
     <Box display="flex" height="100vh">
       {/* 左側：店舗リスト */}
-      <Box sx={{ pl: 15,py:2.8,pr:1, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
+      <Box sx={{ pl: 15,py:4,pr:1, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
         <StoreList
           key={refreshKey}
           selectedStoreId={selectedStoreId}
@@ -441,7 +441,7 @@ try {
 
 
   <Box flex="1" display="flex" flexDirection="column" justifyContent="center"　alignItems="center"
-sx={{ pl: 1, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
+sx={{pl: 1, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
     <CssBaseline />
     <Container maxWidth="lg" disableGutters>
       <Box 
