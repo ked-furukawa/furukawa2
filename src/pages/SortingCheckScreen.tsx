@@ -244,7 +244,7 @@ const fetchProducts = async () => {
   }
 
   return (
-    <Box display="flex" flexDirection="column" height="100vh">
+    <Box display="flex" flexDirection="column" height="100vh" sx={{ px:-1000}}>
 {completeState && (
         <Box
           sx={{
@@ -279,7 +279,7 @@ const fetchProducts = async () => {
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          width: '100%',
+          width: '%',
           height: `calc(100vh - ${navButtonHeight+80}px)`
         }}
       >

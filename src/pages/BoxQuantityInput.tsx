@@ -466,7 +466,7 @@ sx={{pl: 10, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
         flexDirection={{ xs: 'column', md: 'row' }}
         justifyContent="flex-start"
         alignItems="flex-start"
-        gap={1} 
+        gap={-1} 
         height="100%"
       >
           {/* 左側：店舗リスト */}
