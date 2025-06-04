@@ -479,7 +479,7 @@ sx={{pl: 10, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
         />
       </Box>
         {/* 中央：統合された店舗情報と商品リスト */}
-        <Box 
+        <Box sx={{px:3}}
           width={{ xs: '100%', md: '35%' }} 
           height={{ xs: 'auto', md: '600px' }}
         >
