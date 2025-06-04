@@ -136,7 +136,7 @@ const App = () => {
         </List>
       </Drawer>
 
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+      <Box component="main" sx={{ flexGrow: 1,}}>
         {currentPage && currentPage.component({ navigateTo })}
       </Box>
     </Box>

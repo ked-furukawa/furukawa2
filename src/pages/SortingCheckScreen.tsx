@@ -22,9 +22,11 @@ import {
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from "../../amplify/data/resource";
 import { filterByCompleteFlag } from '../components/filterByCompleteFlag';
+import { CompleteState } from '../components/filterByCompleteFlag';
 
 
-const client = generateClient<Schema>();
+
+const client= generateClient<Schema>();
 
 // 商品データの型定義（Orderモデルベース）
 interface Product {
@@ -45,9 +47,8 @@ interface SortingCheckScreenProps {
   targetDate?: string; // 対象日付（YYYY-MM-DD形式）
   targetStoreId?: string; // 対象店舗ID
     navigateTo: (pageKey: string) => void; // ← 追加
-  //  fromPageA?: boolean;(to上越)
+  //    A?: boolean;(to上越)
 }
-
 
 const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
   onProductClick = () => {},
@@ -56,8 +57,9 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
   targetStoreId = '019', 
   navigateTo // 
 }) => {
+  const [completeState, setCompleteState] = useState<"未完了" | "中之島完了" | "作業完了" | null>(null);
   const theme = useTheme();
-  const isLandscape = useMediaQuery('(orientation: landscape)');
+  const isPortrait = useMediaQuery('(orientation: portrait)');
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
   // 商品リストの状態
@@ -88,6 +90,9 @@ const fetchProducts = async () => {
     });
       //フィルター関数に渡す
     const filteredData = await filterByCompleteFlag(targetDate,'test',data);
+    const result = await client.models.CompleteFlag.get({ date: targetDate, departmentId: 'test' });
+    const fetchedCompleteState = result?.data?.completeState as CompleteState | null;
+    setCompleteState(fetchedCompleteState);
 
     console.log(filteredData);
 
@@ -183,13 +188,13 @@ const fetchProducts = async () => {
   const totalCount = products.reduce((sum, product) => sum + product.expectedCount, 0);
   const checkedCount = products.filter(product => product.isChecked).length;
 
-  const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1280px)');
-
+  
   // フッターの高さを定義（レスポンシブ対応）
-  const headerFontSize = isTablet ? '1.3rem' : isLandscape ? '1.6rem' : '1.2rem';
-  const cellFontSize = isTablet ? '1.2rem' : isLandscape ? '1.5rem' : '1rem';
-  const rowHeight = isTablet ? '68px' : isLandscape ? '80px' : '64px';
-  const navButtonHeight = isTablet ? 52 : isLandscape ? 60 : 50;
+  const headerFontSize = isPortrait ? '1.4rem' : '1.2rem';
+  const cellFontSize = isPortrait ? '1.3rem' : '1rem';
+  const rowHeight = isPortrait ? '72px' : '64px';
+  const navButtonHeight = isPortrait ? 56 : 50;
+
 
 
   // ローディング表示
@@ -239,15 +244,33 @@ const fetchProducts = async () => {
   }
 
   return (
-    <Box sx={{
-      height: '100vh',
-      width: '100vw',
-      display: 'flex',
-      flexDirection: 'column',
-      pt: 0,
-      pb: 0,
-      px: 0
-    }}>
+    <Box display="flex" flexDirection="column" height="100vh">
+{completeState && (
+        <Box
+          sx={{
+            p: 0.5,
+            textAlign: 'center',
+            backgroundColor: completeState === '未完了' ? '#ffebee' : '#e8f5e9',
+          }}
+        >
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 'bold',
+              fontSize: isPortrait ? '1.6rem' : '1.4rem',
+              color: completeState === '未完了' ? 'error.main' : 'primary.main',
+            }}
+          >
+            {completeState === '未完了'
+              ? '仕分け作業前確認'
+              : completeState === '中之島完了'
+              ? '上越センター前確認'
+              : ''}
+          </Typography>
+        </Box>
+      )}
+      
+
       <Paper
         elevation={3}
         sx={{
@@ -264,31 +287,18 @@ const fetchProducts = async () => {
         <TableContainer
           ref={tableContainerRef}
           sx={{
-            flexGrow: 1,
-            maxHeight: `calc(100dvh - ${navButtonHeight + 64}px)`, // Adjust based on actual footer height
+            flex: 1,
             overflowY: 'auto',
+            WebkitOverflowScrolling: 'touch',
             width: '100%',
-            '& .MuiTableCell-root': {
-              padding: isLandscape ? '16px 20px' : '14px 16px',
-            },
-            '&::-webkit-scrollbar': {
-              width: '12px'
-            },
-            '&::-webkit-scrollbar-track': {
-              backgroundColor: theme.palette.grey[100]
-            },
-            '&::-webkit-scrollbar-thumb': {
-              backgroundColor: theme.palette.primary.light,
-              borderRadius: '6px',
-              border: `2px solid ${theme.palette.grey[100]}`
-            }
+
           }}
         >
           <Table stickyHeader size="medium" sx={{ width: '100%' }}>
             <TableHead>
               <TableRow
                 sx={{
-                  height: isLandscape ? '120px' : '64px',
+                  height: isPortrait ? '80px' : '64px',
                 }}
               >
                 <TableCell
@@ -348,7 +358,8 @@ const fetchProducts = async () => {
                     cursor: 'pointer',
                     // bgcolor: !product.isChecked ? 'rgba(255, 244, 229, 0.7)' : 'inherit',
                     '&:last-child td, &:last-child th': { border: 0 },
-                    height: rowHeight,
+                    height: 
+rowHeight,
                     '&.Mui-selected': {
                       backgroundColor: 'rgba(25, 118, 210, 0.12)'
                     },
@@ -383,7 +394,7 @@ const fetchProducts = async () => {
                       inputProps={{ 'aria-labelledby': `checkbox-${product.id}` }}
                       sx={{
                         '& .MuiSvgIcon-root': {
-                          fontSize: isLandscape ? 40 : 36
+                          fontSize: isPortrait ? 40 : 32
                         },
                         color: theme.palette.primary.main,
                         '&.Mui-checked': {
@@ -401,7 +412,7 @@ const fetchProducts = async () => {
 
 
         <Box
-          p={isLandscape ? 2 : 1.5}
+          p={isPortrait ? 2 : 1.5}
           //bgcolor="#f5f5f5"
           sx={{
             display: 'flex',
@@ -411,11 +422,11 @@ const fetchProducts = async () => {
           }}
         >
           <Typography
-            variant={isLandscape ? "h6" : "subtitle1"}
+            variant={isPortrait ? "h6" : "subtitle1"}
             align="left"
             sx={{
               fontWeight: 'bold',
-              fontSize: isLandscape ? '1.4rem' : '1.2rem'
+              fontSize: isPortrait ? '1.4rem' : '1.2rem'
             }}
           >
             確認済: {checkedCount}/{totalProducts} 品目 (合計{totalCount}個)
@@ -427,11 +438,11 @@ const fetchProducts = async () => {
             onClick={handleComplete}
             disabled={!products.every(product => product.isChecked)} // ✅ 追加
             sx={{
-              py: isLandscape ? 1.5 : 1,
-              px: isLandscape ? 6 : 4,
-              fontSize: isLandscape ? '1.4rem' : '1.2rem',
+              py: isPortrait ? 1.5 : 1,
+              px: isPortrait ? 6 : 4,
+              fontSize: isPortrait ? '1.4rem' : '1.2rem',
               fontWeight: 'bold',
-              minWidth: isLandscape ? '220px' : '180px',
+              minWidth: isPortrait ? '220px' : '180px',
               opacity: !products.every(p => p.isChecked) ? 0.5 : 1, // グレーアウト風見た目（任意）
               pointerEvents: !products.every(p => p.isChecked) ? 'none' : 'auto' // 任意
             }}
@@ -459,17 +470,17 @@ const fetchProducts = async () => {
           <Paper
             elevation={6}
             sx={{
-              width: isTablet ? '80%' : isLandscape ? '60%' : '90%',
-              maxWidth: 600,
-              p: isLandscape ? 4 : 3,
-              textAlign: 'center',
-              borderRadius: 2
+            width: '90%',
+            maxWidth: 480,
+            p: isPortrait ? 4 : 3,
+            textAlign: 'center',
+            borderRadius: 2
             }}
           >
             <Typography
               variant="h6"
               sx={{
-                fontSize: isLandscape ? '1.6rem' : '1.3rem',
+                fontSize: isPortrait ? '1.6rem' : '1.3rem',
                 fontWeight: 'bold',
                 mb: 3
               }}
@@ -518,6 +529,7 @@ const fetchProducts = async () => {
 
     </Box>
   );
+  
 };
 
 export default SortingCheckScreen;
