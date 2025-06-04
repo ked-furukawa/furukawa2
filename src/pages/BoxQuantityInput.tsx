@@ -78,6 +78,18 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
   const [selectedColor, setSelectedColor] = useState<BoxColor>('green');
   const [refreshKey, setRefreshKey] = useState(0);
 
+// 確定ボタンを有効にするための条件をチェックする関数を追加
+const isConfirmButtonEnabled = useMemo(() => {
+  // 条件1: 商品が選択されている
+  const hasSelectedProducts = selectedProductIds.length > 0;
+  // 条件2: 箱数が入力されている
+  const hasQuantityInput = inputValue !== '';
+  // 条件3: すべての商品がチェックされている
+  const allProductsChecked = products.every(p => p.isChecked || selectedProductIds.includes(p.id));
+  
+  return hasSelectedProducts && hasQuantityInput && allProductsChecked;
+}, [selectedProductIds, inputValue, products]);
+
   // データキャッシュ
   const [orders, setOrders] = useState<Order[]>([]);
   const [boxDataCache, setBoxDataCache] = useState<BoxData[]>([]);
@@ -239,36 +251,25 @@ if (allStores.length > 0) {
     handleStoreSelectInternal(storeId, orders, boxDataCache);
   }, [orders, boxDataCache, completedStores, allStores, getNextStore]);
 
-  // 箱数更新処理（メモ化）
   const handleQuantityUpdate = useCallback(() => {
-    if (selectedProductIds.length === 0 || !inputValue) {
-      setError('商品を選択して箱数を入力してください');
-      return;
-    }
-
-
-
-const quantity = parseInt(inputValue, 10);
-if (isNaN(quantity)) return;
-// すべての商品がチェックされているか確認
-const uncheckedProducts = products.filter(p => !p.isChecked && !selectedProductIds.includes(p.id));
-if (uncheckedProducts.length > 0) {
-  setError(`${uncheckedProducts.length}個の商品がチェックされていません。すべての商品をチェックしてください。`);
-  return;
-}
-// 選択されている全ての商品の数量を更新
-setProducts(prevProducts => 
-  prevProducts.map(product => 
-    selectedProductIds.includes(product.id) 
-      ? { ...product, quantity, isChecked: true } 
-      : product
-  )
-);
-// エラーをクリア
-setError(null);
-// 確認ダイアログを表示
-setShowConfirmDialog(true);
-  }, [inputValue, selectedProductIds, products]);
+  const quantity = parseInt(inputValue, 10);
+  if (isNaN(quantity)) return;
+  
+  // 選択されている全ての商品の数量を更新
+  setProducts(prevProducts => 
+    prevProducts.map(product => 
+      selectedProductIds.includes(product.id) 
+        ? { ...product, quantity, isChecked: true } 
+        : product
+    )
+  );
+  
+  // エラーをクリア
+  setError(null);
+  
+  // 確認ダイアログを表示
+  setShowConfirmDialog(true);
+}, [inputValue, selectedProductIds, products]);
 
   // 色変更ハンドラー（メモ化）
   const handleColorChange = useCallback((color: BoxColor) => {
@@ -479,6 +480,7 @@ try {
             onClear={() => setInputValue('')}
             selectedColor={selectedColor}
             onColorChange={handleColorChange}
+            disableEnterButton={!isConfirmButtonEnabled} // 新しいプロパティを追加
           />
         </Box>
       </Box>

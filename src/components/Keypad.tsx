@@ -29,6 +29,7 @@ interface KeypadProps {
   // 色関連のpropsを追加
   selectedColor?: BoxColor;
   onColorChange?: (color: BoxColor) => void;
+  disableEnterButton?: boolean; // 新しいプロパティを追加
 }
 
 /**
@@ -41,6 +42,7 @@ export const Keypad: React.FC<KeypadProps> = ({
   onClear,
   selectedColor = 'green', // デフォルト色は緑
   onColorChange = () => {}, // デフォルトの空関数
+  disableEnterButton = false, // デフォルト値はfalse
 }) => {
   // 色選択メニューの状態
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -264,6 +266,7 @@ export const Keypad: React.FC<KeypadProps> = ({
             color="primary"
             sx={{ flex: 1, height: 50 }}
             onClick={onEnter}
+            disabled={disableEnterButton} // disableEnterButtonプロパティを使用
           >
             確定
           </Button>
