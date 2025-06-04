@@ -3,7 +3,7 @@ import type { Schema } from "../../amplify/data/resource";
 
 const client = generateClient<Schema>();
 
-type CompleteState = '未完了' | '中之島完了' | '作業完了';
+export type CompleteState = '未完了' | '中之島完了' | '作業完了';
 
 type DataWithStoreTc = {
     storeTc?: string | null;

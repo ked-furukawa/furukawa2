@@ -71,7 +71,7 @@ export const FinalCheck = () => {
         <Box
         sx={{
             position: 'absolute',
-            top: 30,
+            top: 16,
             right: 16,
             zIndex: 1000,
         }}
@@ -158,8 +158,8 @@ export const FinalCheck = () => {
     });
 
     return (
-        <Box sx={{ mb: 3 }}>
-        <Typography variant="subtitle1" sx={{ fontSize :'1.5rem', mb: 1 }}>
+        <Box>
+        <Typography variant="subtitle1" sx={{ fontSize :'1.5rem', }}>
             {title}
         </Typography>
         <TableContainer component={Paper} sx={{  minWidth: 100 }}>
@@ -196,19 +196,16 @@ export const FinalCheck = () => {
         display: 'flex',
         flexDirection: 'row', // ← 横並びにする
         justifyContent: 'flex-end',
-        alignItems: 'flex-start',
+        alignItems: 'flex-end',
         width: '100%',
         height: '100vh',
-        pl: 0,
-        ml:'100px',
-        mt:'80px',
         gap: 3, // 間のスペース
 
     }}>
         <DateSelector />
     <Box sx={{display: 'flex', //左表Box
         justifyContent: 'flex-start', flexDirection: 'column',
-        alignItems: 'flex-start', minHeight:'100vh', width: '100%', p: 3,  }}>
+        alignItems: 'flex-start', minHeight:'100vh', width: '100%', pt:10}}>
     <Typography variant="h5" component="h2" gutterBottom sx={{ alignSelf: 'flex-start' }}>
         店舗別箱数一覧
     </Typography>
@@ -285,16 +282,13 @@ export const FinalCheck = () => {
     sx={{
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'flex-start',
+    alignItems: 'flex-end',
     minHeight: '100vh',
     width:'450px',
-    pt:8,    
-    px: 3,
+    pt: 10,
     gap: 2,
     }}
->       <Typography variant="h5" component="h2" sx={{fontSize: '1.5rem', fontWeight: 'bold', mb: 1,mt:-14, visibility: 'hidden'}}>
-        非表示タイトル（高さ調整用）
-    </Typography>
+>
     <SummaryTable title="全体 合計" total={totalAll} />
     <SummaryTable title="中之島物流センター 合計" total={totalNakanoshima} />
     <SummaryTable title="上越物流センター 合計" total={totalJyoetsu} />
