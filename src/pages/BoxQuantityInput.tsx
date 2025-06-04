@@ -192,59 +192,81 @@ return null;
   }, [allStores]);
 
   // 内部用の店舗選択処理（キャッシュデータを使用）
-  const handleStoreSelectInternal = (
-    storeId: string,
-    orderData: Order[],
-    boxData: BoxData[]
-  ) => {
-    setSelectedStoreId(storeId);
+const handleStoreSelectInternal = (
+  storeId: string,
+  orderData: Order[],
+  boxData: BoxData[]
+) => {
+  setSelectedStoreId(storeId);
 
-
-
-const filtered = orderData.filter(order => order.storeId === storeId);
-if (filtered.length === 0) {
-  setError('店舗データが見つかりませんでした');
-  return;
-}
-const matchingOrder = filtered[0];
-const newStoreData = {
-  storeId: matchingOrder.storeId,
-  storeName: matchingOrder.storeName || '',
-  storeTc: matchingOrder.storeTc || ''
+  const filtered = orderData.filter(order => order.storeId === storeId);
+  if (filtered.length === 0) {
+    setError('店舗データが見つかりませんでした');
+    return;
+  }
+  
+  const matchingOrder = filtered[0];
+  const newStoreData = {
+    storeId: matchingOrder.storeId,
+    storeName: matchingOrder.storeName || '',
+    storeTc: matchingOrder.storeTc || ''
+  };
+  setStoreData(newStoreData);
+  
+  // 店舗の箱データをフィルタリング（データベースアクセスなし）
+  const storeBoxData = boxData.filter(box => box.storeId === storeId);
+  
+  // 選択した店舗が完了済みかどうかをチェック
+  const isCompletedStore = completedStores.some(store => store.storeId === storeId);
+  
+  const productList = filtered.map(order => {
+    const box = storeBoxData.find(b => b.boxCreatedBy === TEST_DEPARTMENT_ID);
+    const shouldBeChecked = isCompletedStore || !!box;
+    
+    console.log(`商品 ${order.itemId} のチェック状態:`, {
+      isCompletedStore,
+      hasBox: !!box,
+      shouldBeChecked
+    });
+    
+    return {
+      id: order.itemId,
+      itemId: order.itemId,
+      itemName: order.itemName || '',
+      itemFormalName: order.itemFormalName || '',
+      orderCount: order.orderCount,
+      quantity: box ? box.boxCount : 0,
+      isChecked: shouldBeChecked
+    };
+  });
+  
+  // 商品データを設定
+  setProducts(productList);
+  console.log('products 状態を設定しました:', productList.map(p => ({
+    id: p.id,
+    isChecked: p.isChecked
+  })));
+  
+  // 入力値をクリア
+  setInputValue('');
+  
+  // 完了済み店舗または箱データがある場合、すべての商品を選択状態にする
+  const shouldSelectAll = isCompletedStore || productList.some(p => p.isChecked);
+  if (shouldSelectAll) {
+    console.log('商品を選択状態に設定します');
+    const allProductIds = productList.map(p => p.id);
+    console.log('選択する商品ID:', allProductIds);
+    setSelectedProductIds(allProductIds);
+  } else {
+    // 選択をクリア
+    setSelectedProductIds([]);
+  }
+  
+  // 次の店舗を設定
+  if (allStores.length > 0) {
+    setNextStore(getNextStore(storeId));
+  }
 };
-setStoreData(newStoreData);
-// 店舗の箱データをフィルタリング（データベースアクセスなし）
-const storeBoxData = boxData.filter(box => box.storeId === storeId);
-// 選択した店舗が完了済みかどうかをチェック
-const isCompletedStore = completedStores.some(store => store.storeId === storeId);  
-const productList = filtered.map(order => {
-  const box = storeBoxData.find(b => b.boxCreatedBy === TEST_DEPARTMENT_ID);
-  const shouldBeChecked = isCompletedStore || !!box;
-  return {
-    id: order.itemId,
-    itemId: order.itemId,
-    itemName: order.itemName || '',
-    itemFormalName: order.itemFormalName || '',
-    orderCount: order.orderCount,
-    quantity: box ? box.boxCount : 0,
-    isChecked: shouldBeChecked
-  };
-});
-setProducts(productList);
-setSelectedProductIds([]);
-setInputValue('');
-// 完了済み店舗の場合、すべての商品を選択状態にする
-if (isCompletedStore) {
-  setTimeout(() => {
-    const allProductIds = productList.map(p => p.id);
-    setSelectedProductIds(allProductIds);
-  }, 100);
-}
-// 次の店舗を設定
-if (allStores.length > 0) {
-  setNextStore(getNextStore(storeId));
-}
-  };
 
   // 店舗選択時の処理（外部向け - キャッシュデータを使用）
   const handleStoreSelect = useCallback(async (storeId: string) => {
@@ -398,7 +420,7 @@ try {
   // 次の店舗に移動（キャッシュデータを使用）
   handleStoreSelectInternal(nextStore.storeId, orders, boxDataCache);
   // 選択をクリア
-  setSelectedProductIds([]);
+//   setSelectedProductIds([]);
   setInputValue('');
 } catch (err) {
   setError('データの保存に失敗しました');

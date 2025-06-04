@@ -26,10 +26,10 @@ interface KeypadProps {
   onChange: (value: string) => void;
   onEnter: () => void;
   onClear: () => void;
-  // 色関連のpropsを追加
   selectedColor?: BoxColor;
   onColorChange?: (color: BoxColor) => void;
-  disableEnterButton?: boolean; // 新しいプロパティを追加
+  // 新しいプロパティを追加
+  disableEnterButton?: boolean;
 }
 
 /**
@@ -40,9 +40,10 @@ export const Keypad: React.FC<KeypadProps> = ({
   onChange,
   onEnter,
   onClear,
-  selectedColor = 'green', // デフォルト色は緑
-  onColorChange = () => {}, // デフォルトの空関数
-  disableEnterButton = false, // デフォルト値はfalse
+  selectedColor = 'green',
+  onColorChange = () => {},
+  // デフォルトでは機能を無効化
+  disableEnterButton = false, // デフォルト値を設定
 }) => {
   // 色選択メニューの状態
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -262,14 +263,19 @@ export const Keypad: React.FC<KeypadProps> = ({
             クリア
           </Button>
           <Button
-            variant="contained"
-            color="primary"
-            sx={{ flex: 1, height: 50 }}
-            onClick={onEnter}
-            disabled={disableEnterButton} // disableEnterButtonプロパティを使用
-          >
-            確定
-          </Button>
+              variant="contained"
+              color="primary"
+              sx={{ 
+                flex: 1, 
+                height: 50,
+                // 無効時のスタイルを強調
+                opacity: disableEnterButton ? 0.5 : 1,
+              }}
+              onClick={onEnter}
+              disabled={disableEnterButton} // disableEnterButtonプロパティを使用
+            >
+              確定
+            </Button>
         </Box>
       </Box>
 
