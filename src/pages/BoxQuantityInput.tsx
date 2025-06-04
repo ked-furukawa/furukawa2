@@ -470,7 +470,7 @@ sx={{pl: 1, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
         height="100%"
       >
           {/* 左側：店舗リスト */}
-     <Box sx={{pr:1, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
+    <Box sx={{pr:1, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
         <StoreList
           key={refreshKey}
           selectedStoreId={selectedStoreId}
