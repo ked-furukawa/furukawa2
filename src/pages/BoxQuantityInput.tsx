@@ -451,21 +451,16 @@ try {
 
   return (
     <Box display="flex" height="100vh">
-      {/* 左側：店舗リスト */}
-      <Box sx={{ p: 1, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
-        <StoreList
-          key={refreshKey}
-          selectedStoreId={selectedStoreId}
-          onSelectStore={handleStoreSelect}
-          completedStores={completedStores}
-        />
-      </Box>
 
 
 
-  <Box flex="1" display="flex" flexDirection="column" overflow="auto" p={1}>
+
+
+  <Box flex="1" display="flex" flexDirection="column" justifyContent="center"　alignItems="center"
+sx={{pl: 1, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
     <CssBaseline />
     <Container maxWidth="lg" disableGutters>
+         
       <Box 
         display="flex"
         flexDirection={{ xs: 'column', md: 'row' }}
@@ -474,6 +469,15 @@ try {
         gap={2} 
         height="100%"
       >
+          {/* 左側：店舗リスト */}
+     <Box sx={{pr:1, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
+        <StoreList
+          key={refreshKey}
+          selectedStoreId={selectedStoreId}
+          onSelectStore={handleStoreSelect}
+          completedStores={completedStores}
+        />
+      </Box>
         {/* 中央：統合された店舗情報と商品リスト */}
         <Box 
           width={{ xs: '100%', md: '45%' }} 
@@ -491,7 +495,8 @@ try {
           />
         </Box>
         {/* 右側：テンキー */}
-        <Box 
+        <Box
+
           width={{ xs: '100%', md: '35%' }}
           height={{ xs: 'auto', md: '600px' }}
         >
