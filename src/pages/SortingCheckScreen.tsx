@@ -89,8 +89,7 @@ const fetchProducts = async () => {
     const { data } = await client.models.Order.list({
       filter: {
         date: { eq: targetDate }
-      },
-      authMode: 'userPool'
+      }
     });
     console.log('data',data);
       //フィルター関数に渡す

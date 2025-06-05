@@ -7,10 +7,43 @@ import testDataOrder from '../services/testDataOrder.json';
 
 const boxClient = generateClient<Schema>();
 
+import { fetchUserAttributes } from 'aws-amplify/auth';
+
+
 export const TestComponent = () => {
     const [value, setValue] = useState('');
     const [submittedValue, setSubmittedValue] = useState<number | null>(null);
     const [message, setMessage] = useState<string>('');
+
+    const fetchProducts = async () => {
+    try {
+    
+        const attrs = await fetchUserAttributes();
+        console.log('ログインユーザーの departmentId:', attrs['custom:departmentId']);
+    
+        // 店舗IDは指定せず、日付のみで取得
+        const { data } = await boxClient.models.Order.list({
+            filter: {
+                date: { eq: '2025-06-02' },
+                resDeptId: { eq: attrs['custom:departmentId'] }
+            },
+        });
+        console.log('data',data);
+
+                // 店舗IDは指定せず、日付のみで取得
+        const { data:Flagdata } = await boxClient.models.CompleteFlag.list({
+            filter: {
+                date: { eq: '2025-06-02' },
+                departmentId: { eq: 'test' }
+            },
+        });
+        console.log('Flagdata',Flagdata);
+    }
+    finally{
+        console.log('test終了');
+    }
+    };
+    
 
     
 
@@ -118,8 +151,11 @@ try {
 
 // ボタンクリックハンドラーtestフラグ作成用
     const handleCreateFlag = async () => {
-    const success = await createOrUpdateTestFlag(); 
+        fetchProducts;
+
+        const success = await createOrUpdateTestFlag(); 
     if (success) console.log("保存に成功しました");
+
 };
 
 const handleDeleteAll = async () => {
@@ -180,6 +216,9 @@ return (
         </Button>
         <Button variant="contained" color="error" onClick={handleDeleteAll}>
             Boxテーブル削除
+        </Button>
+        <Button variant="contained" color="error" onClick={fetchProducts}>
+            test
         </Button>
         </Box>
         </>

@@ -17,11 +17,7 @@ export const schema = a.schema({
     orderCount: a.integer().required(), // 商品注文数 '3'
   })
   .identifier(['date', 'storeId', 'itemId']) // PKとSK
-  .authorization((allow) => [
-    allow.publicApiKey().to(['create','update','delete']),
-    allow.ownerDefinedIn('resDeptId').identityClaim('custom:departmentId')
-  ])
-, //認証情報の設定
+  .authorization(allow => [allow.authenticated()]), //認証情報の設定
 
 
   Box: a.model({ //店舗-箱色のテーブル　←箱数情報、主に書き用(最後はこれを読む)
@@ -36,7 +32,7 @@ export const schema = a.schema({
     boxCreatedBy: a.string() // 箱を作った部門
   })
   .identifier(['date', 'storeId', 'color']) //PKとSK
-  .authorization((allow) => [allow.publicApiKey()]), //認証情報の設定
+  .authorization((allow) => [allow.authenticated()]), //認証情報の設定
 
 
   CompleteFlag: a.model({ //その日の作業完了フラグ　←このフラグで表示されるデータのフィルタリングを決める
@@ -48,8 +44,8 @@ export const schema = a.schema({
     completeState: a.string(), //完了段階のフラグ '未完了'or'中之島完了'or'作業完了'
   })
   .identifier(['date', 'departmentId']) //PKとSK
-  .authorization((allow) => [allow.publicApiKey()]) //認証情報の設定
-});
+  .authorization((allow) => [allow.authenticated()]) //認証情報の設定
+  });
 
 //↑で定義したschemaの型情報を安全に再利用するためにSchemaという変数に格納(準必須)
 export type Schema = ClientSchema<typeof schema>; 
@@ -58,9 +54,9 @@ export type Schema = ClientSchema<typeof schema>;
 export const data = defineData({ 
   schema, //↑のa.schemaで定義したテーブルたち
   authorizationModes: { //認可情報の設定
-    defaultAuthorizationMode: 'apiKey', //デフォルトをapiKey(誰でもアクセス可能)に設定←ここをuserPoolとかiamとかにしてアクセス制限する
-    apiKeyAuthorizationMode: { 
-      expiresInDays: 30, //apiKeyの設定、ここでは有効期限30日
-    },
+    defaultAuthorizationMode: 'userPool', //デフォルトをapiKey(誰でもアクセス可能)に設定←ここをuserPoolとかiamとかにしてアクセス制限する
+    // apiKeyAuthorizationMode: { 
+    //   expiresInDays: 30, //apiKeyの設定、ここでは有効期限30日
+    // },
   },
 });
