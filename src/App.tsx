@@ -17,7 +17,7 @@ import TestComponent from "./pages/TestComponent.tsx";
 import BoxQuantityInput from "./pages/BoxQuantityInput.tsx";
 import SortingCheckScreen from "./pages/SortingCheckScreen.tsx";
 import StoreDoubleCheckList from "./pages/StoreDoubleCheckList.tsx";
-// import ExcelUpload from "./pages/ExcelUpload.tsx";
+import ExcelUpload from "./pages/ExcelUpload.tsx";
 
 import { Authenticator } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
@@ -41,6 +41,11 @@ const App = () => {
       key: "Test",
       label: "テスト画面",
       component: () => <TestComponent />,
+    },
+    {
+      key: "ExcelUpload",
+      label: "S3テスト用",
+      component: () => <ExcelUpload />,
     },
     {
       key: "SortingCheckScreen",
