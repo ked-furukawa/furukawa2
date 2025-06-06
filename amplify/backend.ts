@@ -17,7 +17,4 @@ const backend = defineBackend({
 backend.storage.resources.bucket.addEventNotification(
 	EventType.OBJECT_CREATED_PUT,
 	new LambdaDestination(backend.csvToDB.resources.lambda),
-	{
-		suffix: '.json',
-	}
 );
