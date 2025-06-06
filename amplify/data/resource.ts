@@ -4,8 +4,6 @@ export const schema = a.schema({
   Order: a.model({ //店舗-商品名のテーブル　←注文情報、主に読み用
     importId:a.string().required(), //取り込み単位のID '20250606_103000'
     //2025年6月6日 10:30:00 の取り込み、A.importIdとB.importIdの文字列比較で新しい方を特定可能(文字列として大きいほうが新しい)
-    versionGroupId:a.string().required(), //同一注文であることを識別するためのキー 差分抽出用
-    //versionGroupId = storeId + "_" + itemId + "_" + date '019_210039_0606'
     
     date: a.string().required(),    // 納品日 '20250606'
 
@@ -22,14 +20,18 @@ export const schema = a.schema({
     departmentName: a.string(), //担当部門名 '肉１'
 
     status:a.string().default('PENDING'), //作業状態 'PENDING' or 'IN_PROGRESS' or 'DONE'(完了、箱数入力までされた、変更しない)
-    //'PENDING'=保留中、まだ表示されてない、変更可能　'IN_PROGRESS'=作業中、今表示されてる、変更しない　'DONE'=完了済み、箱数入力までされた、変更しない
+    //'PENDING'=保留中　'IN_PROGRESS'=作業中　'DONE'=完了済み
   })
   .identifier(['importId','date', 'storeId', 'itemId']) // PKとSK
-  .secondaryIndexes((index) => [ //GSI 部門ごとに全部取得したいとき用
-  index("date")
-    .sortKeys(["departmentId"])
-    .queryField("listOrdersByDate") //フロントでこれをimportすればこのGSIが使える
-    .name("GSI_OrderDateDept")
+  .secondaryIndexes((index) => [ 
+  index("date") //GSI 部門ごとに全部取得したいとき用
+    .sortKeys(["departmentId","importId"])
+    .queryField("listOrdersByDeptAndImport") //フロントでこのメソッド名を使えばこのGSIが使える
+    .name("GSI_OrderDateDeptImport"),
+  index("date") //GSI 新旧の注文から差分を取りたい時用
+    .sortKeys(["storeId","itemId"])
+    .queryField("listOrdersByStoreAndItem") //フロントでこのメソッド名を使えばこのGSIが使える
+    .name("GSI_OrderDateStoreItem"),
   ])
   .authorization(allow => [allow.authenticated()]), //認証情報の設定
 
@@ -52,7 +54,7 @@ export const schema = a.schema({
   .secondaryIndexes((index) => [ 
   index("date") //GSI 部門ごとに全部取得したいとき用
     .sortKeys(["departmentId"])
-    .queryField("listBoxesByDate") //フロントでこれをimportすればこのGSIが使える
+    .queryField("listBoxesByDate") //フロントでこのメソッド名を使えばこのGSIが使える
     .name("GSI_BoxDateDept"),
   index("date") //GSI 事務所で全部合計する用
     .sortKeys(["storeId", "boxColor"])
@@ -73,8 +75,18 @@ export const schema = a.schema({
     //'PENDING' → 'DONE' → 'REWORK_PENDING' → 'REWORK_DONE' の順にめぐるイメージ
   })
   .identifier(['date', 'departmentId']) //PKとSK
-  .authorization((allow) => [allow.authenticated()]) //認証情報の設定
+  .authorization((allow) => [allow.authenticated()]), //認証情報の設定
+
+  LatestImportMap: a.model({ //importIdを置いておくテーブル、Lambdaで使ったものをここに保存
+    date: a.string().required(), // '20250606'
+    latestImportId: a.string().required(), // '20250606_103000'　
+    // フロント側では最初にこれを定数に入れて使いまわす、作業完了後に更新する形
+  })
+  .identifier(['date'])
+  .authorization((allow) => [allow.authenticated()])
   });
+
+
 
 //↑で定義したschemaの型情報を安全に再利用するためにSchemaという変数に格納(準必須)
 export type Schema = ClientSchema<typeof schema>; 
