@@ -30,3 +30,10 @@ export interface OrderData {
   resDeptName?: string;
   orderCount: number;
 }
+
+export const CompleteState = {
+  PENDING: 'PENDING',
+  DONE: 'DONE',
+  REWORK_PENDING: 'REWORK_PENDING',
+  REWORK_DONE: 'REWORK_DONE',
+}
