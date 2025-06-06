@@ -159,7 +159,7 @@ return (
             <React.Fragment key={store.storeId}>
                 <ListItem sx={{ 
                 py: isPortrait ? 2 : 1.5,
-                '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.04)' }
+                // '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.04)' }
                 }}>
                 <ListItemText 
                     primary={
