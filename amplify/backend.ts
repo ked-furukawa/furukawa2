@@ -8,10 +8,10 @@ import { EventType } from 'aws-cdk-lib/aws-s3';
 import { LambdaDestination } from 'aws-cdk-lib/aws-s3-notifications';
 
 const backend = defineBackend({
-  auth,
-  data,
-  storage,
-  csvToDB
+	auth,
+	data,
+	storage,
+	csvToDB
 });
 
 backend.storage.resources.bucket.addEventNotification(
