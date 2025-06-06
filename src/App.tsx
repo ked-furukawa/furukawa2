@@ -16,6 +16,7 @@ import TestComponent from "./pages/TestComponent.tsx";
 import BoxQuantityInput from "./pages/BoxQuantityInput.tsx";
 import SortingCheckScreen from "./pages/SortingCheckScreen.tsx";
 import StoreDoubleCheckList from "./pages/StoreDoubleCheckList.tsx";
+import AdditionalOrderInput from "./pages/AdditionalOrderInput.tsx";
 // import ExcelUpload from "./pages/ExcelUpload.tsx";
 
 const drawerWidth = 240;
@@ -53,6 +54,11 @@ const App = () => {
       key: 'FinalCheck',
       label: '最終確認',
       component: () => <FinalCheck />,
+    },
+    {
+      key: 'AdditionalOrderInput',
+      label: '追加注文',
+      component: () => <AdditionalOrderInput />,
     },
     {
       key: 'Test',
