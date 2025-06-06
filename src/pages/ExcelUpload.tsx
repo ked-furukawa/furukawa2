@@ -71,9 +71,9 @@ const handleUpload = async () => { //S3へのアップロード関数
             storeName: item.storeName,
             storeTc: item.storeTc,
             
-            color: item.color,
+            boxColor: item.color,
             boxCount: item.boxCount,
-            boxCreatedBy: 'system'
+            departmentId: 'system'
         });
         console.log(result);
     }
@@ -87,6 +87,8 @@ const handleUpload = async () => { //S3へのアップロード関数
     try {
     for (const item of data) {
         await boxClient.models.Order.create({
+            importId:'001',
+
             date: item.date,
             
             storeId: item.storeId,
@@ -96,7 +98,7 @@ const handleUpload = async () => { //S3へのアップロード関数
             itemId: item.itemId,
             itemName: item.itemName,
             itemFormalName: item.itemFormalName,
-            orderCount: item.orderCount
+            itemCount: item.orderCount
         });
     }
         return true;

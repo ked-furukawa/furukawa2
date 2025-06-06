@@ -11,6 +11,7 @@ import { fetchUserAttributes } from 'aws-amplify/auth';
 
 import {CompleteState} from '../types/index.ts';
 
+import { formatDateToJST } from '../components/formatDateToJST.tsx';
 
 
 export const TestComponent = () => {
@@ -43,14 +44,17 @@ export const TestComponent = () => {
         console.log('Flagdata',Flagdata);
 
         const date='20250606'
-        const result = await boxClient.models.Order.listOrdersByDate({
+        const result = await boxClient.models.Order.listOrdersByDeptAndImport({
         date, // GSI の partitionKey
-        departmentId: {
-            eq: attrs['custom:departmentId'] // sortKey の条件
-        }
-        
+        departmentIdImportId: {
+            eq: {departmentId:attrs['custom:departmentId'] as string,
+                importId:'20250606_130000'} // sortKey の条件
+        },
     });
         console.log('resulet',result);
+        const testdate=formatDateToJST(new Date);
+        console.log(testdate);
+
     }
     finally{
         console.log('test終了');
@@ -106,7 +110,6 @@ export const TestComponent = () => {
 
         const result=await boxClient.models.Order.create({
             importId:'20250606_130000',
-            versionGroupId:storeId+'_'+itemId+'_'+date,
             
             date: date,
             
