@@ -3,11 +3,14 @@ import { TextField, Button, Box, Typography } from '@mui/material';
 import { Schema } from '../../amplify/data/resource';
 import { generateClient } from "aws-amplify/data";
 
-import testDataOrder from '../services/testDataOrder.json';
+// import testDataOrder from '../services/testDataOrder.json';
 
 const boxClient = generateClient<Schema>();
 
 import { fetchUserAttributes } from 'aws-amplify/auth';
+
+import {CompleteState} from '../types/index.ts';
+
 
 
 export const TestComponent = () => {
@@ -25,7 +28,7 @@ export const TestComponent = () => {
         const { data } = await boxClient.models.Order.list({
             filter: {
                 date: { eq: '2025-06-02' },
-                resDeptId: { eq: attrs['custom:departmentId'] }
+                departmentId: { eq: attrs['custom:departmentId'] }
             },
         });
         console.log('data',data);
@@ -38,6 +41,16 @@ export const TestComponent = () => {
             },
         });
         console.log('Flagdata',Flagdata);
+
+        const date='20250606'
+        const result = await boxClient.models.Order.listOrdersByDate({
+        date, // GSI の partitionKey
+        departmentId: {
+            eq: attrs['custom:departmentId'] // sortKey の条件
+        }
+        
+    });
+        console.log('resulet',result);
     }
     finally{
         console.log('test終了');
@@ -70,9 +83,9 @@ export const TestComponent = () => {
             storeId: '019', //必要情報=定義したテーブルの中身
             storeName: '内野店',
             storeTc: '中之島',
-            color: 'green',
+            boxColor: 'green',
             boxCount: numValue,
-            boxCreatedBy: '肉',
+            departmentId: 'test',
         });
         console.log(result);
         setMessage('登録成功');
@@ -82,24 +95,35 @@ export const TestComponent = () => {
         }
     };
 
-      const saveDataToDBOrder = async (data: any[]) => { //DB保存用関数Order
+    const saveDataToDBOrder = async () => { //DB保存用関数Order
     try {
-    for (const item of data) {
-        await boxClient.models.Order.create({
-            date: item.date,
+        const attrs = await fetchUserAttributes();
+
+        const date='20250606'
+        const storeId='019'
+        const itemId='210039'
+        const departmentId=attrs['custom:departmentId']
+
+        const result=await boxClient.models.Order.create({
+            importId:'20250606_130000',
+            versionGroupId:storeId+'_'+itemId+'_'+date,
             
-            storeId: item.storeId,
-            storeName: item.storeName,
-            storeTc: item.storeTc,
+            date: date,
             
-            itemId: item.itemId,
-            itemName: item.itemName,
-            itemFormalName: item.itemFormalName,
-            orderCount: item.orderCount,
-            resDeptId: item.resDeptId
+            storeId: storeId,
+            storeName: '内野店',
+            storeTc: '中之島',
+            
+            itemId: itemId,
+            itemName: '大エビ',
+            itemFormalName: '大エビ天重キット',
+            itemCount: 3,
+
+            departmentId: departmentId,
+            departmentName: 'テスト部門',
+
         });
-        console.log('item',item);
-    }
+        console.log('create',result);
         return true;
     } catch (error) {
         console.error('DB登録エラー:', error);
@@ -109,7 +133,7 @@ export const TestComponent = () => {
 
 // ボタンクリックハンドラーDB保存用
     const handleSaveClick = async () => {
-    const success = await saveDataToDBOrder(testDataOrder); // Order型
+    const success = await saveDataToDBOrder(); // Order型
     if (success) console.log("保存に成功しました");
 };
 
@@ -130,7 +154,8 @@ try {
     await boxClient.models.CompleteFlag.update({
         date,
         departmentId,
-        completeState: '未完了', // 必要なフィールドだけ更新
+        nakanoshimaState: CompleteState.PENDING, // 必要なフィールドだけ更新
+        jyoetsuState: CompleteState.PENDING
     });
     } else {
     // データが存在しない場合は create
@@ -138,7 +163,8 @@ try {
         date,
         departmentId,
         departmentName: 'テスト部門',
-        completeState: '未完了',
+        nakanoshimaState: CompleteState.PENDING, 
+        jyoetsuState: CompleteState.PENDING
     });
     }
 
@@ -168,9 +194,10 @@ const handleDeleteAll = async () => {
             await Promise.all(
             orders.map((box) =>
                 boxClient.models.Box.delete({
-                    date:'2025-06-02', 
+                    date:'20250602', 
                     storeId:box.storeId, 
-                    color:box.color
+                    boxColor:box.boxColor,
+                    departmentId:'test'
                 })
             )
             );
@@ -209,7 +236,7 @@ return (
     borderRadius: 1,
     }}>
         <Button variant="contained" color="secondary" onClick={ handleSaveClick}> {/*DB保存用関数を呼び出す*/}
-        Orderテスト用ボタン
+            Orderテスト用ボタン
         </Button>
         <Button variant="contained" color="error" onClick={ handleCreateFlag }> {/*test部門用の完了フラグを作る*/}
             test部門未完了
