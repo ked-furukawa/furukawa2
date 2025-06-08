@@ -63,29 +63,30 @@ export const schema = a.schema({
   ])
   .authorization((allow) => [allow.authenticated()]), //認証情報の設定
 
+ImportWorkStatus: a.model({
+    date: a.string().required(),             // '20250606'
+    departmentId: a.string().required(),     // 'test'
 
-  CompleteFlag: a.model({ //その日の作業完了フラグ　←このフラグで表示されるデータのフィルタリングを決める
-    date: a.string().required(),    // 注文日 '20250606'
-
-    departmentId: a.string().required(), // 部門ID(仮) 'test'
-    departmentName: a.string(), //部門名(仮) 'test部門'
-
-    nakanoshimaState:a.string().default('PENDING'), //中之島の完了状態
-    jyoetsuState:a.string().default('PENDING'), //上越の完了状態
-    //'PENDING' → 'DONE' → 'REWORK_PENDING' → 'REWORK_DONE' の順にめぐるイメージ
+    importId: a.string().required(),   // '20250606_103000'
+    status: a.string().default('PENDING') // 'PENDING' | 'IN_PROGRESS' | 'DONE'
   })
-  .identifier(['date', 'departmentId']) //PKとSK
-  .authorization((allow) => [allow.authenticated()]), //認証情報の設定
-
-  LatestImportMap: a.model({ //importIdを置いておくテーブル、Lambdaで使ったものをここに保存
-    date: a.string().required(), // '20250606'
-    latestImportId: a.string().required(), // '20250606_103000'　
-    // フロント側では最初にこれを定数に入れて使いまわす、作業完了後に更新する形
-  })
-  .identifier(['date'])
+  .identifier(['date', 'departmentId', 'importId'])
   .authorization((allow) => [allow.authenticated()])
   });
 
+
+  // CompleteFlag: a.model({ //その日の作業完了フラグ　←このフラグで表示されるデータのフィルタリングを決める
+  //   date: a.string().required(),    // 注文日 '20250606'
+
+  //   departmentId: a.string().required(), // 部門ID(仮) 'test'
+  //   departmentName: a.string(), //部門名(仮) 'test部門'
+
+  //   nakanoshimaState:a.string().default('PENDING'), //中之島の完了状態
+  //   jyoetsuState:a.string().default('PENDING'), //上越の完了状態
+  //   //'PENDING' → 'DONE' → 'REWORK_PENDING' → 'REWORK_DONE' の順にめぐるイメージ
+  // })
+  // .identifier(['date', 'departmentId']) //PKとSK
+  // .authorization((allow) => [allow.authenticated()]), //認証情報の設定
 
 
 //↑で定義したschemaの型情報を安全に再利用するためにSchemaという変数に格納(準必須)

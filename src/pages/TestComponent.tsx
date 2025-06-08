@@ -9,7 +9,7 @@ const boxClient = generateClient<Schema>();
 
 import { fetchUserAttributes } from 'aws-amplify/auth';
 
-import {CompleteState} from '../types/index.ts';
+import {StatusTemplate} from '../types/index.ts';
 
 import { formatDateToJST } from '../components/formatDateToJST.tsx';
 
@@ -33,15 +33,9 @@ export const TestComponent = () => {
             },
         });
         console.log('data',data);
+        console.log(StatusTemplate.PENDING); //PENDING
 
                 // 店舗IDは指定せず、日付のみで取得
-        const { data:Flagdata } = await boxClient.models.CompleteFlag.list({
-            filter: {
-                date: { eq: '2025-06-02' },
-                departmentId: { eq: 'test' }
-            },
-        });
-        console.log('Flagdata',Flagdata);
 
         const date='20250606'
         const result = await boxClient.models.Order.listOrdersByDeptAndImport({
@@ -141,52 +135,6 @@ export const TestComponent = () => {
 };
 
 
-const createOrUpdateTestFlag = async (): Promise<boolean> => {
-try {
-    const date = '2025-06-02';
-    const departmentId = 'test';
-
-    // 既存データを取得
-    const { data: existingFlag } = await boxClient.models.CompleteFlag.get({
-        date,
-        departmentId,
-        });
-
-    if (existingFlag) {
-    // データが存在する場合は update
-    await boxClient.models.CompleteFlag.update({
-        date,
-        departmentId,
-        nakanoshimaState: CompleteState.PENDING, // 必要なフィールドだけ更新
-        jyoetsuState: CompleteState.PENDING
-    });
-    } else {
-    // データが存在しない場合は create
-    await boxClient.models.CompleteFlag.create({
-        date,
-        departmentId,
-        departmentName: 'テスト部門',
-        nakanoshimaState: CompleteState.PENDING, 
-        jyoetsuState: CompleteState.PENDING
-    });
-    }
-
-        return true;
-    } catch (error) {
-        console.error('CompleteFlag 作成/更新エラー:', error);
-        return false;
-    }
-};
-
-// ボタンクリックハンドラーtestフラグ作成用
-    const handleCreateFlag = async () => {
-        fetchProducts;
-
-        const success = await createOrUpdateTestFlag(); 
-    if (success) console.log("保存に成功しました");
-
-};
-
 const handleDeleteAll = async () => {
     try {
       // 1. 全 Box を取得
@@ -240,9 +188,6 @@ return (
     }}>
         <Button variant="contained" color="secondary" onClick={ handleSaveClick}> {/*DB保存用関数を呼び出す*/}
             Orderテスト用ボタン
-        </Button>
-        <Button variant="contained" color="error" onClick={ handleCreateFlag }> {/*test部門用の完了フラグを作る*/}
-            test部門未完了
         </Button>
         <Button variant="contained" color="error" onClick={handleDeleteAll}>
             Boxテーブル削除

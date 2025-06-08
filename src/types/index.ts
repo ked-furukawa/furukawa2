@@ -31,9 +31,11 @@ export interface OrderData {
   orderCount: number;
 }
 
-export const CompleteState = {
+export const StatusTemplate = {
   PENDING: 'PENDING',
+  IN_PROGRESS: 'IN_PROGRESS',
   DONE: 'DONE',
-  REWORK_PENDING: 'REWORK_PENDING',
-  REWORK_DONE: 'REWORK_DONE',
+
+  CONFIRMED: 'CONFIRMED',
+  DOUBLE_CHECKED: 'DOUBLE_CHECKED'
 }
