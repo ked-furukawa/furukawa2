@@ -17,6 +17,7 @@ import TestComponent from "./pages/TestComponent.tsx";
 import BoxQuantityInput from "./pages/BoxQuantityInput.tsx";
 import SortingCheckScreen from "./pages/SortingCheckScreen.tsx";
 import StoreDoubleCheckList from "./pages/StoreDoubleCheckList.tsx";
+import AdditionalOrderInput from "./pages/AdditionalOrderInput.tsx";
 import ExcelUpload from "./pages/ExcelUpload.tsx";
 
 import { Authenticator } from "@aws-amplify/ui-react";
@@ -67,6 +68,17 @@ const App = () => {
       label: "最終確認",
       component: () => <FinalCheck />,
     },
+    {
+      key: 'AdditionalOrderInput',
+      label: '追加注文',
+      component: () => <AdditionalOrderInput />,
+    },
+    {
+      key: 'Test',
+      label: 'テスト画面',
+      component: () => <TestComponent />,
+    },
+
   ];
 
   const currentPage = pageList.find((p) => p.key === view);

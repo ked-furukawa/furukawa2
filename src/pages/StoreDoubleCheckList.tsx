@@ -71,7 +71,7 @@ useEffect(() => {
         if (!boxCountsData[box.storeId]) {
             boxCountsData[box.storeId] = {};
         }
-        boxCountsData[box.storeId][box.color] = box.boxCount;
+        boxCountsData[box.storeId][box.boxColor] = box.boxCount;
         });
         
         // 店舗情報を配列に変換
@@ -135,11 +135,11 @@ const handleConfirmSelected = async () => {
         await client.models.Box.update({
             date: box.date,
             storeId: box.storeId,
-            color: box.color,
+            boxColor: box.boxColor,
             boxCount: box.boxCount,
             storeName: box.storeName,
             storeTc: box.storeTc,
-            boxCreatedBy: box.boxCreatedBy
+            departmentId: box.departmentId
         });
         }
     }
