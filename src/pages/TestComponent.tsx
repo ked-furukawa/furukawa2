@@ -12,7 +12,7 @@ import { fetchUserAttributes } from 'aws-amplify/auth';
 import {StatusTemplate} from '../types/index.ts';
 
 import { formatDateToJST } from '../components/utils/formatDateToJST.tsx';
-import { groupOrdersByTcAndStore } from '../components/utils/groupOrdersByTcAndStore.tsx';
+// import { groupOrdersByTcAndStore } from '../components/utils/groupOrdersByTcAndStore.tsx';
 
 
 export const TestComponent = () => {
@@ -50,8 +50,8 @@ export const TestComponent = () => {
         const testdate=formatDateToJST(new Date);
         console.log(testdate);
 
-        const grouped = groupOrdersByTcAndStore(testDataOrder);
-        console.log('グルーピング結果',grouped)
+        // const grouped = groupOrdersByTcAndStore(testDataOrder);
+        // console.log('グルーピング結果',grouped)
 
     }
     finally{
@@ -99,32 +99,13 @@ export const TestComponent = () => {
 
     const saveDataToDBOrder = async () => { //DB保存用関数Order
     try {
-        const attrs = await fetchUserAttributes();
 
-        const date='20250606'
-        const storeId='019'
-        const itemId='210039'
-        const departmentId=attrs['custom:departmentId']
-
-        const result=await boxClient.models.Order.create({
-            importId:'20250606_130000',
-            
-            date: date,
-            
-            storeId: storeId,
-            storeName: '内野店',
-            storeTc: '中之島',
-            
-            itemId: itemId,
-            itemName: '大エビ',
-            itemFormalName: '大エビ天重キット',
-            itemCount: 3,
-
-            departmentId: departmentId,
-            departmentName: 'テスト部門',
-
+    for (const order of testDataOrder) {
+        const result =await boxClient.models.Order.create({
+            ...order
         });
         console.log('create',result);
+    }
         return true;
     } catch (error) {
         console.error('DB登録エラー:', error);

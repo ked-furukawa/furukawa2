@@ -9,18 +9,15 @@ Alert,
 Input,
 } from '@mui/material';
 import { uploadData } from 'aws-amplify/storage';
-//テストデータ
-import testDataOrder from '../services/testDataOrder.json';
-import testDataBox from '../services/testDataBox.json';
-import { Schema } from '../../amplify/data/resource';
-import { generateClient } from "aws-amplify/data";
+
+// import { Schema } from '../../amplify/data/resource';
+// import { generateClient } from "aws-amplify/data";
 
 export const ExcelUpload = () => {
 const [file, setFile] = useState<File | null>(null);
 const [loading, setLoading] = useState(false);
 const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-const boxClient = generateClient<Schema>();
 
 const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -61,63 +58,6 @@ const handleUpload = async () => { //S3へのアップロード関数
     }
 };
 
-  const saveDataToDBBox = async (data: any[]) => { //DB保存用関数Box
-    try {
-    for (const item of data) {
-        const result=await boxClient.models.Box.create({
-            date: item.date,
-            
-            storeId: item.storeId,
-            storeName: item.storeName,
-            storeTc: item.storeTc,
-            
-            boxColor: item.color,
-            boxCount: item.boxCount,
-            departmentId: 'system'
-        });
-        console.log(result);
-    }
-        return true;
-    } catch (error) {
-        console.error('DB登録エラー:', error);
-        return false;
-    }
-};
-  const saveDataToDBOrder = async (data: any[]) => { //DB保存用関数Order
-    try {
-    for (const item of data) {
-        await boxClient.models.Order.create({
-            importId:'001',
-
-            date: item.date,
-            
-            storeId: item.storeId,
-            storeName: item.storeName,
-            storeTc: item.storeTc,
-            
-            itemId: item.itemId,
-            itemName: item.itemName,
-            itemFormalName: item.itemFormalName,
-            itemCount: item.orderCount
-        });
-    }
-        return true;
-    } catch (error) {
-        console.error('DB登録エラー:', error);
-        return false;
-    }
-};
-
-// ボタンクリックハンドラーDB保存用
-    const handleSaveClick = async (data: "box" | "order") => {
-    if (data === "order") {
-    const success = await saveDataToDBOrder(testDataOrder); // Order型
-    if (success) console.log("保存に成功しました");
-    } else {
-    const success = await saveDataToDBBox(testDataBox); // Box型
-    if (success) console.log("保存に成功しました");
-    }
-};
 
 return (
     <>
@@ -162,20 +102,6 @@ return (
         {message.text}
         </Alert>
     )}
-    </Box>
-    <Box sx={{
-    position: "fixed",
-    bottom: 0,
-    right: 0,
-    margin: 2, 
-    borderRadius: 1,
-    }}>
-        <Button variant="contained" color="secondary" onClick={() => handleSaveClick("order")}> {/*DB保存用関数を呼び出す*/}
-        Orderテスト用ボタン
-        </Button>
-        <Button variant="contained" color="secondary" onClick={() => handleSaveClick("box")}> {/*DB保存用関数を呼び出す*/}
-        Boxテスト用ボタン
-        </Button>
     </Box>
     </>
 );

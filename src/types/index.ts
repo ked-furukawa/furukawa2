@@ -26,18 +26,18 @@ export interface OrderData { //Orderテーブル用interface
   date: string; //20250609
 
   storeId: string; //019
-  storeName?: string; //内野店
+  storeName: string; //内野店
   storeTc: string; //中之島
 
   itemId: string; //210014
-  itemName?: string; //あさり
+  itemName: string; //あさり
   itemFormalName?: string; //あさりと生姜の炊き込みご飯
   itemCount: number; //5
 
   departmentId: string; //souzai2
   departmentName?: string; //惣菜2
 
-  status?: OrderStatus; //'PENDING' or 'DONE'
+  status: OrderStatus; //'PENDING' or 'DONE'
 }
 
 export const StatusTemplate = {
