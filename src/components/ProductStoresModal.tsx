@@ -15,17 +15,16 @@ useTheme
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 
-// 商品データの型定義
+// 商品データの型定義（Orderモデルベース）
 interface Product {
-id: string;
-name: string;
-expectedCount: number;
-isChecked: boolean;
-itemId: string;
-date: string;
-storeId: string;
-storeName?: string;
-resDeptName?: string;
+    date:string;
+
+    itemId: string; //itemId
+    itemName: string; // itemName
+    itemCounts: number; // itemCountの合計値
+    isChecked: boolean; // ローカル状態で管理
+
+    departmentId:string; //担当部門ID
 }
 
 // 注文データの型定義（any型を使用して柔軟に対応）
@@ -104,7 +103,7 @@ return (
         fontWeight: 'bold',
         fontSize: isPortrait ? '1.5rem' : '1.3rem'
         }}>
-        {product?.name} - 注文店舗一覧
+        {product?.itemName} - 注文店舗一覧
         </Typography>
         <IconButton
         edge="end"
