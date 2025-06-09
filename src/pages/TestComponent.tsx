@@ -3,14 +3,58 @@ import { TextField, Button, Box, Typography } from '@mui/material';
 import { Schema } from '../../amplify/data/resource';
 import { generateClient } from "aws-amplify/data";
 
-import testDataOrder from '../services/testDataOrder.json';
+// import testDataOrder from '../services/testDataOrder.json';
 
 const boxClient = generateClient<Schema>();
+
+import { fetchUserAttributes } from 'aws-amplify/auth';
+
+import {StatusTemplate} from '../types/index.ts';
+
+import { formatDateToJST } from '../components/formatDateToJST.tsx';
+
 
 export const TestComponent = () => {
     const [value, setValue] = useState('');
     const [submittedValue, setSubmittedValue] = useState<number | null>(null);
     const [message, setMessage] = useState<string>('');
+
+    const fetchProducts = async () => {
+    try {
+    
+        const attrs = await fetchUserAttributes();
+        console.log('ログインユーザーの departmentId:', attrs['custom:departmentId']);
+    
+        // 店舗IDは指定せず、日付のみで取得
+        const { data } = await boxClient.models.Order.list({
+            filter: {
+                date: { eq: '2025-06-02' },
+                departmentId: { eq: attrs['custom:departmentId'] }
+            },
+        });
+        console.log('data',data);
+        console.log(StatusTemplate.PENDING); //PENDING
+
+                // 店舗IDは指定せず、日付のみで取得
+
+        const date='20250606'
+        const result = await boxClient.models.Order.listOrdersByDeptAndImport({
+        date, // GSI の partitionKey
+        departmentIdImportId: {
+            eq: {departmentId:attrs['custom:departmentId'] as string,
+                importId:'20250606_130000'} // sortKey の条件
+        },
+    });
+        console.log('resulet',result);
+        const testdate=formatDateToJST(new Date);
+        console.log(testdate);
+
+    }
+    finally{
+        console.log('test終了');
+    }
+    };
+    
 
     
 
@@ -37,9 +81,9 @@ export const TestComponent = () => {
             storeId: '019', //必要情報=定義したテーブルの中身
             storeName: '内野店',
             storeTc: '中之島',
-            color: 'green',
+            boxColor: 'green',
             boxCount: numValue,
-            boxCreatedBy: '肉',
+            departmentId: 'test',
         });
         console.log(result);
         setMessage('登録成功');
@@ -49,22 +93,34 @@ export const TestComponent = () => {
         }
     };
 
-      const saveDataToDBOrder = async (data: any[]) => { //DB保存用関数Order
+    const saveDataToDBOrder = async () => { //DB保存用関数Order
     try {
-    for (const item of data) {
-        await boxClient.models.Order.create({
-            date: item.date,
+        const attrs = await fetchUserAttributes();
+
+        const date='20250606'
+        const storeId='019'
+        const itemId='210039'
+        const departmentId=attrs['custom:departmentId']
+
+        const result=await boxClient.models.Order.create({
+            importId:'20250606_130000',
             
-            storeId: item.storeId,
-            storeName: item.storeName,
-            storeTc: item.storeTc,
+            date: date,
             
-            itemId: item.itemId,
-            itemName: item.itemName,
-            itemFormalName: item.itemFormalName,
-            orderCount: item.orderCount
+            storeId: storeId,
+            storeName: '内野店',
+            storeTc: '中之島',
+            
+            itemId: itemId,
+            itemName: '大エビ',
+            itemFormalName: '大エビ天重キット',
+            itemCount: 3,
+
+            departmentId: departmentId,
+            departmentName: 'テスト部門',
+
         });
-    }
+        console.log('create',result);
         return true;
     } catch (error) {
         console.error('DB登録エラー:', error);
@@ -74,51 +130,10 @@ export const TestComponent = () => {
 
 // ボタンクリックハンドラーDB保存用
     const handleSaveClick = async () => {
-    const success = await saveDataToDBOrder(testDataOrder); // Order型
+    const success = await saveDataToDBOrder(); // Order型
     if (success) console.log("保存に成功しました");
 };
 
-
-const createOrUpdateTestFlag = async (): Promise<boolean> => {
-try {
-    const date = '2025-06-02';
-    const departmentId = 'test';
-
-    // 既存データを取得
-    const { data: existingFlag } = await boxClient.models.CompleteFlag.get({
-        date,
-        departmentId,
-        });
-
-    if (existingFlag) {
-    // データが存在する場合は update
-    await boxClient.models.CompleteFlag.update({
-        date,
-        departmentId,
-        completeState: '未完了', // 必要なフィールドだけ更新
-    });
-    } else {
-    // データが存在しない場合は create
-    await boxClient.models.CompleteFlag.create({
-        date,
-        departmentId,
-        departmentName: 'テスト部門',
-        completeState: '未完了',
-    });
-    }
-
-        return true;
-    } catch (error) {
-        console.error('CompleteFlag 作成/更新エラー:', error);
-        return false;
-    }
-};
-
-// ボタンクリックハンドラーtestフラグ作成用
-    const handleCreateFlag = async () => {
-    const success = await createOrUpdateTestFlag(); 
-    if (success) console.log("保存に成功しました");
-};
 
 const handleDeleteAll = async () => {
     try {
@@ -130,9 +145,10 @@ const handleDeleteAll = async () => {
             await Promise.all(
             orders.map((box) =>
                 boxClient.models.Box.delete({
-                    date:'2025-06-02', 
+                    date:'20250602', 
                     storeId:box.storeId, 
-                    color:box.color
+                    boxColor:box.boxColor,
+                    departmentId:'test'
                 })
             )
             );
@@ -171,13 +187,13 @@ return (
     borderRadius: 1,
     }}>
         <Button variant="contained" color="secondary" onClick={ handleSaveClick}> {/*DB保存用関数を呼び出す*/}
-        Orderテスト用ボタン
-        </Button>
-        <Button variant="contained" color="error" onClick={ handleCreateFlag }> {/*test部門用の完了フラグを作る*/}
-            test部門未完了
+            Orderテスト用ボタン
         </Button>
         <Button variant="contained" color="error" onClick={handleDeleteAll}>
             Boxテーブル削除
+        </Button>
+        <Button variant="contained" color="error" onClick={fetchProducts}>
+            test
         </Button>
         </Box>
         </>

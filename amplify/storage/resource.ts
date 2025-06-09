@@ -6,7 +6,7 @@ export const storage = defineStorage({
 
     access: (allow) => ({
         "excel-files/*": [
-        allow.guest.to(["read", "write"]),
+        allow.authenticated.to(["read", "write"]),
         ],
     }),
 });

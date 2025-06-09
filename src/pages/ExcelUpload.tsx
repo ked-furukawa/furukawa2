@@ -8,7 +8,7 @@ LinearProgress,
 Alert,
 Input,
 } from '@mui/material';
-import { getUrl, uploadData } from 'aws-amplify/storage';
+import { uploadData } from 'aws-amplify/storage';
 //テストデータ
 import testDataOrder from '../services/testDataOrder.json';
 import testDataBox from '../services/testDataBox.json';
@@ -42,17 +42,6 @@ const handleUpload = async () => { //S3へのアップロード関数
     const filePath = `excel-files/${Date.now()}-${file.name}` // S3上のパス
 
     try {
-            // 同名ファイルが存在するかチェック
-    try {
-      await getUrl({ path: filePath }); // 存在すれば成功 → エラーでなければ既に存在
-        setMessage({ type: 'error', text: 'アップロード済みのファイルです。' });
-        setLoading(false);
-        return;
-        } catch(err) {
-            if((err instanceof Error) && err.name !== 'NotFound') {
-            throw err; 
-        }
-    }
     const result = await uploadData({
         path: filePath, // S3上のパス
         data: file,
@@ -82,9 +71,9 @@ const handleUpload = async () => { //S3へのアップロード関数
             storeName: item.storeName,
             storeTc: item.storeTc,
             
-            color: item.color,
+            boxColor: item.color,
             boxCount: item.boxCount,
-            boxCreatedBy: 'system'
+            departmentId: 'system'
         });
         console.log(result);
     }
@@ -98,6 +87,8 @@ const handleUpload = async () => { //S3へのアップロード関数
     try {
     for (const item of data) {
         await boxClient.models.Order.create({
+            importId:'001',
+
             date: item.date,
             
             storeId: item.storeId,
@@ -107,7 +98,7 @@ const handleUpload = async () => { //S3へのアップロード関数
             itemId: item.itemId,
             itemName: item.itemName,
             itemFormalName: item.itemFormalName,
-            orderCount: item.orderCount
+            itemCount: item.orderCount
         });
     }
         return true;
