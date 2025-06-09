@@ -20,6 +20,19 @@ const colorStyles: Record<BoxColor, { bg: string, text: string }> = {
   yellow: { bg: '#ffeb3b', text: 'black' }
 };
 
+// 数字ボタン用の共通スタイル - 文字色と枠線を黒に設定
+const numberButtonStyle = {
+  flex: 1, 
+  height: 60, 
+  fontSize: '1.5rem', 
+  fontWeight: 'bold',
+  color: 'black', // 数字の色を黒に設定
+  borderColor: 'black', // 枠線を黒に設定
+  '&:hover': {
+    borderColor: 'black', // ホバー時も枠線を黒に保つ
+  }
+};
+
 // コンポーネントのProps型定義
 interface KeypadProps {
   value: string;
@@ -170,21 +183,21 @@ export const Keypad: React.FC<KeypadProps> = ({
         <Box display="flex" gap={1} mb={1}>
           <Button 
             variant="outlined" 
-            sx={{ flex: 1, height: 60, fontSize: '1.5rem', fontWeight: 'bold' }} 
+            sx={numberButtonStyle} 
             onClick={() => handleNumberClick('7')}
           >
             7
           </Button>
           <Button 
             variant="outlined" 
-            sx={{ flex: 1, height: 60, fontSize: '1.5rem', fontWeight: 'bold' }} 
+            sx={numberButtonStyle} 
             onClick={() => handleNumberClick('8')}
           >
             8
           </Button>
           <Button 
             variant="outlined" 
-            sx={{ flex: 1, height: 60, fontSize: '1.5rem', fontWeight: 'bold' }} 
+            sx={numberButtonStyle} 
             onClick={() => handleNumberClick('9')}
           >
             9
@@ -195,21 +208,21 @@ export const Keypad: React.FC<KeypadProps> = ({
         <Box display="flex" gap={1} mb={1}>
           <Button 
             variant="outlined" 
-            sx={{ flex: 1, height: 60, fontSize: '1.5rem', fontWeight: 'bold' }} 
+            sx={numberButtonStyle} 
             onClick={() => handleNumberClick('4')}
           >
             4
           </Button>
           <Button 
             variant="outlined" 
-            sx={{ flex: 1, height: 60, fontSize: '1.5rem', fontWeight: 'bold' }} 
+            sx={numberButtonStyle} 
             onClick={() => handleNumberClick('5')}
           >
             5
           </Button>
           <Button 
             variant="outlined" 
-            sx={{ flex: 1, height: 60, fontSize: '1.5rem', fontWeight: 'bold' }} 
+            sx={numberButtonStyle} 
             onClick={() => handleNumberClick('6')}
           >
             6
@@ -220,21 +233,21 @@ export const Keypad: React.FC<KeypadProps> = ({
         <Box display="flex" gap={1} mb={1}>
           <Button 
             variant="outlined" 
-            sx={{ flex: 1, height: 60, fontSize: '1.5rem', fontWeight: 'bold' }} 
+            sx={numberButtonStyle} 
             onClick={() => handleNumberClick('1')}
           >
             1
           </Button>
           <Button 
             variant="outlined" 
-            sx={{ flex: 1, height: 60, fontSize: '1.5rem', fontWeight: 'bold' }} 
+            sx={numberButtonStyle} 
             onClick={() => handleNumberClick('2')}
           >
             2
           </Button>
           <Button 
             variant="outlined" 
-            sx={{ flex: 1, height: 60, fontSize: '1.5rem', fontWeight: 'bold' }} 
+            sx={numberButtonStyle} 
             onClick={() => handleNumberClick('3')}
           >
             3
@@ -245,7 +258,7 @@ export const Keypad: React.FC<KeypadProps> = ({
         <Box display="flex" justifyContent="center" mb={2}>
           <Button 
             variant="outlined" 
-            sx={{ width: '33.3%', height: 60, fontSize: '1.5rem', fontWeight: 'bold' }} 
+            sx={{ ...numberButtonStyle, width: '33.3%' }} 
             onClick={() => handleNumberClick('0')}
           >
               0

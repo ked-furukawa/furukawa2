@@ -142,13 +142,13 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
         </Box>
         ) : (
         <TableContainer sx={{ flex: 1, overflowY: 'auto' }}>
-            <Table stickyHeader size="small" sx={{ tableLayout: 'fixed' }}>
+            <Table stickyHeader size="medium" sx={{ tableLayout: 'fixed' }}>
             <TableHead>
-                <TableRow>
-                <TableCell>商品名</TableCell>
-                <TableCell align="right">個数</TableCell>
-                <TableCell align="center">選択</TableCell>
-                </TableRow>
+            <TableRow>
+                <TableCell sx={{ fontSize: '1.1rem', fontWeight: 'bold', padding: '16px 12px' }}>商品名</TableCell>
+                <TableCell align="right" sx={{ fontSize: '1.1rem', fontWeight: 'bold' }}>個数</TableCell>
+                <TableCell align="center" sx={{ fontSize: '1.1rem', fontWeight: 'bold' }}>選択</TableCell>
+            </TableRow>
             </TableHead>
             <TableBody>
                 {products.map((product) => (
@@ -166,14 +166,18 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
                     maxWidth: 0, // これが重要: テキストの省略を強制
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap'
+                    whiteSpace: 'nowrap',
+                    fontSize: '1rem', // フォントサイズを大きく
+                    padding: '16px 12px' // パディングを増やす
                 }}>
                     <Typography 
-                    variant="body2" 
+                    variant="body1" // body2からbody1に変更してサイズアップ
                     sx={{ 
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap'
+                        whiteSpace: 'nowrap',
+                        fontWeight: 500, // やや太めに
+                        lineHeight: 1.4 // 行の高さを調整
                     }}
                     >
                     {product.itemName}
@@ -185,18 +189,40 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
                         display: 'block',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap'
+                        whiteSpace: 'nowrap',
+                        fontSize: '0.85rem' // キャプションも大きく
                     }}
                     >
                     {product.itemFormalName}
                     </Typography>
                 </TableCell>
-                    <TableCell align="right">{product.orderCount}</TableCell>
-                    <TableCell align="center" onClick={(e) => e.stopPropagation()}> {/* イベントの伝播を停止 */}
-                        <Checkbox
+                    <TableCell 
+                        align="right"
+                        sx={{ 
+                            fontSize: '1.5rem', // 個数表示を大きく
+                            fontWeight: 500, // やや太めに
+                            padding: '16px 8px', // パディングを増やす
+                            textAlign: 'right', // 右寄せのまま
+                            paddingRight: '24px' // 右側の余白を増やして全体的に左に寄せる
+                        }}
+                        >
+                        {product.orderCount}
+                        </TableCell>
+                    <TableCell 
+                    align="center" 
+                    onClick={(e) => e.stopPropagation()}
+                    sx={{ padding: '8px' }} // パディングを調整
+                    > 
+                    <Checkbox
                         checked={completedStoreIds?.includes(storeNumber)||selectedProductIds.includes(product.id)}
-                        onChange={() => onProductSelect(product.id)} // チェックボックス単体でも選択できる
-                        />
+                        onChange={() => onProductSelect(product.id)}
+                        sx={{ 
+                        '& .MuiSvgIcon-root': { 
+                            fontSize: 35 // チェックボックスのサイズを大きく
+                        },
+                        padding: '8px' // チェックボックス自体のパディングも調整
+                        }}
+                    />
                     </TableCell>
                     </TableRow>
                 ))}
@@ -207,7 +233,7 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
 
         {/* フッター部分 - 合計情報 */}
         <Box sx={{ p: 2, borderTop: '1px solid rgba(224, 224, 224, 1)', backgroundColor: '#fafafa' }}>
-        <Typography variant="body2">
+        <Typography variant="body1">
             合計商品数: {products.length} / 合計個数: {products.reduce((sum, product) => sum + product.orderCount, 0)}
         </Typography>
         {/* <Typography variant="body2" color="text.secondary">
