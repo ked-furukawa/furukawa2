@@ -1,251 +1,190 @@
 
 [
     {
-        "date": "2025-06-04",
+        "importId": "20250609_103000",
+
+        "date": "20250609",
 
         "storeId": "019",
         "storeName": "内野店",
         "storeTc": "中之島",
 
-        "itemId": "210283",
-        "itemName": "ごはん",
-        "itemFormalName": "あさりの炊き込みご飯キット",
-        "orderCount": 99
+        "itemId": "210014",
+        "itemName": "あさり",
+        "itemFormalName": "あさりと生姜の炊き込みご飯",
+        "itemCount": 5,
+
+        "departmentId":  "kurosawa",
+        "departmentName": "黒澤"
     },
     {
-        "date": "2025-06-02",
+        "importId": "20250609_130000",
+
+        "date": "20250609",
 
         "storeId": "019",
         "storeName": "内野店",
         "storeTc": "中之島",
 
-        "itemId": "210005",
-        "itemName": "レモン",
-        "itemFormalName": "レモンスライス",
-        "orderCount": 5
+        "itemId": "210014",
+        "itemName": "あさり",
+        "itemFormalName": "あさりと生姜の炊き込みご飯",
+        "itemCount": 99,
+
+        "departmentId":  "kurosawa",
+        "departmentName": "黒澤"
     },
-        {
-        "date": "2025-06-02",
+    {
+        "importId": "20250609_103000",
+
+        "date": "20250609",
+
+        "storeId": "025",
+        "storeName": "春日山店",
+        "storeTc": "上越",
+
+        "itemId": "210090",
+        "itemName": "筍",
+        "itemFormalName": "筍とアスパラの炊き込みご飯",
+        "itemCount": 5,
+
+        "departmentId":  "kurosawa",
+        "departmentName": "黒澤"
+    },
+    {
+        "importId": "20250609_130000",
+
+        "date": "20250609",
+
+        "storeId": "025",
+        "storeName": "春日山店",
+        "storeTc": "上越",
+
+        "itemId": "210090",
+        "itemName": "筍",
+        "itemFormalName": "筍とアスパラの炊き込みご飯",
+        "itemCount": 99,
+
+        "departmentId":  "kurosawa",
+        "departmentName": "黒澤"
+    },
+    {
+        "importId": "20250609_103000",
+
+        "date": "20250609",
 
         "storeId": "019",
         "storeName": "内野店",
         "storeTc": "中之島",
 
-        "itemId": "210039",
-        "itemName": "大エビ",
-        "itemFormalName": "大エビ天重キット",
-        "orderCount": 3
-    },
-        {
-        "date": "2025-06-02",
+        "itemId": "210278",
+        "itemName": "かつ重",
+        "itemFormalName": "新かつ重キット",
+        "itemCount": 5,
 
-        "storeId": "020",
-        "storeName": "吉田店",
-        "storeTc": "中之島",
-
-        "itemId": "210039",
-        "itemName": "大エビ",
-        "itemFormalName": "大エビ天重キット",
-        "orderCount": 2
-    },
-        {
-        "date": "2025-06-02",
-
-        "storeId": "020",
-        "storeName": "吉田店",
-        "storeTc": "中之島",
-
-        "itemId": "210030",
-        "itemName": "ナス",
-        "itemFormalName": "天ぷら用ナス",
-        "orderCount": 1
-    },
-        {
-        "date": "2025-06-02",
-
-        "storeId": "020",
-        "storeName": "吉田店",
-        "storeTc": "中之島",
-
-        "itemId": "210110",
-        "itemName": "あんかけ",
-        "itemFormalName": "あんかけ用野菜4点セット",
-        "orderCount": 1
-    },
-        {
-        "date": "2025-06-02",
-
-        "storeId": "020",
-        "storeName": "吉田店",
-        "storeTc": "中之島",
-
-        "itemId": "210152",
-        "itemName": "天小",
-        "itemFormalName": "天ぷら御前キット夏",
-        "orderCount": 1
-    },
-        {
-        "date": "2025-06-02",
-
-        "storeId": "020",
-        "storeName": "吉田店",
-        "storeTc": "中之島",
-
-        "itemId": "210057",
-        "itemName": "天重",
-        "itemFormalName": "天重(夏) キット",
-        "orderCount": 1
-    },
-        {
-        "date": "2025-06-02",
-
-        "storeId": "121",
-        "storeName": "川崎店",
-        "storeTc": "中之島",
-
-        "itemId": "210039",
-        "itemName": "大エビ",
-        "itemFormalName": "大エビ天重キット",
-        "orderCount": 1
-    },
-        {
-        "date": "2025-06-02",
-
-        "storeId": "121",
-        "storeName": "川崎店",
-        "storeTc": "中之島",
-
-        "itemId": "210039",
-        "itemName": "大エビ",
-        "itemFormalName": "大エビ天重キット",
-        "orderCount": 3
-    },
-        {
-        "date": "2025-06-02",
-
-        "storeId": "121",
-        "storeName": "川崎店",
-        "storeTc": "中之島",
-
-        "itemId": "210040",
-        "itemName": "てり",
-        "itemFormalName": "チキンステーキ（照焼き）１０枚",
-        "orderCount": 1
+        "departmentId":  "sakurai",
+        "departmentName": "櫻井"
     },
     {
-        "date": "2025-06-02",
+        "importId": "20250609_130000",
 
-        "storeId": "040",
-        "storeName": "黒部店",
-        "storeTc": "上越",
+        "date": "20250609",
 
-        "itemId": "210005",
-        "itemName": "レモンスライス",
-        "itemFormalName": "レモン",
-        "orderCount": 3
-    },
-    {
-        "date": "2025-06-02",
-
-        "storeId": "040",
-        "storeName": "黒部店",
-        "storeTc": "上越",
-
-        "itemId": "210039",
-        "itemName": "大エビ",
-        "itemFormalName": "大エビ天重キット",
-        "orderCount": 1
-    },
-    {
-        "date": "2025-06-02",
-        "storeId": "020",
-        "storeName": "吉田店",
+        "storeId": "019",
+        "storeName": "内野店",
         "storeTc": "中之島",
-        "itemId": "210082",
-        "itemName": "バジル",
-        "itemFormalName": "バジルチキンと根菜キット",
-        "orderCount": 4
+
+        "itemId": "210278",
+        "itemName": "かつ重",
+        "itemFormalName": "新かつ重キット",
+        "itemCount": 99,
+
+        "departmentId":  "sakurai",
+        "departmentName": "櫻井"
     },
     {
-        "date": "2025-06-02",
-        "storeId": "133",
-        "storeName": "糸魚川東店",
+        "importId": "20250609_103000",
+
+        "date": "20250609",
+
+        "storeId": "025",
+        "storeName": "春日山店",
         "storeTc": "上越",
-        "itemId": "210001",
-        "itemName": "かぼちゃ",
-        "itemFormalName": "カボチャスライス",
-        "orderCount": 5
+
+        "itemId": "210181",
+        "itemName": "デミ",
+        "itemFormalName": "洋風デミカツ丼キット",
+        "itemCount": 5,
+
+        "departmentId":  "sakurai",
+        "departmentName": "櫻井"
     },
     {
-        "date": "2025-06-02",
-        "storeId": "133",
-        "storeName": "糸魚川東店",
+        "importId": "20250609_130000",
+
+        "date": "20250609",
+
+        "storeId": "025",
+        "storeName": "春日山店",
         "storeTc": "上越",
-        "itemId": "210068",
-        "itemName": "とりてん",
-        "itemFormalName": "弁当用とり天キット",
-        "orderCount": 4
+
+        "itemId": "210181",
+        "itemName": "デミ",
+        "itemFormalName": "洋風デミカツ丼キット",
+        "itemCount": 99,
+
+        "departmentId":  "sakurai",
+        "departmentName": "櫻井"
     },
     {
-        "date": "2025-06-02",
-        "storeId": "133",
-        "storeName": "糸魚川東店",
-        "storeTc": "上越",
-        "itemId": "210126",
-        "itemName": "あまから",
-        "itemFormalName": "豚肉の甘辛揚げ",
-        "orderCount": 1
-    },
-        {
-        "date": "2025-06-02",
-        "storeId": "217",
-        "storeName": "国府店",
-        "storeTc": "上越",
-        "itemId": "210068",
-        "itemName": "とりてん",
-        "itemFormalName": "弁当用とり天キット",
-        "orderCount": 4
-    },
-        {
-        "date": "2025-06-02",
-        "storeId": "223",
-        "storeName": "にしやま店",
-        "storeTc": "上越",
-        "itemId": "210068",
-        "itemName": "とりてん",
-        "itemFormalName": "弁当用とり天キット",
-        "orderCount": 4
-    },
-        {
-        "date": "2025-06-02",
-        "storeId": "223",
-        "storeName": "にしやま店",
-        "storeTc": "上越",
-        "itemId": "210200",
-        "itemName": "すぶた",
-        "itemFormalName": "極醸黒酢のまろコク酢豚",
-        "orderCount": 2
-    },
-        {
-        "date": "2025-06-02",
-        "storeId": "223",
-        "storeName": "にしやま店",
-        "storeTc": "上越",
+        "importId": "20250609_103000",
+
+        "date": "20250609",
+
+        "storeId": "019",
+        "storeName": "内野店",
+        "storeTc": "中之島",
+
         "itemId": "210205",
-        "itemName": "むね",
+        "itemName": "ムネ肉",
         "itemFormalName": "若鶏ムネ肉あんかけセット",
-        "orderCount": 1
-    },
-            {
-        "date": "2025-06-02",
-        "storeId": "223",
-        "storeName": "にしやま店",
-        "storeTc": "上越",
-        "itemId": "210105",
-        "itemName": "生姜",
-        "itemFormalName": "野菜たっぷり豚生姜焼きキット",
-        "orderCount": 99,
-        "resDeptId": "test"
-    }
+        "itemCount": 5,
 
+        "departmentId":  "furukawa",
+        "departmentName": "古川"
+    },
+    {
+        "importId": "20250609_130000",
+
+        "date": "20250609",
+
+        "storeId": "019",
+        "storeName": "内野店",
+        "storeTc": "中之島",
+
+        "itemId": "210205",
+        "itemName": "ムネ肉",
+        "itemFormalName": "若鶏ムネ肉あんかけセット",
+        "itemCount": 5,
+
+        "departmentId":  "furukawa",
+        "departmentName": "古川"
+    },
+    {
+        "importId": "20250609_103000",
+
+        "date": "20250609",
+
+        "storeId": "025",
+        "storeName": "春日山店",
+        "storeTc": "上越",
+
+        "itemId": "210126",
+        "itemName": "甘辛",
+        "itemFormalName": "豚肉の甘辛揚げ",
+        "itemCount": 99,
+
+        "departmentId":  "furukawa",
+        "departmentName": "古川"
+    }
 ]
