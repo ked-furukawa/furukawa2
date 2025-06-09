@@ -49,10 +49,10 @@ export const FinalCheck = () => {
                 storeName: item.storeName,
                 storeTc: item.storeTc,
 
-                greenBoxes: item.color === 'green' ? item.boxCount : 0,
-                redBoxes: item.color === 'red' ? item.boxCount : 0,
-                blueBoxes: item.color === 'blue' ? item.boxCount : 0,
-                yellowBoxes: item.color === 'yellow' ? item.boxCount : 0
+                greenBoxes: item.boxColor === 'green' ? item.boxCount : 0,
+                redBoxes: item.boxColor === 'red' ? item.boxCount : 0,
+                blueBoxes: item.boxColor === 'blue' ? item.boxCount : 0,
+                yellowBoxes: item.boxColor === 'yellow' ? item.boxCount : 0
             })) //マッピングしたものはstoreMapに入っている、以降はこれを使う
 
             aggregateStoreData(storeMap);
