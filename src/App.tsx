@@ -53,11 +53,11 @@ const App = () => {
       label: "仕分け前商品数確認",
       component: (props) => <SortingCheckScreen {...props} />,
     },
-    {
-      key: "BoxQuantityInput",
-      label: "仕分け箱数入力",
-      component: (props) => <BoxQuantityInput {...props} />,
-    },
+    // {
+    //   key: "BoxQuantityInput",
+    //   label: "仕分け箱数入力",
+    //   component: (props) => <BoxQuantityInput {...props} />,
+    // },
     {
       key: "StoreDoubleCheckList",
       label: "ダブルチェック",
@@ -73,12 +73,6 @@ const App = () => {
       label: '追加注文',
       component: () => <AdditionalOrderInput />,
     },
-    {
-      key: 'Test',
-      label: 'テスト画面',
-      component: () => <TestComponent />,
-    },
-
   ];
 
   const currentPage = pageList.find((p) => p.key === view);

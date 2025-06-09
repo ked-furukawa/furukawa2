@@ -49,10 +49,10 @@ export const FinalCheck = () => {
                 storeName: item.storeName,
                 storeTc: item.storeTc,
 
-                greenBoxes: item.color === 'green' ? item.boxCount : 0,
-                redBoxes: item.color === 'red' ? item.boxCount : 0,
-                blueBoxes: item.color === 'blue' ? item.boxCount : 0,
-                yellowBoxes: item.color === 'yellow' ? item.boxCount : 0
+                greenBoxes: item.boxColor === 'green' ? item.boxCount : 0,
+                redBoxes: item.boxColor === 'red' ? item.boxCount : 0,
+                blueBoxes: item.boxColor === 'blue' ? item.boxCount : 0,
+                yellowBoxes: item.boxColor === 'yellow' ? item.boxCount : 0
             })) //マッピングしたものはstoreMapに入っている、以降はこれを使う
 
             aggregateStoreData(storeMap);
@@ -166,11 +166,11 @@ export const FinalCheck = () => {
             <Table size="small" sx={{ tableLayout: 'fixed', width: '100%' }}>
             <TableHead>
                 <TableRow>
-                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'success.light', color: 'white', }}>Box緑</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'error.light', color: 'white', }}>Box赤</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.light', color: 'white', }}>Box青</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'warning.light', color: 'white', }}>Box黄</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'white', }}>合計</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'success.light', boxColor: 'white', }}>Box緑</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'error.light', boxColor: 'white', }}>Box赤</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.light', boxColor: 'white', }}>Box青</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'warning.light', boxColor: 'white', }}>Box黄</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.main', boxColor: 'white', }}>合計</TableCell>
                 </TableRow>
             </TableHead>
             <TableBody>
@@ -214,14 +214,14 @@ export const FinalCheck = () => {
         <Table stickyHeader aria-label="店舗データテーブル" >
             <TableHead>
             <TableRow> 
-                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'white' }}>TC</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'white' }}>店舗番号</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'white' }}>店舗名</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'success.light', color: 'white' }}>トートーbox緑</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'error.light', color: 'white' }}>トートーbox赤</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'primary.light', color: 'white' }}>トートーbox青</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'warning.light', color: 'white' }}>トートーbox黄</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'white',width: '15%' }}>合計</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.main', boxColor: 'white' }}>TC</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.main', boxColor: 'white' }}>店舗番号</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.main', boxColor: 'white' }}>店舗名</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'success.light', boxColor: 'white' }}>トートーbox緑</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'error.light', boxColor: 'white' }}>トートーbox赤</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'primary.light', boxColor: 'white' }}>トートーbox青</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'warning.light', boxColor: 'white' }}>トートーbox黄</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'primary.main', boxColor: 'white',width: '15%' }}>合計</TableCell>
             </TableRow>
             </TableHead>
             <TableBody >
