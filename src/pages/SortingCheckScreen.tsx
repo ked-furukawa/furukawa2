@@ -24,6 +24,7 @@ import type { Schema } from "../../amplify/data/resource";
 import { filterByCompleteFlag } from '../components/filterByCompleteFlag';
 import { CompleteState } from '../components/filterByCompleteFlag';
 import ProductStoresModal from '../components/ProductStoresModal';
+import { fetchUserAttributes } from 'aws-amplify/auth';
 
 const client= generateClient<Schema>();
 
