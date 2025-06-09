@@ -203,7 +203,7 @@ return (
                 <Keypad 
                 value={inputValue }
                 onChange={handleInputChange}
-                onEnter={() => handleQuantityUpdate}
+                onEnter={handleQuantityUpdate}
                 onClear={() => setInputValue('')}
                 selectedColor={selectedColor}
                 onColorChange={handleColorChange}

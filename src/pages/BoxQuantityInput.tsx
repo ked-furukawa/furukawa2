@@ -78,6 +78,18 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
   const [selectedColor, setSelectedColor] = useState<BoxColor>('green');
   const [refreshKey, setRefreshKey] = useState(0);
 
+// 確定ボタンを有効にするための条件をチェックする関数を追加
+const isConfirmButtonEnabled = useMemo(() => {
+  // 条件1: 商品が選択されている
+  const hasSelectedProducts = selectedProductIds.length > 0;
+  // 条件2: 箱数が入力されている
+  const hasQuantityInput = inputValue !== '';
+  // 条件3: すべての商品がチェックされている
+  const allProductsChecked = products.every(p => p.isChecked || selectedProductIds.includes(p.id));
+  
+  return hasSelectedProducts && hasQuantityInput && allProductsChecked;
+}, [selectedProductIds, inputValue, products]);
+
   // データキャッシュ
   const [orders, setOrders] = useState<Order[]>([]);
   const [boxDataCache, setBoxDataCache] = useState<BoxData[]>([]);
@@ -180,95 +192,106 @@ return null;
   }, [allStores]);
 
   // 内部用の店舗選択処理（キャッシュデータを使用）
-  const handleStoreSelectInternal = (
-    storeId: string,
-    orderData: Order[],
-    boxData: BoxData[]
-  ) => {
-    setSelectedStoreId(storeId);
+const handleStoreSelectInternal = (
+  storeId: string,
+  orderData: Order[],
+  boxData: BoxData[]
+) => {
+  setSelectedStoreId(storeId);
 
-
-
-const filtered = orderData.filter(order => order.storeId === storeId);
-if (filtered.length === 0) {
-  setError('店舗データが見つかりませんでした');
-  return;
-}
-const matchingOrder = filtered[0];
-const newStoreData = {
-  storeId: matchingOrder.storeId,
-  storeName: matchingOrder.storeName || '',
-  storeTc: matchingOrder.storeTc || ''
+  const filtered = orderData.filter(order => order.storeId === storeId);
+  if (filtered.length === 0) {
+    setError('店舗データが見つかりませんでした');
+    return;
+  }
+  
+  const matchingOrder = filtered[0];
+  const newStoreData = {
+    storeId: matchingOrder.storeId,
+    storeName: matchingOrder.storeName || '',
+    storeTc: matchingOrder.storeTc || ''
+  };
+  setStoreData(newStoreData);
+  
+  // 店舗の箱データをフィルタリング（データベースアクセスなし）
+  const storeBoxData = boxData.filter(box => box.storeId === storeId);
+  
+  // 選択した店舗が完了済みかどうかをチェック
+  const isCompletedStore = completedStores.some(store => store.storeId === storeId);
+  
+  const productList = filtered.map(order => {
+    const box = storeBoxData.find(b => b.boxCreatedBy === TEST_DEPARTMENT_ID);
+    const shouldBeChecked = isCompletedStore || !!box;
+    
+    console.log(`商品 ${order.itemId} のチェック状態:`, {
+      isCompletedStore,
+      hasBox: !!box,
+      shouldBeChecked
+    });
+    
+    return {
+      id: order.itemId,
+      itemId: order.itemId,
+      itemName: order.itemName || '',
+      itemFormalName: order.itemFormalName || '',
+      orderCount: order.orderCount,
+      quantity: box ? box.boxCount : 0,
+      isChecked: shouldBeChecked
+    };
+  });
+  
+  // 商品データを設定
+  setProducts(productList);
+  console.log('products 状態を設定しました:', productList.map(p => ({
+    id: p.id,
+    isChecked: p.isChecked
+  })));
+  
+  // 入力値をクリア
+  setInputValue('');
+  
+  // 完了済み店舗または箱データがある場合、すべての商品を選択状態にする
+  const shouldSelectAll = isCompletedStore || productList.some(p => p.isChecked);
+  if (shouldSelectAll) {
+    console.log('商品を選択状態に設定します');
+    const allProductIds = productList.map(p => p.id);
+    console.log('選択する商品ID:', allProductIds);
+    setSelectedProductIds(allProductIds);
+  } else {
+    // 選択をクリア
+    setSelectedProductIds([]);
+  }
+  
+  // 次の店舗を設定
+  if (allStores.length > 0) {
+    setNextStore(getNextStore(storeId));
+  }
 };
-setStoreData(newStoreData);
-// 店舗の箱データをフィルタリング（データベースアクセスなし）
-const storeBoxData = boxData.filter(box => box.storeId === storeId);
-// 選択した店舗が完了済みかどうかをチェック
-const isCompletedStore = completedStores.some(store => store.storeId === storeId);  
-const productList = filtered.map(order => {
-  const box = storeBoxData.find(b => b.boxCreatedBy === TEST_DEPARTMENT_ID);
-  const shouldBeChecked = isCompletedStore || !!box;
-  return {
-    id: order.itemId,
-    itemId: order.itemId,
-    itemName: order.itemName || '',
-    itemFormalName: order.itemFormalName || '',
-    orderCount: order.orderCount,
-    quantity: box ? box.boxCount : 0,
-    isChecked: shouldBeChecked
-  };
-});
-setProducts(productList);
-setSelectedProductIds([]);
-setInputValue('');
-// 完了済み店舗の場合、すべての商品を選択状態にする
-if (isCompletedStore) {
-  setTimeout(() => {
-    const allProductIds = productList.map(p => p.id);
-    setSelectedProductIds(allProductIds);
-  }, 100);
-}
-// 次の店舗を設定
-if (allStores.length > 0) {
-  setNextStore(getNextStore(storeId));
-}
-  };
 
   // 店舗選択時の処理（外部向け - キャッシュデータを使用）
   const handleStoreSelect = useCallback(async (storeId: string) => {
     handleStoreSelectInternal(storeId, orders, boxDataCache);
   }, [orders, boxDataCache, completedStores, allStores, getNextStore]);
 
-  // 箱数更新処理（メモ化）
   const handleQuantityUpdate = useCallback(() => {
-    if (selectedProductIds.length === 0 || !inputValue) {
-      setError('商品を選択して箱数を入力してください');
-      return;
-    }
-
-
-
-const quantity = parseInt(inputValue, 10);
-if (isNaN(quantity)) return;
-// すべての商品がチェックされているか確認
-const uncheckedProducts = products.filter(p => !p.isChecked && !selectedProductIds.includes(p.id));
-if (uncheckedProducts.length > 0) {
-  setError(`${uncheckedProducts.length}個の商品がチェックされていません。すべての商品をチェックしてください。`);
-  return;
-}
-// 選択されている全ての商品の数量を更新
-setProducts(prevProducts => 
-  prevProducts.map(product => 
-    selectedProductIds.includes(product.id) 
-      ? { ...product, quantity, isChecked: true } 
-      : product
-  )
-);
-// エラーをクリア
-setError(null);
-// 確認ダイアログを表示
-setShowConfirmDialog(true);
-  }, [inputValue, selectedProductIds, products]);
+  const quantity = parseInt(inputValue, 10);
+  if (isNaN(quantity)) return;
+  
+  // 選択されている全ての商品の数量を更新
+  setProducts(prevProducts => 
+    prevProducts.map(product => 
+      selectedProductIds.includes(product.id) 
+        ? { ...product, quantity, isChecked: true } 
+        : product
+    )
+  );
+  
+  // エラーをクリア
+  setError(null);
+  
+  // 確認ダイアログを表示
+  setShowConfirmDialog(true);
+}, [inputValue, selectedProductIds, products]);
 
   // 色変更ハンドラー（メモ化）
   const handleColorChange = useCallback((color: BoxColor) => {
@@ -397,7 +420,7 @@ try {
   // 次の店舗に移動（キャッシュデータを使用）
   handleStoreSelectInternal(nextStore.storeId, orders, boxDataCache);
   // 選択をクリア
-  setSelectedProductIds([]);
+//   setSelectedProductIds([]);
   setInputValue('');
 } catch (err) {
   setError('データの保存に失敗しました');
@@ -428,8 +451,26 @@ try {
 
   return (
     <Box display="flex" height="100vh">
-      {/* 左側：店舗リスト */}
-      <Box sx={{ p: 1, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
+
+
+
+
+
+  <Box flex="1" display="flex" flexDirection="column" justifyContent="center"　alignItems="center"
+sx={{pl: 10, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
+    <CssBaseline />
+    <Container maxWidth="lg" disableGutters>
+         
+      <Box 
+        display="flex"
+        flexDirection={{ xs: 'column', md: 'row' }}
+        justifyContent="flex-start"
+        alignItems="flex-start"
+        gap={-1} 
+        height="100%"
+      >
+          {/* 左側：店舗リスト */}
+     <Box sx={{pr:0.2, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
         <StoreList
           key={refreshKey}
           selectedStoreId={selectedStoreId}
@@ -437,23 +478,9 @@ try {
           completedStores={completedStores}
         />
       </Box>
-
-
-
-  <Box flex="1" display="flex" flexDirection="column" overflow="auto" p={1}>
-    <CssBaseline />
-    <Container maxWidth="lg" disableGutters>
-      <Box 
-        display="flex"
-        flexDirection={{ xs: 'column', md: 'row' }}
-        justifyContent="flex-start"
-        alignItems="flex-start"
-        gap={2} 
-        height="100%"
-      >
         {/* 中央：統合された店舗情報と商品リスト */}
-        <Box 
-          width={{ xs: '100%', md: '45%' }} 
+        <Box sx={{px:3}}
+          width={{ xs: '100%', md: '35%' }} 
           height={{ xs: 'auto', md: '600px' }}
         >
           <StoreProductPanel
@@ -468,8 +495,9 @@ try {
           />
         </Box>
         {/* 右側：テンキー */}
-        <Box 
-          width={{ xs: '100%', md: '35%' }}
+        <Box
+
+          width={{ xs: '100%', md: '25%' }}
           height={{ xs: 'auto', md: '600px' }}
         >
           <Keypad 
@@ -479,6 +507,7 @@ try {
             onClear={() => setInputValue('')}
             selectedColor={selectedColor}
             onColorChange={handleColorChange}
+            disableEnterButton={!isConfirmButtonEnabled} // 新しいプロパティを追加
           />
         </Box>
       </Box>

@@ -248,7 +248,7 @@ const fetchProducts = async () => {
   }
 
   return (
-    <Box display="flex" flexDirection="column" height="100vh">
+    <Box display="flex" flexDirection="column" height="100vh" sx={{ px:-1000}}>
 {completeState && (
         <Box
           sx={{
@@ -283,8 +283,8 @@ const fetchProducts = async () => {
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          width: '100%',
-          height: `calc(100vh - ${navButtonHeight}px)`
+          width: '%',
+          height: `calc(100vh - ${navButtonHeight+80}px)`
         }}
       >
 
@@ -419,10 +419,14 @@ rowHeight,
           p={isPortrait ? 2 : 1.5}
           //bgcolor="#f5f5f5"
           sx={{
+            position: 'sticky', 
+            backgroundColor: 'white',
+            borderTop: '1px solid #ccc',
+            p: isPortrait ? 2 : 1.5,
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            boxSizing: 'border-box'
+            zIndex: 1000
           }}
         >
           <Typography
