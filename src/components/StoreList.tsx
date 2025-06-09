@@ -18,7 +18,7 @@ import ExpandMore from '@mui/icons-material/ExpandMore';
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../../amplify/data/resource";
 
-import { filterByCompleteFlag } from './filterByCompleteFlag';
+// import { groupOrdersByTcAndStore } from './utils/groupOrdersByTcAndStore';
 
 // Amplify クライアントの生成
 const dataClient = generateClient<Schema>();
@@ -86,13 +86,13 @@ const StoreList: React.FC<StoreListProps> = ({
           filter: { date: { eq: testDate } }
         });
 
-        const filteredBoxItems = await filterByCompleteFlag(testDate,'test',boxItems);
+        const filteredBoxItems = boxItems
         
         // 取得したデータを適切な形式に変換
         const formattedBoxData = filteredBoxItems.map(box => ({
           storeId: box.storeId,
           boxCount: box.boxCount || 0,
-          color: (box.color as BoxColor) || 'green'
+          color: (box.boxColor as BoxColor) || 'green'
         }));
         
         setBoxData(formattedBoxData);
@@ -116,7 +116,7 @@ const StoreList: React.FC<StoreListProps> = ({
           const formattedBoxData = items.map(box => ({
             storeId: box.storeId,
             boxCount: box.boxCount || 0,
-            color: (box.color as BoxColor) || 'green'
+            color: (box.boxColor as BoxColor) || 'green'
           }));
           
           setBoxData(formattedBoxData);
@@ -142,7 +142,7 @@ const StoreList: React.FC<StoreListProps> = ({
         });
 
           //フィルター関数に渡す
-        const filteredOrderData = await filterByCompleteFlag(testDate,'test',orderData);
+        const filteredOrderData = orderData
 
         // 店舗情報を抽出して重複を排除
         const storeMap = new Map<string, {
