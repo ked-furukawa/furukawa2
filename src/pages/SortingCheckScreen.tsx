@@ -21,8 +21,8 @@ import {
 
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from "../../amplify/data/resource";
-import { filterByCompleteFlag } from '../components/filterByCompleteFlag';
-import { CompleteState } from '../components/filterByCompleteFlag';
+import { filterByCompleteFlag } from '../components/utils/groupOrdersByTcAndStore';
+import { CompleteState } from '../components/utils/groupOrdersByTcAndStore';
 import ProductStoresModal from '../components/ProductStoresModal';
 import { fetchUserAttributes } from 'aws-amplify/auth';
 

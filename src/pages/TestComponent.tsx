@@ -3,7 +3,7 @@ import { TextField, Button, Box, Typography } from '@mui/material';
 import { Schema } from '../../amplify/data/resource';
 import { generateClient } from "aws-amplify/data";
 
-// import testDataOrder from '../services/testDataOrder.json';
+import testDataOrder from '../services/testDataOrder.json';
 
 const boxClient = generateClient<Schema>();
 
@@ -11,7 +11,8 @@ import { fetchUserAttributes } from 'aws-amplify/auth';
 
 import {StatusTemplate} from '../types/index.ts';
 
-import { formatDateToJST } from '../components/formatDateToJST.tsx';
+import { formatDateToJST } from '../components/utils/formatDateToJST.tsx';
+import { groupOrdersByTcAndStore } from '../components/utils/groupOrdersByTcAndStore.tsx';
 
 
 export const TestComponent = () => {
@@ -48,6 +49,9 @@ export const TestComponent = () => {
         console.log('resulet',result);
         const testdate=formatDateToJST(new Date);
         console.log(testdate);
+
+        const grouped = groupOrdersByTcAndStore(testDataOrder);
+        console.log('グルーピング結果',grouped)
 
     }
     finally{
