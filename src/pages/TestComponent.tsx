@@ -52,7 +52,7 @@ export const TestComponent = () => {
       const saveDataToDBOrder = async (data: any[]) => { //DB保存用関数Order
     try {
     for (const item of data) {
-        await boxClient.models.Order.create({
+        const result = await boxClient.models.Order.create({
             date: item.date,
             
             storeId: item.storeId,
@@ -64,6 +64,8 @@ export const TestComponent = () => {
             itemFormalName: item.itemFormalName,
             orderCount: item.orderCount
         });
+        console.log(result)
+        console.log(item)
     }
         return true;
     } catch (error) {
