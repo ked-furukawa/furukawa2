@@ -26,6 +26,13 @@ interface Product {
 
     departmentId:string; //担当部門ID
 }
+//表示用の型定義
+type StoreSummary = {
+    storeId: string;
+    storeName: string;
+    itemCount: number;
+};
+
 
 // 注文データの型定義（any型を使用して柔軟に対応）
 interface ProductStoresModalProps {
@@ -45,37 +52,26 @@ const theme = useTheme();
 const isPortrait = useMediaQuery('(orientation: portrait)');
 
 // 選択された商品に関連する店舗データをフィルタリング
-const relatedOrders = product
-    ? allOrders.filter(order => 
-        order.itemId === product.itemId && 
-        order.date === product.date
-    )
-    : [];
+const filtered = allOrders.filter(order => order.itemId === product?.itemId);
 
 // 店舗ごとに注文数をグループ化
-const storeGroups = relatedOrders.reduce<{
-    [storeId: string]: { 
-    storeName: string; 
-    totalCount: number;
-    storeId: string;
-    }
-}>((acc, order) => {
-    const storeId = order.storeId;
-    
+const summaryMap = filtered.reduce<{ [storeId: string]: StoreSummary }>((acc, order) => {
+    const { storeId, storeName, itemCount } = order;
+
     if (!acc[storeId]) {
-    acc[storeId] = {
-        storeName: order.storeName || `店舗ID: ${storeId}`,
-        totalCount: 0,
-        storeId: storeId
-    };
+        acc[storeId] = {
+            storeId,
+            storeName: storeName || `店舗ID: ${storeId}`,
+            itemCount: 0,
+        };
     }
-    
-    acc[storeId].totalCount += order.orderCount || 0;
-    return acc;
-}, {});
+
+        acc[storeId].itemCount += itemCount;
+        return acc;
+    }, {});
 
 // 店舗グループを配列に変換
-const storeList = Object.values(storeGroups);
+const storeList = Object.values(summaryMap);
 
 return (
     <Dialog
@@ -99,7 +95,7 @@ return (
         py: 2,
         px: 3
     }}>
-        <Typography variant="h6" sx={{ 
+        <Typography variant="h6" component="div" sx={{ 
         fontWeight: 'bold',
         fontSize: isPortrait ? '1.5rem' : '1.3rem'
         }}>
@@ -184,7 +180,7 @@ return (
                         fontWeight: 'bold'
                         }}
                     >
-                        {store.totalCount}個
+                        {store.itemCount}個
                     </Typography>
                     } 
                     sx={{ flex: 1 }}
@@ -220,7 +216,7 @@ return (
         fontWeight: 'bold',
         fontSize: isPortrait ? '1.2rem' : '1rem'
         }}>
-        総注文数: {storeList.reduce((sum, store) => sum + store.totalCount, 0)}個
+        総注文数: {storeList.reduce((sum, store) => sum + store.itemCount, 0)}個
         </Typography>
     </Box>
     </Dialog>
