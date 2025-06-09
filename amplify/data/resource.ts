@@ -16,7 +16,7 @@ export const schema = a.schema({
     itemFormalName: a.string(), //商品名・規格 '大エビ天重キット'
     itemCount: a.integer().required(), // 商品注文数 '3'
 
-    departmentId: a.string(), //並び順グループから計算される 'souzai2' 
+    departmentId: a.string().required(), //並び順グループから計算される 'souzai2' 
     departmentName: a.string(), //担当部門名 '惣菜2'
 
     status:a.string().default('PENDING'), //作業状態 'PENDING' or 'DONE'
