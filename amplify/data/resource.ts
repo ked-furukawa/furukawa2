@@ -16,11 +16,11 @@ export const schema = a.schema({
     itemFormalName: a.string(), //商品名・規格 '大エビ天重キット'
     itemCount: a.integer().required(), // 商品注文数 '3'
 
-    departmentId: a.string(), //商品コードから計算される
-    departmentName: a.string(), //担当部門名 '肉１'
+    departmentId: a.string(), //並び順グループから計算される 'souzai2' 
+    departmentName: a.string(), //担当部門名 '惣菜2'
 
-    status:a.string().default('PENDING'), //作業状態 'PENDING' or 'IN_PROGRESS' or 'DONE'(完了、箱数入力までされた、変更しない)
-    //'PENDING'=保留中　'IN_PROGRESS'=作業中　'DONE'=完了済み
+    status:a.string().default('PENDING'), //作業状態 'PENDING' or 'DONE'
+    //'PENDING'=保留中　'DONE'=完了済み
   })
   .identifier(['importId','date', 'storeId', 'itemId']) // PKとSK
   .secondaryIndexes((index) => [ 
@@ -30,7 +30,7 @@ export const schema = a.schema({
     .name("GSI_OrderDateDeptImport"),
   index("date") //GSI 新旧の注文から差分を取りたい時用
     .sortKeys(["storeId","itemId"])
-    .queryField("listOrdersByStoreAndItem") //フロントでこのメソッド名を使えばこのGSIが使える
+    .queryField("listOrdersByStoreAndItem")
     .name("GSI_OrderDateStoreItem"),
   ])
   .authorization(allow => [allow.authenticated()]), //認証情報の設定

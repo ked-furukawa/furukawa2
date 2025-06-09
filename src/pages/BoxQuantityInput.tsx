@@ -16,7 +16,7 @@ import StoreList from '../components/StoreList';
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../../amplify/data/resource";
 import { StoreProductPanel } from '../components/StoreProductPanel';
-import { filterByCompleteFlag } from '../components/filterByCompleteFlag';
+import { filterByCompleteFlag } from '../components/utils/groupOrdersByTcAndStore';
 
 // 型定義に BoxColor を追加
 type BoxColor = 'green' | 'red' | 'blue' | 'yellow';
