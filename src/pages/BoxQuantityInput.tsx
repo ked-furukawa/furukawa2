@@ -457,7 +457,7 @@ try {
 
 
   <Box flex="1" display="flex" flexDirection="column" justifyContent="center"　alignItems="center"
-sx={{pl: 1, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
+sx={{pl: 10, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
     <CssBaseline />
     <Container maxWidth="lg" disableGutters>
          
@@ -466,11 +466,11 @@ sx={{pl: 1, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
         flexDirection={{ xs: 'column', md: 'row' }}
         justifyContent="flex-start"
         alignItems="flex-start"
-        gap={2} 
+        gap={-1} 
         height="100%"
       >
           {/* 左側：店舗リスト */}
-    <Box sx={{pr:1, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
+     <Box sx={{pr:0.2, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
         <StoreList
           key={refreshKey}
           selectedStoreId={selectedStoreId}
@@ -479,8 +479,8 @@ sx={{pl: 1, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
         />
       </Box>
         {/* 中央：統合された店舗情報と商品リスト */}
-        <Box 
-          width={{ xs: '100%', md: '45%' }} 
+        <Box sx={{px:3}}
+          width={{ xs: '100%', md: '35%' }} 
           height={{ xs: 'auto', md: '600px' }}
         >
           <StoreProductPanel
@@ -497,7 +497,7 @@ sx={{pl: 1, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
         {/* 右側：テンキー */}
         <Box
 
-          width={{ xs: '100%', md: '35%' }}
+          width={{ xs: '100%', md: '25%' }}
           height={{ xs: 'auto', md: '600px' }}
         >
           <Keypad 

@@ -24,6 +24,7 @@ import type { Schema } from "../../amplify/data/resource";
 import { filterByCompleteFlag } from '../components/filterByCompleteFlag';
 import { CompleteState } from '../components/filterByCompleteFlag';
 import ProductStoresModal from '../components/ProductStoresModal';
+import { fetchUserAttributes } from 'aws-amplify/auth';
 
 const client= generateClient<Schema>();
 
@@ -85,6 +86,9 @@ const fetchProducts = async () => {
   try {
     setLoading(true);
     setError(null);
+
+    const attrs = await fetchUserAttributes();
+    console.log('ログインユーザーの departmentId:', attrs['custom:departmentId']);
 
     // 店舗IDは指定せず、日付のみで取得
     const { data } = await client.models.Order.list({
@@ -260,7 +264,7 @@ const fetchProducts = async () => {
   }
 
   return (
-    <Box display="flex" flexDirection="column" height="100vh">
+    <Box display="flex" flexDirection="column" height="100vh" sx={{ px:-1000}}>
 {completeState && (
         <Box
           sx={{
@@ -295,7 +299,7 @@ const fetchProducts = async () => {
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          width: '100%',
+          width: '%',
           height: `calc(100vh - ${navButtonHeight+80}px)`
         }}
       >

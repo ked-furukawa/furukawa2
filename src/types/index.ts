@@ -30,3 +30,12 @@ export interface OrderData {
   resDeptName?: string;
   orderCount: number;
 }
+
+export const StatusTemplate = {
+  PENDING: 'PENDING',
+  IN_PROGRESS: 'IN_PROGRESS',
+  DONE: 'DONE',
+
+  CONFIRMED: 'CONFIRMED',
+  DOUBLE_CHECKED: 'DOUBLE_CHECKED'
+}
