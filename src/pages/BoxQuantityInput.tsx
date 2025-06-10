@@ -29,7 +29,7 @@ const dataClient = generateClient<Schema>();
 
 // 定数の抽出
 const TEST_DEPARTMENT_ID = "test";
-const TEST_DEPARTMENT_NAME = "test部門";
+// const TEST_DEPARTMENT_NAME = "test部門";
 
 // 型定義
 interface Store {
