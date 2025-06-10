@@ -1,5 +1,6 @@
 // src/pages/BoxQuantityInput.tsx
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { fetchUserAttributes } from 'aws-amplify/auth';
 import {
   Box,
   Container,
@@ -28,7 +29,7 @@ type BoxColor = 'green' | 'red' | 'blue' | 'yellow';
 const dataClient = generateClient<Schema>();
 
 // 定数の抽出
-const TEST_DEPARTMENT_ID = "test";
+const TEST_DEPARTMENT_ID = "sakurai";
 const TEST_DEPARTMENT_NAME = "test部門";
 
 // 型定義
@@ -79,6 +80,33 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
   const [currentDate, setCurrentDate] = useState<string>('');
   const [importId, setImportId] = useState<string | null>(null);
 
+  const [departmentId, setDepartmentId] = useState<string>('sakurai'); // テスト用のデフォルト値
+
+// 認証情報から部門IDを取得する部分
+useEffect(() => {
+  const fetchUserInfo = async () => {
+    try {     
+      // ユーザー属性を取得
+      const attributes = await fetchUserAttributes();
+      console.log('ユーザー属性:', attributes);
+      
+      // カスタム属性から部門IDを取得
+      const userDepartmentId = attributes['custom:departmentId'];
+      
+      if (userDepartmentId) {
+        console.log('部門ID:', userDepartmentId);
+        setDepartmentId(userDepartmentId);
+      }
+      // 取得できない場合はデフォルト値のままにする
+    } catch (error) {
+      console.error('ユーザー情報の取得に失敗しました:', error);
+      // エラー時はデフォルト値のままにする
+    }
+  };
+  
+  fetchUserInfo();
+}, []);
+
   // データキャッシュ
   const [orders, setOrders] = useState<OrderData[]>([]);
   const [boxDataCache, setBoxDataCache] = useState<BoxData[]>([]);
@@ -101,92 +129,115 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
     [completedStores]
   );
 
-  // 初期データの一括取得
-  useEffect(() => {
-    const fetchAllData = async () => {
+// 初期データの一括取得
+useEffect(() => {
+  // 部門IDが設定されるまで待機
+  if (!departmentId) return;
+  
+const fetchAllData = async () => {
+  try {
+    setLoading(true);
+    
+    // 固定の日付を使用（6月9日のテストデータ）
+    const today = '20250609';
+    setCurrentDate(today);
+    
+    // importId を取得
+    const latestImportId = await resolveImportId(today, departmentId);
+    let queryImportId = '20250609_103000'; // デフォルトのテスト用importId
+    
+    if (latestImportId) {
+      // latestImportId が null でない場合
+      queryImportId = latestImportId;
+      
+      // 作業開始時にステータスを更新
+      await dataClient.models.ImportWorkStatus.update({
+        date: today,
+        departmentId: departmentId,
+        importId: latestImportId,
+        status: StatusTemplate.IN_PROGRESS
+      });
+    } else {
+      // ImportWorkStatus が見つからない場合の処理
+      console.log('ImportWorkStatus が見つからないため、テスト用のimportIdを作成します');
+      
       try {
-        setLoading(true);
-        
-        // 現在の日付を取得
-        const today = formatDateToJST(new Date());
-        setCurrentDate(today);
-        
-        // importId を取得
-        const latestImportId = await resolveImportId(today, TEST_DEPARTMENT_ID);
-        
-        if (!latestImportId) {
-          setError('有効な作業データが見つかりませんでした');
-          setLoading(false);
-          return;
-        }
-        
-        setImportId(latestImportId);
-        
-        // 作業開始時にステータスを更新
-        await dataClient.models.ImportWorkStatus.update({
+        // 新しい ImportWorkStatus レコードを作成
+        await dataClient.models.ImportWorkStatus.create({
           date: today,
-          departmentId: TEST_DEPARTMENT_ID,
-          importId: latestImportId,
-          status: StatusTemplate.IN_PROGRESS
+          departmentId: departmentId,
+          importId: queryImportId,
+          status: StatusTemplate.IN_PROGRESS // 直接 IN_PROGRESS で作成
         });
-        
-        // GSIを使用して効率的にデータを取得
-        const [ordersResponse, boxResponse] = await Promise.all([
-          // GSI_OrderDateDeptImport を使用して Order データを取得
-          dataClient.models.Order.listOrdersByDeptAndImport({
-            date: today,
-            departmentIdImportId: { 
-              beginsWith: { 
-                departmentId: TEST_DEPARTMENT_ID,
-                importId: latestImportId 
-              }
-            }
-          }),
-          // GSI_BoxDateDept を使用して Box データを取得
-          dataClient.models.Box.listBoxesByDate({
-            date: today,
-            departmentId: { eq: TEST_DEPARTMENT_ID }
-          })
-        ]);
-        
-  // データをキャッシュ
-setOrders(ordersResponse.data as OrderData[]);
-
-// BoxData の型と実際のデータ構造の違いを解消するためにマッピング
-const mappedBoxData = boxResponse.data.map(box => ({
-  date: box.date,
-  storeId: box.storeId,
-  storeName: box.storeName ?? undefined, // null を undefined に変換
-  storeTc: box.storeTc ?? undefined, // null を undefined に変換
-  color: box.boxColor || 'green', // null/undefined の場合はデフォルト値
-  boxCount: box.boxCount,
-  boxCreatedBy: box.departmentId ?? undefined, // null を undefined に変換
-  isChecked: box.status === StatusTemplate.CONFIRMED || box.status === StatusTemplate.DOUBLE_CHECKED
-}));
-
-setBoxDataCache(mappedBoxData);
-        
-        // 完了済み店舗の処理
-        processCompletedStores(mappedBoxData);
-        
-        // 店舗リストの作成
-        const groupedOrders = groupOrdersByTcAndStore(ordersResponse.data as OrderData[]);
-        const stores = extractStoresFromGroupedOrders(groupedOrders);
-        setAllStores(stores);
-        
-        // 最初の店舗を選択
-        if (stores.length > 0) {
-          const firstStoreId = stores[0].storeId;
-          handleStoreSelectInternal(firstStoreId, ordersResponse.data as OrderData[], mappedBoxData);
-          setNextStore(getNextStore(firstStoreId, stores));
-        }
       } catch (err) {
-        console.error('データの読み込みに失敗しました:', err);
-        setError('データの読み込みに失敗しました');
-      } finally {
-        setLoading(false);
+        console.error('ImportWorkStatus の作成に失敗しました:', err);
+        setError('作業データの作成に失敗しました');
       }
-    };
+    }
+    
+    // importId を状態として保存
+    setImportId(queryImportId);
+    
+    // GSIを使用して効率的にデータを取得
+    const [ordersResponse, boxResponse] = await Promise.all([
+      // GSI_OrderDateDeptImport を使用して Order データを取得
+      dataClient.models.Order.listOrdersByDeptAndImport({
+        date: today,
+        departmentIdImportId: { 
+          beginsWith: { 
+            departmentId: departmentId,
+            importId: queryImportId
+          }
+        }
+      }),
+      // GSI_BoxDateDept を使用して Box データを取得
+      dataClient.models.Box.listBoxesByDate({
+        date: today,
+        departmentId: { eq: departmentId }
+      })
+    ]);
+    
+    console.log(`部門ID: ${departmentId} の注文データ:`, ordersResponse.data);
+    
+    // データをキャッシュ
+    setOrders(ordersResponse.data as OrderData[]);
+    
+    // BoxData の型と実際のデータ構造の違いを解消するためにマッピング
+    const mappedBoxData = boxResponse.data.map(box => ({
+      date: box.date,
+      storeId: box.storeId,
+      storeName: box.storeName ?? undefined,
+      storeTc: box.storeTc ?? undefined,
+      color: box.boxColor || 'green',
+      boxCount: box.boxCount,
+      boxCreatedBy: box.departmentId ?? undefined,
+      isChecked: box.status === StatusTemplate.CONFIRMED || box.status === StatusTemplate.DOUBLE_CHECKED
+    }));
+    setBoxDataCache(mappedBoxData);
+    
+    // 完了済み店舗の処理
+    processCompletedStores(mappedBoxData);
+    
+    // 店舗リストの作成
+    const groupedOrders = groupOrdersByTcAndStore(ordersResponse.data as OrderData[]);
+    const stores = extractStoresFromGroupedOrders(groupedOrders);
+    setAllStores(stores);
+    
+    // 最初の店舗を選択
+    if (stores.length > 0) {
+      const firstStoreId = stores[0].storeId;
+      handleStoreSelectInternal(firstStoreId, ordersResponse.data as OrderData[], mappedBoxData);
+      setNextStore(getNextStore(firstStoreId, stores));
+    } else {
+      setError('この部門に割り当てられた店舗がありません');
+    }
+  } catch (err) {
+    console.error('データの読み込みに失敗しました:', err);
+    setError('データの読み込みに失敗しました');
+  } finally {
+    setLoading(false);
+  }
+};
     
     fetchAllData();
   }, []);
