@@ -30,10 +30,36 @@ export const resolveImportId = async (
             new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
         );
 
-    return pendingList.length > 0 ? pendingList[0].importId : null;
+    if (pendingList.length === 0) return null;
+
+    const latestPending = pendingList[0]; //最新のもの
+    const otherPendings = pendingList.slice(1); // 残り
+
+    // ③ 最新のものを IN_PROGRESS に更新
+    await client.models.ImportWorkStatus.update({
+        date: latestPending.date,
+        departmentId: latestPending.departmentId,
+        importId: latestPending.importId,
+        status: "IN_PROGRESS",
+    });
+
+    // ④ 他のPENDINGをすべて DONE に更新
+    await Promise.all(
+        otherPendings.map((record) =>
+            client.models.ImportWorkStatus.update({
+                date: record.date,
+                departmentId: record.departmentId,
+                importId: record.importId,
+                status: "DONE",
+            })
+        )
+    );
+
+    return latestPending.importId;
+
     } catch (error) {
-    console.error("importIdの取得中にエラーが発生しました:", error);
-    return null;
+        console.error("importIdの取得・更新中にエラーが発生しました:", error);
+        return null;
     }
 };
 //以下使用例

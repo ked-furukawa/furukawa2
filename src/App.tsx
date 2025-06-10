@@ -53,11 +53,11 @@ const App = () => {
       label: "仕分け前商品数確認",
       component: (props) => <SortingCheckScreen {...props} />,
     },
-    // {
-    //   key: "BoxQuantityInput",
-    //   label: "仕分け箱数入力",
-    //   component: (props) => <BoxQuantityInput {...props} />,
-    // },
+    {
+      key: "BoxQuantityInput",
+      label: "仕分け箱数入力",
+      component: (props) => <BoxQuantityInput {...props} />,
+    },
     {
       key: "StoreDoubleCheckList",
       label: "ダブルチェック",
