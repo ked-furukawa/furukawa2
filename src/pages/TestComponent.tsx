@@ -3,7 +3,8 @@ import { TextField, Button, Box, Typography } from '@mui/material';
 import { Schema } from '../../amplify/data/resource';
 import { generateClient } from "aws-amplify/data";
 
-import testDataOrder from '../services/testDataOrder.json';
+import testDataOrder1 from '../services/testDataOrder1.json';
+import testDataOrder2 from '../services/testDataOrder2.json';
 
 const boxClient = generateClient<Schema>();
 
@@ -97,7 +98,7 @@ export const TestComponent = () => {
         }
     };
 
-    const saveDataToDBOrder = async () => { //DB保存用関数Order
+    const saveDataToDBOrder = async (testDataOrder:any) => { //DB保存用関数Order
     try {
 
     for (const order of testDataOrder) {
@@ -114,13 +115,13 @@ export const TestComponent = () => {
 };
 
 // ボタンクリックハンドラーDB保存用
-    const handleSaveClick = async () => {
-    const success = await saveDataToDBOrder(); // Order型
+    const handleSaveClick = async (testData:any) => {
+    const success = await saveDataToDBOrder(testData); // Order型
     if (success) console.log("保存に成功しました");
 };
 
 
-const handleDeleteAll = async () => {
+const handleDeleteBox = async () => {
     try {
       // 1. 全 Box を取得
         const { data: orders } = await boxClient.models.Box.list();
@@ -140,6 +141,31 @@ const handleDeleteAll = async () => {
         }
 
         alert('全Boxデータを削除しました');
+        } catch (err) {
+        console.error('削除エラー:', err);
+        alert('削除に失敗しました');
+        }
+    };
+
+const handleDeleteOrder = async () => {
+    try {
+      // 1. 全 Order を取得
+        const { data: orders } = await boxClient.models.Order.list();
+
+        if (orders) {
+            await Promise.all(
+            orders.map((order) =>
+                boxClient.models.Order.delete({
+                    date:'20250609', 
+                    importId:order.importId,
+                    storeId:order.storeId, 
+                    itemId:order.itemId
+                })
+            )
+            );
+        }
+
+        alert('全Orderデータを削除しました');
         } catch (err) {
         console.error('削除エラー:', err);
         alert('削除に失敗しました');
@@ -171,10 +197,16 @@ return (
     margin: 2, 
     borderRadius: 1,
     }}>
-        <Button variant="contained" color="secondary" onClick={ handleSaveClick}> {/*DB保存用関数を呼び出す*/}
-            Orderテスト用ボタン
+        <Button variant="contained" color="secondary" onClick={() => handleSaveClick(testDataOrder1)}> {/*DB保存用関数を呼び出す*/}
+            10:30保存
         </Button>
-        <Button variant="contained" color="error" onClick={handleDeleteAll}>
+        <Button variant="contained" color="secondary" onClick={() => handleSaveClick(testDataOrder2)}> {/*DB保存用関数を呼び出す*/}
+            13:00保存
+        </Button>
+        <Button variant="contained" color="error" onClick={handleDeleteOrder}>
+            Orderテーブル削除
+        </Button>
+        <Button variant="contained" color="error" onClick={handleDeleteBox}>
             Boxテーブル削除
         </Button>
         <Button variant="contained" color="error" onClick={fetchProducts}>

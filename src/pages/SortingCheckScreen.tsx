@@ -110,10 +110,9 @@ const loadProducts = async () => {
           importId: resolvedImportId,
         },
       },
-    });
+    }); 
     
-    const rawOrders = result.data || []; //加工前の注文データ
-    setRawOrderData(rawOrders) //モーダルに渡す用
+    const rawOrders = result.data; //加工前の注文データ
 
     // PENDINGのデータがあるかチェック
   const pendingOrders = rawOrders.filter(o => o.status === "PENDING");
@@ -139,6 +138,9 @@ const loadProducts = async () => {
       productMap[order.itemId].itemCounts += order.itemCount;
     });
 
+      setRawOrderData(rawOrders) //モーダルに渡す用
+      console.log("test",rawOrderData)
+
     setProducts(Object.values(productMap));
   } catch (err) {
     setError("エラーです");
@@ -149,6 +151,7 @@ const loadProducts = async () => {
 
 useEffect(() => {
   loadProducts();
+
 }, [date]);
 
 

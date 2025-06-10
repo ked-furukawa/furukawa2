@@ -297,15 +297,17 @@ try {
 
     // APIを使用して保存
     for (const item of orderItems) {
-    await client.models.Order.create({
+    await client.models.Order.create({// 未完成　importIdを考える必要あり
+        importId:"aaaaaa",
         date: today,
         storeId: selectedStoreObj.storeId,
         storeName: selectedStoreObj.storeName,
         storeTc: selectedDestination,
         itemId: item.itemId,
-        itemName: item.itemName,
-        itemFormalName: item.itemFormalName || undefined,
-        orderCount: item.orderCount
+        itemName: item.itemName ,
+        itemFormalName: item.itemFormalName ,
+        itemCount: item.orderCount,
+        departmentId:""
     });
     }
 
