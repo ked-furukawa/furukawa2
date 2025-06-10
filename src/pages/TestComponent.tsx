@@ -31,7 +31,7 @@ export const TestComponent = () => {
         const { data } = await boxClient.models.Order.list({
             filter: {
                 date: { eq: '2025-06-02' },
-                departmentId: { eq: attrs['custom:departmentId'] }
+                departmentId: { beginsWith: attrs['custom:departmentId'] }
             },
         });
         console.log('data',data);
