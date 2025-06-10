@@ -109,14 +109,41 @@ export const TestComponent = () => {
         const result =await boxClient.models.Order.create({
             ...order
         });
-        const result2 =await boxClient.models.ImportWorkStatus.create({
-            date: order.date,
-            departmentId: departmentId,
-            importId: order.importId
-        });
+
         console.log('create',result);
-        console.log('importId',result2);
     }
+    const importId=testDataOrder[0].importId;
+    const date='20250609'
+const { data: existingRecords } = await boxClient.models.ImportWorkStatus.list({
+    filter: {
+        importId: { eq: importId },
+        departmentId: { eq: departmentId },
+        date: { eq: date }
+    }
+});
+
+    let result;
+
+    if (existingRecords.length > 0) {
+    // 既存レコードがある場合：最初の1件を更新
+    const existing = existingRecords[0];
+    result = await boxClient.models.ImportWorkStatus.update({
+        date: existing.date,
+        importId: existing.importId,
+        departmentId:existing.departmentId,
+        status: 'PENDING'
+    });
+    } else {
+    // レコードが存在しない場合 → 作成
+    result = await boxClient.models.ImportWorkStatus.create({
+        date,
+        departmentId,
+        importId
+    });
+    }
+
+console.log('importId result:', result);
+
         return true;
     
     } catch (error) {
