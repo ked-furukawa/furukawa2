@@ -3,7 +3,8 @@ import { TextField, Button, Box, Typography } from '@mui/material';
 import { Schema } from '../../amplify/data/resource';
 import { generateClient } from "aws-amplify/data";
 
-import testDataOrder from '../services/testDataOrder.json';
+import testDataOrder1 from '../services/testDataOrder1.json';
+import testDataOrder2 from '../services/testDataOrder2.json';
 
 const boxClient = generateClient<Schema>();
 
@@ -12,7 +13,7 @@ import { fetchUserAttributes } from 'aws-amplify/auth';
 import {StatusTemplate} from '../types/index.ts';
 
 import { formatDateToJST } from '../components/utils/formatDateToJST.tsx';
-import { groupOrdersByTcAndStore } from '../components/utils/groupOrdersByTcAndStore.tsx';
+// import { groupOrdersByTcAndStore } from '../components/utils/groupOrdersByTcAndStore.tsx';
 
 
 export const TestComponent = () => {
@@ -50,8 +51,8 @@ export const TestComponent = () => {
         const testdate=formatDateToJST(new Date);
         console.log(testdate);
 
-        const grouped = groupOrdersByTcAndStore(testDataOrder);
-        console.log('グルーピング結果',grouped)
+        // const grouped = groupOrdersByTcAndStore(testDataOrder);
+        // console.log('グルーピング結果',grouped)
 
     }
     finally{
@@ -97,34 +98,15 @@ export const TestComponent = () => {
         }
     };
 
-    const saveDataToDBOrder = async () => { //DB保存用関数Order
+    const saveDataToDBOrder = async (testDataOrder:any) => { //DB保存用関数Order
     try {
-        const attrs = await fetchUserAttributes();
 
-        const date='20250606'
-        const storeId='019'
-        const itemId='210039'
-        const departmentId=attrs['custom:departmentId']
-
-        const result=await boxClient.models.Order.create({
-            importId:'20250606_130000',
-            
-            date: date,
-            
-            storeId: storeId,
-            storeName: '内野店',
-            storeTc: '中之島',
-            
-            itemId: itemId,
-            itemName: '大エビ',
-            itemFormalName: '大エビ天重キット',
-            itemCount: 3,
-
-            departmentId: departmentId,
-            departmentName: 'テスト部門',
-
+    for (const order of testDataOrder) {
+        const result =await boxClient.models.Order.create({
+            ...order
         });
         console.log('create',result);
+    }
         return true;
     } catch (error) {
         console.error('DB登録エラー:', error);
@@ -133,13 +115,13 @@ export const TestComponent = () => {
 };
 
 // ボタンクリックハンドラーDB保存用
-    const handleSaveClick = async () => {
-    const success = await saveDataToDBOrder(); // Order型
+    const handleSaveClick = async (testData:any) => {
+    const success = await saveDataToDBOrder(testData); // Order型
     if (success) console.log("保存に成功しました");
 };
 
 
-const handleDeleteAll = async () => {
+const handleDeleteBox = async () => {
     try {
       // 1. 全 Box を取得
         const { data: orders } = await boxClient.models.Box.list();
@@ -159,6 +141,31 @@ const handleDeleteAll = async () => {
         }
 
         alert('全Boxデータを削除しました');
+        } catch (err) {
+        console.error('削除エラー:', err);
+        alert('削除に失敗しました');
+        }
+    };
+
+const handleDeleteOrder = async () => {
+    try {
+      // 1. 全 Order を取得
+        const { data: orders } = await boxClient.models.Order.list();
+
+        if (orders) {
+            await Promise.all(
+            orders.map((order) =>
+                boxClient.models.Order.delete({
+                    date:'20250609', 
+                    importId:order.importId,
+                    storeId:order.storeId, 
+                    itemId:order.itemId
+                })
+            )
+            );
+        }
+
+        alert('全Orderデータを削除しました');
         } catch (err) {
         console.error('削除エラー:', err);
         alert('削除に失敗しました');
@@ -190,10 +197,16 @@ return (
     margin: 2, 
     borderRadius: 1,
     }}>
-        <Button variant="contained" color="secondary" onClick={ handleSaveClick}> {/*DB保存用関数を呼び出す*/}
-            Orderテスト用ボタン
+        <Button variant="contained" color="secondary" onClick={() => handleSaveClick(testDataOrder1)}> {/*DB保存用関数を呼び出す*/}
+            10:30保存
         </Button>
-        <Button variant="contained" color="error" onClick={handleDeleteAll}>
+        <Button variant="contained" color="secondary" onClick={() => handleSaveClick(testDataOrder2)}> {/*DB保存用関数を呼び出す*/}
+            13:00保存
+        </Button>
+        <Button variant="contained" color="error" onClick={handleDeleteOrder}>
+            Orderテーブル削除
+        </Button>
+        <Button variant="contained" color="error" onClick={handleDeleteBox}>
             Boxテーブル削除
         </Button>
         <Button variant="contained" color="error" onClick={fetchProducts}>

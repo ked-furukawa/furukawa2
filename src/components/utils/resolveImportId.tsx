@@ -36,3 +36,23 @@ export const resolveImportId = async (
     return null;
     }
 };
+//以下使用例
+
+// import { useEffect, useState } from "react";
+// import { getLatestImportId } from "@/utils/getLatestImportId";
+
+// const ExampleComponent = () => {
+//   const [importId, setImportId] = useState<string | null>(null);
+
+//   useEffect(() => {
+//     const fetchImportId = async () => {
+//       const id = await getLatestImportId("20250609", "souzai2");
+//       setImportId(id);
+//     };
+
+//     fetchImportId();
+//   }, []);
+
+//   return <div>importId: {importId ?? "取得できませんでした"}</div>;
+// };
+

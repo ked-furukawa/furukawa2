@@ -21,6 +21,8 @@ import type { Schema } from "../../amplify/data/resource";
 
 const boxClient = generateClient<Schema>();
 
+import { fetchUserAttributes } from 'aws-amplify/auth';
+
 interface StoreDoubleCheckListProps {
 stores: Store[];
 selectedStoreIds: string[];
@@ -71,12 +73,15 @@ const handleInputChange = (value: string) => {
   // 箱数更新処理
 const handleQuantityUpdate  = async () => {
     try {
+        const attrs = await fetchUserAttributes();
         const result = await boxClient.models.Box.update({ //DBの書き換え部分、今回はBoxテーブル
-            date: '2025-06-02', //実際は画面内のどこかに保持している変数などを使って必要情報を埋めていく
+            date: '20250609', //実際は画面内のどこかに保持している変数などを使って必要情報を埋めていく
             storeId: selectedStoreId, //必要情報=定義したテーブルの中身
 
-            color: 'green',
+            boxColor: 'green',
             boxCount: Number(inputValue),
+
+            departmentId: attrs['custom:departmentId'] as string
         });
         console.log('result',result);
         } catch (error) {
