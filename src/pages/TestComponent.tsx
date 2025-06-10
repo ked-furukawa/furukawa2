@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { TextField, Button, Box, Typography } from '@mui/material';
 import { Schema } from '../../amplify/data/resource';
 import { generateClient } from "aws-amplify/data";
@@ -20,18 +20,26 @@ export const TestComponent = () => {
     const [value, setValue] = useState('');
     const [submittedValue, setSubmittedValue] = useState<number | null>(null);
     const [message, setMessage] = useState<string>('');
+    const [departmentId, setDepartmentId] = useState<string>('');
+
+    useEffect(()=>{
+        const fetchDepartmentId = async() =>{
+            const attrs = await fetchUserAttributes();
+            setDepartmentId(attrs['custom:departmentId'] as string)
+        }
+    
+        fetchDepartmentId();
+    },[])
 
     const fetchProducts = async () => {
     try {
-    
-        const attrs = await fetchUserAttributes();
-        console.log('ログインユーザーの departmentId:', attrs['custom:departmentId']);
+        console.log('ログインユーザーの departmentId:', departmentId);
     
         // 店舗IDは指定せず、日付のみで取得
         const { data } = await boxClient.models.Order.list({
             filter: {
                 date: { eq: '2025-06-02' },
-                departmentId: { eq: attrs['custom:departmentId'] }
+                departmentId: { beginsWith: departmentId }
             },
         });
         console.log('data',data);
@@ -43,17 +51,13 @@ export const TestComponent = () => {
         const result = await boxClient.models.Order.listOrdersByDeptAndImport({
         date, // GSI の partitionKey
         departmentIdImportId: {
-            eq: {departmentId:attrs['custom:departmentId'] as string,
+            eq: {departmentId:departmentId,
                 importId:'20250606_130000'} // sortKey の条件
         },
     });
         console.log('resulet',result);
         const testdate=formatDateToJST(new Date);
         console.log(testdate);
-
-        // const grouped = groupOrdersByTcAndStore(testDataOrder);
-        // console.log('グルーピング結果',grouped)
-
     }
     finally{
         console.log('test終了');
@@ -105,9 +109,43 @@ export const TestComponent = () => {
         const result =await boxClient.models.Order.create({
             ...order
         });
+
         console.log('create',result);
     }
+    const importId=testDataOrder[0].importId;
+    const date='20250609'
+const { data: existingRecords } = await boxClient.models.ImportWorkStatus.list({
+    filter: {
+        importId: { eq: importId },
+        departmentId: { eq: departmentId },
+        date: { eq: date }
+    }
+});
+
+    let result;
+
+    if (existingRecords.length > 0) {
+    // 既存レコードがある場合：最初の1件を更新
+    const existing = existingRecords[0];
+    result = await boxClient.models.ImportWorkStatus.update({
+        date: existing.date,
+        importId: existing.importId,
+        departmentId:existing.departmentId,
+        status: 'PENDING'
+    });
+    } else {
+    // レコードが存在しない場合 → 作成
+    result = await boxClient.models.ImportWorkStatus.create({
+        date,
+        departmentId,
+        importId
+    });
+    }
+
+console.log('importId result:', result);
+
         return true;
+    
     } catch (error) {
         console.error('DB登録エラー:', error);
         return false;
