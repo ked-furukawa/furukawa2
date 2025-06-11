@@ -31,8 +31,8 @@ const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('s
 
 // データを取得
 useEffect(() => {
-    // テストデータの日付を指定 (2025-06-02)
-    const targetDate = "2025-06-02";
+    // テストデータの日付を指定 (20250609)
+    const targetDate = "20250609";
     
     // DynamoDBからのデータ取得をサブスクライブ
     const subscription = client.models.Box.observeQuery({
@@ -117,8 +117,8 @@ const handleConfirmSelected = async () => {
     try {
     setLoading(true);
     
-    // テストデータの日付を指定 (2025-06-02)
-    const targetDate = "2025-06-02";
+    // テストデータの日付を指定 (20250609)
+    const targetDate = "20250609";
     
     // 選択された店舗の箱データを取得して更新
     for (const storeId of selectedStoreIds) {
