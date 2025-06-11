@@ -210,6 +210,30 @@ const handleDeleteOrder = async () => {
         }
     };
 
+    const handleDeleteImportId = async () => {
+    try {
+      // 1. 全 Order を取得
+        const { data } = await boxClient.models.ImportWorkStatus.list();
+
+        if (data) {
+            await Promise.all(
+            data.map((data) =>
+                boxClient.models.ImportWorkStatus.delete({
+                    date:'20250609', 
+                    importId:data.importId,
+                    departmentId:data.departmentId,
+                })
+            )
+            );
+        }
+
+        alert('全ImportWorkStatusデータを削除しました');
+        } catch (err) {
+        console.error('削除エラー:', err);
+        alert('削除に失敗しました');
+        }
+    };
+
 
 return (
         <>
@@ -243,6 +267,9 @@ return (
         </Button>
         <Button variant="contained" color="error" onClick={handleDeleteOrder}>
             Orderテーブル削除
+        </Button>
+        <Button variant="contained" color="error" onClick={handleDeleteImportId}>
+            ImportWorkStatusテーブル削除
         </Button>
         <Button variant="contained" color="error" onClick={handleDeleteBox}>
             Boxテーブル削除
