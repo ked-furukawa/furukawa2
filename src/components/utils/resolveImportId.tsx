@@ -23,12 +23,14 @@ export const resolveImportId = async (
     if (inProgress) return inProgress.importId;
 
     // ② PENDING の中から createdAt の新しい順に並び替え
+    // createdAtベースのソートを、importIdベースに変更
     const pendingList = data
         .filter((record) => record.status === "PENDING")
         .sort(
             (a, b) =>
-            new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
+                b.importId.localeCompare(a.importId) // 文字列として降順（新しい順）
         );
+
 
     if (pendingList.length === 0) return null;
 

@@ -63,7 +63,7 @@ export const schema = a.schema({
   ])
   .authorization((allow) => [allow.authenticated()]), //認証情報の設定
 
-ImportWorkStatus: a.model({
+  ImportWorkStatus: a.model({
     date: a.string().required(),             // '20250606'
     departmentId: a.string().required(),     // 'test'
 
@@ -73,7 +73,6 @@ ImportWorkStatus: a.model({
   .identifier(['date', 'departmentId', 'importId'])
   .authorization((allow) => [allow.authenticated()])
   });
-
 
   // CompleteFlag: a.model({ //その日の作業完了フラグ　←このフラグで表示されるデータのフィルタリングを決める
   //   date: a.string().required(),    // 注文日 '20250606'
