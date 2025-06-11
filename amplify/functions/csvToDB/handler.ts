@@ -36,11 +36,11 @@ interface ImportWorkStatus {//ImportWorkStatusテーブル用型定義
 
 export const handler: Handler = async (event, context) => {
 try {
-    const { s3Key, routeCode, routeName, startDate } = event.arguments;
-    console.log("s3Key", s3Key);
-    console.log("routeCode", routeCode);
-    console.log("routeName", routeName);
-    console.log("startDate", startDate);
+    // S3イベントからバケット名とオブジェクトキーを取得
+    const bucket = event.Records[0].s3.bucket.name;
+    const key = decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, ' '));
+
+    console.log(`Processing image from bucket: ${bucket}, key: ${key}`);
 
     //S3からeventファイルを取得
     try {
@@ -49,7 +49,7 @@ try {
         const bucketName = process.env.STORAGE_BUCKET_NAME || "";
         console.log("bucketName", bucketName);
         
-        const params = { Bucket: bucketName, Key: s3Key };
+        const params = { Bucket: bucketName, Key: key };
         const s3Object = await s3Client.send(new GetObjectCommand(params));
         const csvData = s3Object.Body;
         if (!csvData) {
