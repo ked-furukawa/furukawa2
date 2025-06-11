@@ -555,24 +555,24 @@ const filteredStores = useMemo(() => {
       setRefreshKey(prev => prev + 1);
       
       // 中之島店舗の完了チェック
-      const nakanoshimaStores = allStores.filter(s => s.storeTc === '中之島');
-      const completedNakanoshima = completedStores
-        .filter(cs => nakanoshimaStores.some(ns => ns.storeId === cs.storeId))
-        .map(cs => cs.storeId);
-      const newlyCompleted = [...new Set([...completedNakanoshima, selectedStoreId])];
-      
-      if (newlyCompleted.length === nakanoshimaStores.length) {
-        // 全中之島店舗が完了 → 商品数確認画面へ遷移
-        // ImportWorkStatus を更新
-        await dataClient.models.ImportWorkStatus.update({
-          date: currentDate,
-          departmentId: departmentId,
-          importId: importId,
-          status: StatusTemplate.DONE
-        });
-        navigateTo('SortingCheckScreen');
-        return;
-      }
+const nakanoshimaStores = allStores.filter(s => s.storeTc === '中之島');
+const completedNakanoshima = completedStores
+  .filter(cs => nakanoshimaStores.some(ns => ns.storeId === cs.storeId))
+  .map(cs => cs.storeId);
+const newlyCompleted = [...new Set([...completedNakanoshima, selectedStoreId])];
+
+if (newlyCompleted.length === nakanoshimaStores.length) {
+  // 全中之島店舗が完了 → 商品数確認画面へ遷移
+  // ImportWorkStatus を更新
+  await dataClient.models.ImportWorkStatus.update({
+    date: currentDate,
+    departmentId: departmentId,
+    importId: importId,
+    status: StatusTemplate.DONE
+  });
+  navigateTo('SortingCheckScreen');
+  return;
+}
       
       if (!nextStore) {
         navigateTo('StoreDoubleCheckList');
@@ -631,18 +631,18 @@ const filteredStores = useMemo(() => {
             {/* 左側：店舗リスト */}
             <Box sx={{pr:0.2, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
               <StoreList
-                key={refreshKey}
-                selectedStoreId={selectedStoreId}
-                onSelectStore={handleStoreSelect}
-                completedStores={completedStores}
-                // 以下のプロパティを追加
-                stores={allStores.map(store => ({
-                  id: store.storeId,
-                  storeNumber: store.storeId,
-                  storeName: store.storeName,
-                  storeTc: store.storeTc
-                }))}
-              />
+              key={refreshKey}
+              selectedStoreId={selectedStoreId}
+              onSelectStore={handleStoreSelect}
+              completedStores={completedStores}
+              // allStores から filteredStores に変更
+              stores={filteredStores.map(store => ({
+                id: store.storeId,
+                storeNumber: store.storeId,
+                storeName: store.storeName,
+                storeTc: store.storeTc
+              }))}
+            />
             </Box>
             {/* 中央：統合された店舗情報と商品リスト */}
             <Box sx={{px:3}}
