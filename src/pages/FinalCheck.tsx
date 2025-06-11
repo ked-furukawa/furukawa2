@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Box, Typography } from "@mui/material";
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Box, Typography, Button } from "@mui/material";
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -10,8 +10,15 @@ import type { Schema } from "../../amplify/data/resource";
 type Box = Schema['Box']['type'];
 const boxClient = generateClient<Schema>();
 
+//excel出力用
+import ExcelJS from 'exceljs';
+import { createDetailListFromTemplate } from '../components/utils/createDetailListFromTemplate';
+import { downloadData } from 'aws-amplify/storage';
+import { saveAs } from 'file-saver';
+
 // 店舗集計データの型
 interface StoreBoxSummary {
+    date: string,
     storeId: string;
     storeName: string;
     storeTc: string;
@@ -20,24 +27,17 @@ interface StoreBoxSummary {
     blueBoxes: number;
     yellowBoxes: number;
 }
-// interface TotalBoxSummary {
-//     storeTc: string;
-//     greenBoxes: number;
-//     redBoxes: number;
-//     blueBoxes: number;
-//     yellowBoxes: number;
-// }
 
 
 export const FinalCheck = () => {
     const [storeData, setStoreData] = useState<StoreBoxSummary[]>([]);  
     const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
 
-    useEffect(() => {       
+    useEffect(() => {
     const sub = boxClient.models.Box.observeQuery({
     filter: {
         date: {
-        eq: selectedDate?.toISOString().split('T')[0] || ''
+        eq: selectedDate?.toISOString().split('T')[0].replace(/-/g, '') || ''
         }
     }
     }).subscribe({ //Boxテーブルの変更をサブスクライブ
@@ -49,10 +49,10 @@ export const FinalCheck = () => {
                 storeName: item.storeName,
                 storeTc: item.storeTc,
 
-                greenBoxes: item.color === 'green' ? item.boxCount : 0,
-                redBoxes: item.color === 'red' ? item.boxCount : 0,
-                blueBoxes: item.color === 'blue' ? item.boxCount : 0,
-                yellowBoxes: item.color === 'yellow' ? item.boxCount : 0
+                greenBoxes: item.boxColor === 'green' ? item.boxCount : 0,
+                redBoxes: item.boxColor === 'red' ? item.boxCount : 0,
+                blueBoxes: item.boxColor === 'blue' ? item.boxCount : 0,
+                yellowBoxes: item.boxColor === 'yellow' ? item.boxCount : 0
             })) //マッピングしたものはstoreMapに入っている、以降はこれを使う
 
             aggregateStoreData(storeMap);
@@ -64,6 +64,46 @@ export const FinalCheck = () => {
 
     return () => sub.unsubscribe();
     }, [selectedDate]);
+
+    const getDetailDataSomehow = () =>{
+        console.log("storeData",storeData)
+        return storeData
+    }
+
+    const handleDownloadExcel = async() => {
+        try{
+        // Downloads file content to memory
+        const { body ,eTag } = await downloadData({
+        path: "excel-files/1749535537569-納品箱数明細票テンプレート.xlsx"
+        }).result;
+        console.log('eTag',eTag)
+        console.log('body',body)
+
+        // 明示的に Blob にキャスト
+        const blob = body as unknown as Blob;
+        const arrayBuffer = await blob.arrayBuffer();
+
+        // ExcelJSで読み込み
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(arrayBuffer);
+
+            // 明細データを取得（例）
+        const detailData = getDetailDataSomehow();
+        console.log("detailData",detailData)
+
+            // テンプレートにデータを書き込む
+        createDetailListFromTemplate(workbook, detailData);
+
+            // ファイル出力
+        const buffer = await workbook.xlsx.writeBuffer();
+        const newBlob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        saveAs(newBlob, `納品箱数明細票_${new Date().toISOString().slice(0, 10)}.xlsx`);
+
+        } catch (error) {
+            console.error('Excel ファイルのダウンロードまたは処理中にエラーが発生しました:', error);
+        }
+
+    };
 
     const DateSelector = () => { //カレンダーで日付指定
 
@@ -117,12 +157,7 @@ export const FinalCheck = () => {
         const result = Array.from(aggregatedMap.values());
         setStoreData(result)
     };
-    // const total = {
-    //     green: storeData.reduce((sum, s) => sum + s.greenBoxes, 0),
-    //     red: storeData.reduce((sum, s) => sum + s.redBoxes, 0),
-    //     blue: storeData.reduce((sum, s) => sum + s.blueBoxes, 0),
-    //     yellow: storeData.reduce((sum, s) => sum + s.yellowBoxes, 0),
-    // };
+
     const nakanoshimaData = storeData.filter((s) => s.storeTc === '中之島');
     const jyoetsuData = storeData.filter((s) => s.storeTc !== '中之島');
 
@@ -166,11 +201,11 @@ export const FinalCheck = () => {
             <Table size="small" sx={{ tableLayout: 'fixed', width: '100%' }}>
             <TableHead>
                 <TableRow>
-                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'success.light', color: 'white', }}>Box緑</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'error.light', color: 'white', }}>Box赤</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.light', color: 'white', }}>Box青</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'warning.light', color: 'white', }}>Box黄</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'white', }}>合計</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'success.light', boxColor: 'white', }}>Box緑</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'error.light', boxColor: 'white', }}>Box赤</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.light', boxColor: 'white', }}>Box青</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'warning.light', boxColor: 'white', }}>Box黄</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.main', boxColor: 'white', }}>合計</TableCell>
                 </TableRow>
             </TableHead>
             <TableBody>
@@ -214,14 +249,14 @@ export const FinalCheck = () => {
         <Table stickyHeader aria-label="店舗データテーブル" >
             <TableHead>
             <TableRow> 
-                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'white' }}>TC</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'white' }}>店舗番号</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'white' }}>店舗名</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'success.light', color: 'white' }}>トートーbox緑</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'error.light', color: 'white' }}>トートーbox赤</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'primary.light', color: 'white' }}>トートーbox青</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'warning.light', color: 'white' }}>トートーbox黄</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'primary.main', color: 'white',width: '15%' }}>合計</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.main', boxColor: 'white' }}>TC</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.main', boxColor: 'white' }}>店舗番号</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.main', boxColor: 'white' }}>店舗名</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'success.light', boxColor: 'white' }}>トートーbox緑</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'error.light', boxColor: 'white' }}>トートーbox赤</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'primary.light', boxColor: 'white' }}>トートーbox青</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'warning.light', boxColor: 'white' }}>トートーbox黄</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'primary.main', boxColor: 'white',width: '15%' }}>合計</TableCell>
             </TableRow>
             </TableHead>
             <TableBody >
@@ -294,6 +329,9 @@ export const FinalCheck = () => {
     <SummaryTable title="中之島物流センター 合計" total={totalNakanoshima} />
     <SummaryTable title="上越物流センター 合計" total={totalJyoetsu} />
     </Box>
+    <Button onClick={handleDownloadExcel}>
+        明細表をダウンロード
+    </Button>
     </Box>
     );
 };

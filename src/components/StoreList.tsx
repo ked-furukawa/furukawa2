@@ -18,7 +18,7 @@ import ExpandMore from '@mui/icons-material/ExpandMore';
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../../amplify/data/resource";
 
-import { filterByCompleteFlag } from './filterByCompleteFlag';
+// import { groupOrdersByTcAndStore } from './utils/groupOrdersByTcAndStore';
 
 // Amplify クライアントの生成
 const dataClient = generateClient<Schema>();
@@ -51,18 +51,26 @@ interface BoxData {
   color: BoxColor;
 }
 
-// props の型定義を更新
+// StoreList.tsx の props の型定義を修正
 interface StoreListProps {
   selectedStoreId: string | null;
   onSelectStore: (storeId: string) => void;
-  completedStores?: {storeId: string, boxCount: number, color: BoxColor}[]; // オプショナルに変更
+  completedStores?: {storeId: string, boxCount: number, color: BoxColor}[];
+  // 以下のプロパティを追加
+  stores?: {
+    id: string;
+    storeNumber: string;
+    storeName: string;
+    storeTc?: string;
+  }[];
 }
 
 
 const StoreList: React.FC<StoreListProps> = ({ 
   selectedStoreId, 
   onSelectStore,
-  completedStores = [] // デフォルト値を空配列に設定
+  completedStores = [], // デフォルト値を空配列に設定
+  stores = [] // stores プロパティを追加
 }) => {
   const [storesByDestination, setStoresByDestination] = useState<StoresByDestination[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -79,20 +87,20 @@ const StoreList: React.FC<StoreListProps> = ({
     const fetchBoxData = async () => {
       try {
         // テスト用固定日付
-        const testDate = "2025-06-02";
+        const testDate = "20250609";
         
         // Box テーブルからデータを取得（日付フィルタを追加）
         const { data: boxItems } = await dataClient.models.Box.list({
           filter: { date: { eq: testDate } }
         });
 
-        const filteredBoxItems = await filterByCompleteFlag(testDate,'test',boxItems);
+        const filteredBoxItems = boxItems
         
         // 取得したデータを適切な形式に変換
         const formattedBoxData = filteredBoxItems.map(box => ({
           storeId: box.storeId,
           boxCount: box.boxCount || 0,
-          color: (box.color as BoxColor) || 'green'
+          color: (box.boxColor as BoxColor) || 'green'
         }));
         
         setBoxData(formattedBoxData);
@@ -108,7 +116,7 @@ const StoreList: React.FC<StoreListProps> = ({
     console.log('test');
     
     // リアルタイム更新のためのサブスクリプション設定
-      const testDate = "2025-06-02";
+      const testDate = "20250609";
       const subscription = dataClient.models.Box.observeQuery({
         filter: { date: { eq: testDate } }
       }).subscribe({
@@ -116,7 +124,7 @@ const StoreList: React.FC<StoreListProps> = ({
           const formattedBoxData = items.map(box => ({
             storeId: box.storeId,
             boxCount: box.boxCount || 0,
-            color: (box.color as BoxColor) || 'green'
+            color: (box.boxColor as BoxColor) || 'green'
           }));
           
           setBoxData(formattedBoxData);
@@ -128,98 +136,84 @@ const StoreList: React.FC<StoreListProps> = ({
     return () => subscription.unsubscribe();
   }, []);
 
-  // 送り先ごとの店舗データを取得
-  useEffect(() => {
-    const fetchStoresByDestination = async () => {
-      try {
-        setLoading(true);
-        
-        const testDate = "2025-06-02"; // テスト用固定日付
-        
-        // Order テーブルから店舗データを取得
-        const { data: orderData } = await dataClient.models.Order.list({
-          filter: { date: { eq: testDate } }
+// 送り先ごとの店舗データを処理
+useEffect(() => {
+  try {
+    setLoading(true);
+    
+    // 店舗情報を抽出して重複を排除
+    const storeMap = new Map<string, {
+      id: string;
+      storeNumber: string;
+      storeName: string;
+      storeTc: string;
+    }>();
+    
+    stores.forEach(store => {
+      if (!storeMap.has(store.id)) {
+        storeMap.set(store.id, {
+          id: store.id,
+          storeNumber: store.storeNumber,
+          storeName: store.storeName,
+          storeTc: store.storeTc || '未分類'
         });
-
-          //フィルター関数に渡す
-        const filteredOrderData = await filterByCompleteFlag(testDate,'test',orderData);
-
-        // 店舗情報を抽出して重複を排除
-        const storeMap = new Map<string, {
-          id: string;
-          storeNumber: string;
-          storeName: string;
-          storeTc: string;
-        }>();
-        
-        filteredOrderData.forEach(order => {
-          if (!storeMap.has(order.storeId)) {
-            storeMap.set(order.storeId, {
-              id: order.storeId,
-              storeNumber: order.storeId,
-              storeName: order.storeName || '不明な店舗',
-              storeTc: order.storeTc || '未分類'
-            });
-          }
-        });
-        
-        // 送り先（TC）ごとに店舗をグループ化
-        const destinationMap = new Map<string, {
-          id: string;
-          name: string;
-          stores: Store[];
-        }>();
-        
-        storeMap.forEach(store => {
-          const tcId = store.storeTc;
-          if (!destinationMap.has(tcId)) {
-            destinationMap.set(tcId, {
-              id: tcId,
-              name: tcId,
-              stores: []
-            });
-          }
-          
-          // 箱数データまたはcompletedStoresから完了状態を判定
-          const isCompleted = 
-            boxData.some(item => item.storeId === store.id) || 
-            completedStores.some(item => item.storeId === store.id);
-          
-          destinationMap.get(tcId)?.stores.push({
-            id: store.id,
-            storeNumber: store.storeNumber,
-            storeName: store.storeName,
-            isCompleted
-          });
-        });
-        
-        // 結果を配列に変換
-        const result: StoresByDestination[] = Array.from(destinationMap.values()).map(dest => ({
-          destination: {
-            id: dest.id,
-            name: dest.name
-          },
-          stores: dest.stores
-        }));
-        
-        setStoresByDestination(result);
-        
-        // 初期状態ですべての送り先を展開
-        const initialExpandState: Record<string, boolean> = {};
-        result.forEach(item => {
-          initialExpandState[item.destination.id] = true;
-        });
-        setExpandedDestinations(initialExpandState);
-      } catch (err) {
-        console.error('店舗データの取得に失敗しました:', err);
-        setError('店舗データの読み込みに失敗しました');
-      } finally {
-        setLoading(false);
       }
-    };
-
-    fetchStoresByDestination();
-  }, [boxData, completedStores]); // boxDataとcompletedStoresが変更されたときに再取得
+    });
+    
+    // 送り先（TC）ごとに店舗をグループ化
+    const destinationMap = new Map<string, {
+      id: string;
+      name: string;
+      stores: Store[];
+    }>();
+    
+    storeMap.forEach(store => {
+      const tcId = store.storeTc;
+      if (!destinationMap.has(tcId)) {
+        destinationMap.set(tcId, {
+          id: tcId,
+          name: tcId,
+          stores: []
+        });
+      }
+      
+      // 箱数データまたはcompletedStoresから完了状態を判定
+      const isCompleted = 
+        boxData.some(item => item.storeId === store.id) || 
+        completedStores.some(item => item.storeId === store.id);
+      
+      destinationMap.get(tcId)?.stores.push({
+        id: store.id,
+        storeNumber: store.storeNumber,
+        storeName: store.storeName,
+        isCompleted
+      });
+    });
+    
+    // 結果を配列に変換
+    const result: StoresByDestination[] = Array.from(destinationMap.values()).map(dest => ({
+      destination: {
+        id: dest.id,
+        name: dest.name
+      },
+      stores: dest.stores
+    }));
+    
+    setStoresByDestination(result);
+    
+    // 初期状態ですべての送り先を展開
+    const initialExpandState: Record<string, boolean> = {};
+    result.forEach(item => {
+      initialExpandState[item.destination.id] = true;
+    });
+    setExpandedDestinations(initialExpandState);
+  } catch (err) {
+    console.error('店舗データの処理に失敗しました:', err);
+    setError('店舗データの処理に失敗しました');
+  } finally {
+    setLoading(false);
+  }
+}, [boxData, completedStores, stores]); // stores を依存配列に追加
 
 // 選択された店舗が変更されたときに自動スクロール
   useEffect(() => {

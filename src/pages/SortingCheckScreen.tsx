@@ -21,24 +21,26 @@ import {
 
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from "../../amplify/data/resource";
-import { filterByCompleteFlag } from '../components/filterByCompleteFlag';
-import { CompleteState } from '../components/filterByCompleteFlag';
 
+import ProductStoresModal from '../components/ProductStoresModal'; //逆引きモーダル
 
+import { fetchUserAttributes } from 'aws-amplify/auth';
 
 const client= generateClient<Schema>();
 
+import { resolveImportId } from "../components/utils/resolveImportId";
+
+
 // 商品データの型定義（Orderモデルベース）
 interface Product {
-  id: string; // date-storeId-itemIdの組み合わせ
-  name: string; // itemNameまたはitemName
-  expectedCount: number; // orderCount
+  date:string;
+
+  itemId: string; //itemId
+  itemName: string; // itemName
+  itemCounts: number; // itemCountの合計値
   isChecked: boolean; // ローカル状態で管理
-  itemId: string;
-  date: string;
-  storeId: string;
-  storeName?: string;
-  resDeptName?: string;
+
+  departmentId:string; //担当部門ID
 }
 
 interface SortingCheckScreenProps {
@@ -46,18 +48,15 @@ interface SortingCheckScreenProps {
   onComplete?: () => void;
   targetDate?: string; // 対象日付（YYYY-MM-DD形式）
   targetStoreId?: string; // 対象店舗ID
-    navigateTo: (pageKey: string) => void; // ← 追加
+  navigateTo: (pageKey: string) => void; // ← 追加
   //    A?: boolean;(to上越)
 }
 
 const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
   onProductClick = () => {},
   onComplete = () => {},
-  targetDate = '2025-06-02', 
-  targetStoreId = '019', 
   navigateTo // 
 }) => {
-  const [completeState, setCompleteState] = useState<"未完了" | "中之島完了" | "作業完了" | null>(null);
   const theme = useTheme();
   const isPortrait = useMediaQuery('(orientation: portrait)');
   const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -72,82 +71,115 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
   const [alertMessage, setAlertMessage] = useState('');
   const [alertSeverity, setAlertSeverity] = useState<'success' | 'error'>('success');
 
-  // DynamoDBからOrderデータを取得
-  useEffect(() => {
-    fetchProducts();
-  }, [targetDate, targetStoreId]);
+  // モーダル用の状態を追加
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [rawOrderData, setRawOrderData] = useState<any[]>([]); // 生の注文データを保存
 
-const fetchProducts = async () => {
+  const [hasNakanoShimaPending, setHasNakanoShimaPending] = useState(false);// 中之島が完了してるかのフラグ 
+  const [hasAnyPending, setHasAnyPending] = useState<boolean>(false);
+
+  const date="20250609" //テスト用固定日付
+
+const loadProducts = async () => {
+  setLoading(true);
+  setError(null);
+  setProducts([]);
+
   try {
-    setLoading(true);
-    setError(null);
-
-    // 店舗IDは指定せず、日付のみで取得
-    const { data } = await client.models.Order.list({
-      filter: {
-        date: { eq: targetDate }
-      }
-    });
-      //フィルター関数に渡す
-    const filteredData = await filterByCompleteFlag(targetDate,'test',data);
-    const result = await client.models.CompleteFlag.get({ date: targetDate, departmentId: 'test' });
-    const fetchedCompleteState = result?.data?.completeState as CompleteState | null;
-    setCompleteState(fetchedCompleteState);
-
-    console.log(filteredData);
-
-    if (filteredData) {
-      // 商品名（itemFormalName）でグループ化して集計
-      const groupedMap = new Map<string, Product>();
-
-      for (const order of filteredData) {
-        const key = order.itemName || `商品ID: ${order.itemId}`;
-
-        if (groupedMap.has(key)) {
-          const existing = groupedMap.get(key)!;
-          existing.expectedCount += order.orderCount || 0;
-        } else {
-          groupedMap.set(key, {
-            id: key, // 固有IDでなくても今回は表示上問題なし
-            name: key,
-            expectedCount: order.orderCount || 0,
-            isChecked: false,
-            itemId: order.itemId,
-            date: order.date,
-            storeId: order.storeId,
-            storeName: order.storeName ?? undefined,
-            resDeptName: order.resDeptName ?? undefined
-          });
-        }
-      }
-
-      const formattedProducts: Product[] = Array.from(groupedMap.values());
-
-      setProducts(formattedProducts);
-      console.log(formattedProducts);
+    const attrs = await fetchUserAttributes();
+    const departmentId = attrs['custom:departmentId'] as string;
+    if (!departmentId) {
+      setError("ユーザー情報が取得できませんでした");
+      setLoading(false);
+      return;
     }
+
+    const resolvedImportId = await resolveImportId(date, departmentId);
+    if (!resolvedImportId) {
+      setError("importIdが取得できませんでした");
+      setLoading(false);
+      return;
+    }
+
+    const result = await client.models.Order.listOrdersByDeptAndImport({
+      date,
+      departmentIdImportId: {
+        eq: {
+          departmentId,
+          importId: resolvedImportId,
+        },
+      },
+    }); 
+    
+    const rawOrders = result.data; //加工前の注文データ
+
+    // PENDINGのデータがあるかチェック
+  const pendingOrders = rawOrders.filter(o => o.status === "PENDING");
+  setHasAnyPending(pendingOrders.length > 0);
+    // 中之島が完了してるかチェック
+  const hasNakano = pendingOrders.some(o => o.storeTc === "中之島");
+  setHasNakanoShimaPending(hasNakano);
+
+
+    const productMap: { [itemId: string]: Product } = {};
+
+    pendingOrders.forEach(order => {
+      if (!productMap[order.itemId]) {
+        productMap[order.itemId] = {
+          date:date,
+          itemId: order.itemId,
+          itemName: order.itemName ?? "",
+          itemCounts: 0,
+          isChecked: false,
+          departmentId: order.departmentId ?? "",
+        };
+      }
+      productMap[order.itemId].itemCounts += order.itemCount;
+    });
+
+      setRawOrderData(rawOrders) //モーダルに渡す用
+      console.log("test",rawOrderData)
+
+    setProducts(Object.values(productMap));
   } catch (err) {
-    console.error('注文データの取得に失敗しました:', err);
-    setError('注文データの取得に失敗しました。再度お試しください。');
-  } finally {
-    setLoading(false);
+    setError("エラーです");
+  } finally{
+    setLoading(false); // 読み込み完了
   }
 };
+
+useEffect(() => {
+  loadProducts();
+
+}, [date]);
+
 
 
 
   // チェックボックスの状態を変更（ローカル状態のみ）
   const handleCheckProduct = (productId: string) => {
     setProducts(products.map(product =>
-      product.id === productId
+      product.itemId === productId
         ? { ...product, isChecked: !product.isChecked }
         : product
     ));
   };
 
-  // 商品名をクリックして詳細画面に移動する関数
+  // 商品クリックハンドラを修正
   const handleProductClick = (productId: string) => {
+    const product = products.find(p => p.itemId === productId);
+    if (product) {
+      setSelectedProduct(product);
+      setModalOpen(true);
+    }
+    // 既存のonProductClick呼び出しは残しておく（互換性のため）
     onProductClick(productId);
+  };
+
+  // モーダルを閉じる関数を追加
+  const handleCloseModal = () => {
+    setModalOpen(false);
   };
 
   // 完了ボタンを押したときの処理
@@ -166,7 +198,7 @@ const fetchProducts = async () => {
     else {
       const uncheckedProducts = products
         .filter(product => !product.isChecked)
-        .map(product => product.name)
+        .map(product => product.itemName)
         .join('、');
 
       setAlertMessage(`${uncheckedProducts}の確認が完了していません`);
@@ -178,14 +210,14 @@ const fetchProducts = async () => {
 
   // データを再読み込みする関数
   const handleRefresh = () => {
-    fetchProducts();
+    loadProducts();
   };
 
 
 
   // 合計商品数と合計個数を計算
   const totalProducts = products.length;
-  const totalCount = products.reduce((sum, product) => sum + product.expectedCount, 0);
+  const totalCount = products.reduce((sum, product) => sum + product.itemCounts, 0);
   const checkedCount = products.filter(product => product.isChecked).length;
 
   
@@ -245,12 +277,15 @@ const fetchProducts = async () => {
 
   return (
     <Box display="flex" flexDirection="column" height="100vh" sx={{ px:-1000}}>
-{completeState && (
+      {!hasAnyPending ? (
+    <Typography>本日の注文はすべて完了しています</Typography>
+    ) : (
+      <>
         <Box
           sx={{
             p: 0.5,
             textAlign: 'center',
-            backgroundColor: completeState === '未完了' ? '#ffebee' : '#e8f5e9',
+            backgroundColor: hasNakanoShimaPending ?  '#ffebee' : '#e8f5e9',
           }}
         >
           <Typography
@@ -258,18 +293,14 @@ const fetchProducts = async () => {
             sx={{
               fontWeight: 'bold',
               fontSize: isPortrait ? '1.6rem' : '1.4rem',
-              color: completeState === '未完了' ? 'error.main' : 'primary.main',
+              color: hasNakanoShimaPending ? 'error.main' : 'primary.main',
             }}
           >
-            {completeState === '未完了'
-              ? '仕分け作業前確認'
-              : completeState === '中之島完了'
-              ? '上越センター前確認'
-              : ''}
+            {hasNakanoShimaPending
+              ? '仕分け作業前確認':'上越センター前確認'
+              }
           </Typography>
         </Box>
-      )}
-      
 
       <Paper
         elevation={3}
@@ -350,12 +381,12 @@ const fetchProducts = async () => {
             <TableBody>
               {products.map((product) => (
                 <TableRow
-                  key={product.id}
+                  key={product.itemId}
                   hover
-                  onClick={() => handleProductClick(product.id)}
+                  // onClick={() => handleProductClick(product.id)}
                   selected={product.isChecked}
                   sx={{
-                    cursor: 'pointer',
+                    cursor: 'default',// カーソルをデフォルトに変更（行全体はクリック可能に見せない）
                     // bgcolor: !product.isChecked ? 'rgba(255, 244, 229, 0.7)' : 'inherit',
                     '&:last-child td, &:last-child th': { border: 0 },
                     height: 
@@ -376,7 +407,19 @@ rowHeight,
                       fontWeight: 'bold'
                     }}
                   >
-                    {product.name}
+                    <Box
+                      component="span"
+                      onClick={() => handleProductClick(product.itemId)}
+                      sx={{
+                        cursor: 'pointer',
+                        borderBottom: '1px solid',
+                        borderColor: 'text.primary',
+                        display: 'inline-block',
+                        paddingBottom: '1px', // 下線とテキストの間に少し余白を追加
+                      }}
+                    >
+                      {product.itemName}
+                    </Box>
                   </TableCell>
                   <TableCell
                     align="right"
@@ -385,13 +428,13 @@ rowHeight,
                       fontWeight: 'bold'
                     }}
                   >
-                    {product.expectedCount}
+                    {product.itemCounts}
                   </TableCell>
                   <TableCell padding="checkbox" align="center" onClick={(e) => e.stopPropagation()}>
                     <Checkbox
                       checked={product.isChecked}
-                      onChange={() => handleCheckProduct(product.id)}
-                      inputProps={{ 'aria-labelledby': `checkbox-${product.id}` }}
+                      onChange={() => handleCheckProduct(product.itemId)}
+                      inputProps={{ 'aria-labelledby': `checkbox-${product.itemId}` }}
                       sx={{
                         '& .MuiSvgIcon-root': {
                           fontSize: isPortrait ? 40 : 32
@@ -455,7 +498,9 @@ rowHeight,
           </Button>
         </Box>
       </Paper>
-     
+      </>
+          )}
+    
       {/* アラート表示 */}
       <Backdrop
         sx={{
@@ -531,9 +576,16 @@ rowHeight,
         </Fade>
       </Backdrop>
 
+{/* モーダルの追加 */}
+      <ProductStoresModal
+        open={modalOpen}
+        onClose={handleCloseModal}
+        product={selectedProduct}
+        allOrders={rawOrderData}
+      />
+      
     </Box>
   );
-  
 };
 
 export default SortingCheckScreen;
