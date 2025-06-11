@@ -17,23 +17,6 @@ const backend = defineBackend({
 	PUTeventTest,
 	csvToDB
 });
-//PUTeventTest用のイベント設定
-backend.storage.resources.bucket.addEventNotification(
-	EventType.OBJECT_CREATED_PUT,
-	new LambdaDestination(backend.PUTeventTest.resources.lambda),
-	{
-		prefix:'excel-files/'
-	}
-);
-//csvToDB用のイベント設定
-backend.storage.resources.bucket.addEventNotification(
-	EventType.OBJECT_CREATED_PUT,
-	new LambdaDestination(backend.csvToDB.resources.lambda),
-	{
-		prefix:'csv-files/',
-		suffix:'.csv'
-	}
-);
 
 // S3バケットへのアクセス権限ポリシー
 const s3AccessPolicy = new PolicyStatement({
@@ -81,4 +64,22 @@ backend.csvToDB.addEnvironment(
 backend.csvToDB.addEnvironment(
 	'AMPLIFY_DATA_IMPORTWORKSTATUS_TABLE_NAME',
 	backend.data.resources.tables["ImportWorkStatus"].tableName,
+);
+
+//PUTeventTest用のイベント設定
+backend.storage.resources.bucket.addEventNotification(
+	EventType.OBJECT_CREATED_PUT,
+	new LambdaDestination(backend.PUTeventTest.resources.lambda),
+	{
+		prefix:'excel-files/'
+	}
+);
+//csvToDB用のイベント設定
+backend.storage.resources.bucket.addEventNotification(
+	EventType.OBJECT_CREATED_PUT,
+	new LambdaDestination(backend.csvToDB.resources.lambda),
+	{
+		prefix:'csv-files/',
+		suffix:'.csv'
+	}
 );
