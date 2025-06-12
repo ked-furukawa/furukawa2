@@ -17,9 +17,10 @@ import StoreList from '../components/StoreList';
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../../amplify/data/resource";
 import { StoreProductPanel } from '../components/StoreProductPanel';
-import { OrderData, BoxData, StatusTemplate } from '../types';
+import { OrderData, BoxData, StatusTemplate, OrderStatus } from '../types';
 import { formatDateToJST } from '../components/utils/formatDateToJST';
 import { groupOrdersByTcAndStore } from '../components/utils/groupOrdersByTcAndStore';
+import { resolveImportId } from '../components/utils/resolveImportId';
 
 // 型定義
 type BoxColor = 'green' | 'red' | 'blue' | 'yellow';
@@ -138,136 +139,143 @@ useEffect(() => {
   // 部門IDが設定されるまで待機
   if (!departmentId) return;
   
-  const fetchAllData = async () => {
-    try {
-      setLoading(true);
-      
-      // 固定の日付を使用（6月9日のテストデータ）
-      const today = '20250609';
-      setCurrentDate(today);
-      
-      // importId を読み取り専用で取得（状態変更なし）
-      const getImportIdReadOnly = async () => {
-        try {
-          const { data } = await dataClient.models.ImportWorkStatus.list({
-            filter: {
-              date: { eq: today },
-              departmentId: { eq: departmentId },
-            },
-          });
-
-          if (!data || data.length === 0) return null;
-
-          // IN_PROGRESS があればそれを返す（SortingCheckScreen と同様）
-          const inProgress = data.find((record) => record.status === "IN_PROGRESS");
-          if (inProgress) return inProgress.importId;
-
-          // IN_PROGRESS がなければ PENDING の中から最新のものを返す
-          const pendingList = data
-            .filter((record) => record.status === "PENDING")
-            .sort((a, b) => 
-              new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
-            );
-          
-          if (pendingList.length > 0) return pendingList[0].importId;
-
-          return null;
-        } catch (error) {
-          console.error("importIdの読み取り中にエラーが発生しました:", error);
-          return null;
-        }
-      };
-
-      const latestImportId = await getImportIdReadOnly();
-      let queryImportId = '20250609_103000'; // デフォルトのテスト用importId
-      
-      if (latestImportId) {
-        queryImportId = latestImportId;
-        console.log(`既存の importId を使用: ${queryImportId}`);
-      } else {
-        console.log(`ImportWorkStatus が見つからないため、テスト用のimportIdを使用: ${queryImportId}`);
+const fetchAllData = async () => {
+  try {
+    setLoading(true);
+    
+    // 固定の日付を使用（6月9日のテストデータ）
+    const today = '20250609';
+    setCurrentDate(today);
+    
+    // resolveImportId を使用して最新の importId を取得
+    const latestImportId = await resolveImportId(today, departmentId);
+    if (!latestImportId) {
+      setError('有効な importId が見つかりませんでした');
+      return;
+    }
+    
+    // importId を状態として保存
+    setImportId(latestImportId);
+    
+    console.log(`データ取得に使用する importId: ${latestImportId}`);
+    
+    // 同じ日付の全てのImportWorkStatusを取得して複数回注文の有無を確認
+    const importStatusResponse = await dataClient.models.ImportWorkStatus.list({
+      filter: {
+        date: { eq: today },
+        departmentId: { eq: departmentId }
       }
-      
-      // importId を状態として保存
-      setImportId(queryImportId);
-      
-      console.log(`データ取得に使用する importId: ${queryImportId}`);
-        
-        console.log(`データ取得に使用する importId: ${queryImportId}`);
-        
-        // 同じ日付の全てのImportWorkStatusを取得して複数回注文の有無を確認
-        const importStatusResponse = await dataClient.models.ImportWorkStatus.list({
-          filter: {
-            date: { eq: today },
-            departmentId: { eq: departmentId }
-          }
-        });
-        
-        const importIds = importStatusResponse.data.map(status => status.importId);
-        setAllImportIds(importIds);
-        
-        // 全ての注文データを取得（複数importIdに対応）
-        const ordersResponse = await dataClient.models.Order.list({
-          filter: {
-            date: { eq: today },
-            departmentId: { eq: departmentId }
-          }
-        });
-        
-        // 箱データを取得
-        const boxResponse = await dataClient.models.Box.listBoxesByDate({
-          date: today,
-          departmentId: { eq: departmentId }
-        });
-        
-        console.log(`部門ID: ${departmentId} の注文データ:`, ordersResponse.data);
-        
-        // 注文データを処理（複数importIdの統合処理）
-        const processedOrders = processMultipleImportOrders(ordersResponse.data as OrderData[]);
-        
-        // データをキャッシュ
-        setOrders(processedOrders);
-        
-        // BoxData の型と実際のデータ構造の違いを解消するためにマッピング
-        const mappedBoxData = boxResponse.data.map(box => ({
-          date: box.date,
-          storeId: box.storeId,
-          storeName: box.storeName ?? undefined,
-          storeTc: box.storeTc ?? undefined,
-          color: box.boxColor || 'green',
-          boxCount: box.boxCount,
-          boxCreatedBy: box.departmentId ?? undefined,
-          isChecked: box.status === StatusTemplate.CONFIRMED || box.status === StatusTemplate.DOUBLE_CHECKED
-        }));
-        setBoxDataCache(mappedBoxData);
-        
-        // 完了済み店舗の処理
-        processCompletedStores(mappedBoxData);
-        
-        // 店舗リストの作成
-        const groupedOrders = groupOrdersByTcAndStore(processedOrders);
-        console.log('グループ化された注文データ:', groupedOrders);
-        
-        const stores = extractStoresFromGroupedOrders(groupedOrders);
-        console.log('抽出された店舗リスト:', stores);
-        
-        setAllStores(stores);
-        
-        // 最初の店舗を選択
-        if (stores.length > 0) {
-          const firstStoreId = stores[0].storeId;
-          handleStoreSelectInternal(firstStoreId, processedOrders, mappedBoxData);
-          setNextStore(getNextStore(firstStoreId, stores));
-        } else {
-          setError('この部門に割り当てられた店舗がありません');
-        }
-      } catch (err) {
-        console.error('データの読み込みに失敗しました:', err);
-        setError('データの読み込みに失敗しました: ' + (err instanceof Error ? err.message : String(err)));
-      } finally {
-        setLoading(false);
+    });
+    
+    const importIds = importStatusResponse.data.map(status => status.importId);
+    setAllImportIds(importIds);
+    
+    // 最新の importId に基づく注文データを取得
+    const ordersResponse = await dataClient.models.Order.list({
+      filter: {
+        importId: { eq: latestImportId },
+        departmentId: { eq: departmentId }
       }
-    };
+    });
+    
+    console.log(`最新の注文データ (${ordersResponse.data.length}件) を取得しました`);
+    
+    // 同じ date×storeId×itemId で status=DONE の注文を検索
+    // GSIを使用する場合、filterはsortKeyに対してのみ使用可能
+    const doneOrdersResponse = await dataClient.models.Order.listOrdersByStoreAndItem({
+      date: today,
+      // filterは削除し、後でJavaScriptでフィルタリング
+    });
+    
+    console.log(`全注文データ (${doneOrdersResponse.data.length}件) を取得しました`);
+    
+    // JavaScript側でDONEステータスの注文をフィルタリング
+    const doneOrders = doneOrdersResponse.data.filter(order => 
+      order.status === StatusTemplate.DONE
+    );
+    
+    console.log(`処理済み注文 (${doneOrders.length}件) を抽出しました`);
+    
+    // 処理済み注文のマップを作成（高速検索用）
+    const doneOrdersMap = new Map();
+    doneOrders.forEach(order => {
+      const key = `${order.date}_${order.storeId}_${order.itemId}`;
+      doneOrdersMap.set(key, order);
+    });
+    
+    // 最新の注文から処理済みのものを除外
+    const filteredOrders = ordersResponse.data.filter(order => {
+      const key = `${order.date}_${order.storeId}_${order.itemId}`;
+      return !doneOrdersMap.has(key);
+    });
+    
+    console.log(`フィルタリング後の注文データ: ${filteredOrders.length}件`);
+    
+    // 型変換を行ってからステートに保存
+    const typedOrders: OrderData[] = filteredOrders.map(order => ({
+      importId: order.importId,
+      date: order.date,
+      storeId: order.storeId,
+      storeName: order.storeName || '',  // null の場合は空文字列に変換
+      storeTc: order.storeTc || '',      // null の場合は空文字列に変換
+      itemId: order.itemId,
+      itemName: order.itemName || '',    // null の場合は空文字列に変換
+      itemFormalName: order.itemFormalName || undefined,
+      itemCount: order.itemCount,
+      departmentId: order.departmentId,
+      departmentName: order.departmentName || undefined,
+      status: order.status as OrderStatus || 'PENDING'
+    }));
+    
+    // フィルタリングされた注文データを状態として保存
+    setOrders(typedOrders);
+    
+    // 箱データを取得
+    const boxResponse = await dataClient.models.Box.listBoxesByDate({
+      date: today,
+      departmentId: { eq: departmentId }
+    });
+    
+    // BoxData の型と実際のデータ構造の違いを解消するためにマッピング
+    const mappedBoxData = boxResponse.data.map(box => ({
+      date: box.date,
+      storeId: box.storeId,
+      storeName: box.storeName ?? undefined,
+      storeTc: box.storeTc ?? undefined,
+      color: box.boxColor || 'green',
+      boxCount: box.boxCount,
+      boxCreatedBy: box.departmentId ?? undefined,
+      isChecked: box.status === StatusTemplate.CONFIRMED || box.status === StatusTemplate.DOUBLE_CHECKED
+    }));
+    setBoxDataCache(mappedBoxData);
+    
+    // 完了済み店舗の処理
+    processCompletedStores(mappedBoxData);
+    
+    // 店舗リストの作成
+    const groupedOrders = groupOrdersByTcAndStore(typedOrders);
+    console.log('グループ化された注文データ:', groupedOrders);
+    
+    const stores = extractStoresFromGroupedOrders(groupedOrders);
+    console.log('抽出された店舗リスト:', stores);
+    
+    setAllStores(stores);
+    
+    // 最初の店舗を選択
+    if (stores.length > 0) {
+      const firstStoreId = stores[0].storeId;
+      handleStoreSelectInternal(firstStoreId, typedOrders, mappedBoxData);
+      setNextStore(getNextStore(firstStoreId, stores));
+    } else {
+      setError('この部門に割り当てられた店舗がありません');
+    }
+  } catch (err) {
+    console.error('データの読み込みに失敗しました:', err);
+    setError('データの読み込みに失敗しました: ' + (err instanceof Error ? err.message : String(err)));
+  } finally {
+    setLoading(false);
+  }
+};
     
     fetchAllData();
   }, [departmentId]);
@@ -539,26 +547,6 @@ useEffect(() => {
         }
       }
       
-      // 対応する注文のステータスを更新
-      const updatePromises = selectedProductIds.map(productId => {
-        // 選択された商品に対応する全ての注文を取得
-        const orderUpdates = orders
-          .filter(order => order.storeId === selectedStoreId && order.itemId === productId)
-          .map(order => 
-            dataClient.models.Order.update({
-              importId: order.importId,
-              date: order.date,
-              storeId: order.storeId,
-              itemId: order.itemId,
-              status: StatusTemplate.DONE
-            })
-          );
-        
-        return Promise.all(orderUpdates);
-      });
-      
-      await Promise.all(updatePromises);
-      
       // 完了済み店舗リストに追加（既に追加されている場合は更新）
       setCompletedStores(prev => {
         const filteredStores = prev.filter(store => store.storeId !== selectedStoreId);
@@ -579,19 +567,61 @@ useEffect(() => {
         .map(cs => cs.storeId);
       const newlyCompleted = [...new Set([...completedNakanoshima, selectedStoreId])];
 
-      if (newlyCompleted.length === nakanoshimaStores.length) {
-        // 全中之島店舗が完了 → 商品数確認画面へ遷移
-        console.log('中之島エリアの作業が完了しました');
-        
-        // ImportWorkStatus は更新せず、画面遷移のみ行う
-        navigateTo('SortingCheckScreen');
-        return;
-      }
-      
-      if (!nextStore) {
-        navigateTo('StoreDoubleCheckList');
-        return;
-      }
+      // 中之島エリア完了チェック部分
+if (newlyCompleted.length === nakanoshimaStores.length) {
+  // 全中之島店舗が完了
+  console.log('中之島エリアの作業が完了しました');
+  
+  // 中之島エリアの全注文ステータスを更新
+  const nakanoshimaStoreIds = nakanoshimaStores.map(s => s.storeId);
+  const nakanoshimaOrders = orders.filter(order => 
+    nakanoshimaStoreIds.includes(order.storeId)
+  );
+  
+  // 注文ステータスを一括更新
+  const updatePromises = nakanoshimaOrders.map(order => 
+    dataClient.models.Order.update({
+      importId: order.importId,
+      date: order.date,
+      storeId: order.storeId,
+      itemId: order.itemId,
+      status: StatusTemplate.DONE
+    })
+  );
+  
+  await Promise.all(updatePromises);
+  
+  // 画面遷移
+  navigateTo('SortingCheckScreen');
+  return;
+}
+
+// 最後の店舗チェック部分
+if (!nextStore) {
+  // 上越エリアの全注文ステータスを更新
+  const joetsuStores = allStores.filter(s => s.storeTc === '上越');
+  const joetsuStoreIds = joetsuStores.map(s => s.storeId);
+  const joetsuOrders = orders.filter(order => 
+    joetsuStoreIds.includes(order.storeId)
+  );
+  
+  // 注文ステータスを一括更新
+  const updatePromises = joetsuOrders.map(order => 
+    dataClient.models.Order.update({
+      importId: order.importId,
+      date: order.date,
+      storeId: order.storeId,
+      itemId: order.itemId,
+      status: StatusTemplate.DONE
+    })
+  );
+  
+  await Promise.all(updatePromises);
+  
+  // 画面遷移
+  navigateTo('StoreDoubleCheckList');
+  return;
+}
       
       // 次の店舗に移動（キャッシュデータを使用）
       handleStoreSelectInternal(nextStore.storeId, orders, boxDataCache);
