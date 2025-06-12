@@ -1,5 +1,5 @@
-export function alignmentToDepartmentId(alignment: number): string | null {
-    if (typeof alignment !== 'number' || isNaN(alignment)) return null;
+export function alignmentToDepartmentId(alignment: number): string {
+    if (typeof alignment !== 'number' || isNaN(alignment)) return 'a';
 
     // 完全一致の特別処理
     if (alignment === 6084) return 'honsyabuturyu';//本社物流棒ヒレカツ
@@ -18,5 +18,5 @@ export function alignmentToDepartmentId(alignment: number): string | null {
     ];
 
     const matched = ranges.find(r => alignment >= r.min && alignment <= r.max);
-    return matched?.id ?? null;
+    return matched?.id ?? 'b';
 }

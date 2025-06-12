@@ -12,7 +12,7 @@ import { fetchUserAttributes } from 'aws-amplify/auth';
 
 import {StatusTemplate} from '../types/index.ts';
 
-import { formatDateToJST } from '../components/utils/formatDateToJST.tsx';
+import { formatDateToJST } from '../components/utils/formatDateToJST.ts';
 // import { groupOrdersByTcAndStore } from '../components/utils/groupOrdersByTcAndStore.tsx';
 
 
