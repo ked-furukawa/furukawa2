@@ -1,5 +1,5 @@
 // src/pages/BoxQuantityInput.tsx
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { fetchUserAttributes } from 'aws-amplify/auth';
 import {
   Box,
@@ -20,7 +20,6 @@ import { StoreProductPanel } from '../components/StoreProductPanel';
 import { OrderData, BoxData, StatusTemplate } from '../types';
 import { formatDateToJST } from '../components/utils/formatDateToJST';
 import { groupOrdersByTcAndStore } from '../components/utils/groupOrdersByTcAndStore';
-import { resolveImportId } from '../components/utils/resolveImportId';
 
 // 型定義
 type BoxColor = 'green' | 'red' | 'blue' | 'yellow';
@@ -42,7 +41,7 @@ interface Product {
   itemFormalName: string;
   orderCount: number;
   quantity: number;
-  isChecked: boolean; // 追加
+  isChecked: boolean;
 }
 
 // 完了済み店舗の型定義
@@ -77,7 +76,7 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
   const [importId, setImportId] = useState<string | null>(null);
   const [allImportIds, setAllImportIds] = useState<string[]>([]);
 
-  const [departmentId, setDepartmentId] = useState<string>('sakurai'); // テスト用のデフォルト値
+  const [departmentId, setDepartmentId] = useState<string>(''); // 初期値を空文字列に変更
   const [currentRegion, setCurrentRegion] = useState<string>('中之島'); // 初期値は中之島
 
   // データキャッシュ
@@ -85,29 +84,31 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
   const [boxDataCache, setBoxDataCache] = useState<BoxData[]>([]);
 
   // 認証情報から部門IDを取得する部分
-  useEffect(() => {
-    const fetchUserInfo = async () => {
-      try {     
-        // ユーザー属性を取得
-        const attributes = await fetchUserAttributes();
-        console.log('ユーザー属性:', attributes);
-        
-        // カスタム属性から部門IDを取得
-        const userDepartmentId = attributes['custom:departmentId'];
-        
-        if (userDepartmentId) {
-          console.log('部門ID:', userDepartmentId);
-          setDepartmentId(userDepartmentId);
-        }
-        // 取得できない場合はデフォルト値のままにする
-      } catch (error) {
-        console.error('ユーザー情報の取得に失敗しました:', error);
-        // エラー時はデフォルト値のままにする
+useEffect(() => {
+  const fetchUserInfo = async () => {
+    try {     
+      // ユーザー属性を取得
+      const attributes = await fetchUserAttributes();
+      console.log('ユーザー属性:', attributes);
+      
+      // カスタム属性から部門IDを取得
+      const userDepartmentId = attributes['custom:departmentId'];
+      
+      if (userDepartmentId) {
+        console.log('部門ID:', userDepartmentId);
+        setDepartmentId(userDepartmentId);
+      } else {
+        // 取得できない場合はエラーを設定
+        setError('ユーザーに部門IDが設定されていません');
       }
-    };
-    
-    fetchUserInfo();
-  }, []);
+    } catch (error) {
+      console.error('ユーザー情報の取得に失敗しました:', error);
+      setError('ユーザー情報の取得に失敗しました');
+    }
+  };
+  
+  fetchUserInfo();
+}, []);
 
   // 確定ボタンを有効にするための条件をチェックする関数
   const isConfirmButtonEnabled = useMemo(() => {
@@ -128,58 +129,69 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
   );
   
   // フィルタリングされた店舗リスト（メモ化）
-const filteredStores = useMemo(() => {
-  return allStores.filter(store => store.storeTc === currentRegion);
-}, [allStores, currentRegion]);
+  const filteredStores = useMemo(() => {
+    return allStores.filter(store => store.storeTc === currentRegion);
+  }, [allStores, currentRegion]);
 
-  // 初期データの一括取得
-  useEffect(() => {
-    // 部門IDが設定されるまで待機
-    if (!departmentId) return;
-    
-    const fetchAllData = async () => {
-      try {
-        setLoading(true);
-        
-        // 固定の日付を使用（6月9日のテストデータ）
-        const today = '20250609';
-        setCurrentDate(today);
-        
-        // importId を取得
-        const latestImportId = await resolveImportId(today, departmentId);
-        let queryImportId = '20250609_103000'; // デフォルトのテスト用importId
-        
-        if (latestImportId) {
-          // latestImportId が null でない場合
-          queryImportId = latestImportId;
-          
-          // 作業開始時にステータスを更新
-          await dataClient.models.ImportWorkStatus.update({
-            date: today,
-            departmentId: departmentId,
-            importId: latestImportId,
-            status: StatusTemplate.IN_PROGRESS
+// 初期データの一括取得
+useEffect(() => {
+  // 部門IDが設定されるまで待機
+  if (!departmentId) return;
+  
+  const fetchAllData = async () => {
+    try {
+      setLoading(true);
+      
+      // 固定の日付を使用（6月9日のテストデータ）
+      const today = '20250609';
+      setCurrentDate(today);
+      
+      // importId を読み取り専用で取得（状態変更なし）
+      const getImportIdReadOnly = async () => {
+        try {
+          const { data } = await dataClient.models.ImportWorkStatus.list({
+            filter: {
+              date: { eq: today },
+              departmentId: { eq: departmentId },
+            },
           });
-        } else {
-          // ImportWorkStatus が見つからない場合の処理
-          console.log('ImportWorkStatus が見つからないため、テスト用のimportIdを作成します');
+
+          if (!data || data.length === 0) return null;
+
+          // IN_PROGRESS があればそれを返す（SortingCheckScreen と同様）
+          const inProgress = data.find((record) => record.status === "IN_PROGRESS");
+          if (inProgress) return inProgress.importId;
+
+          // IN_PROGRESS がなければ PENDING の中から最新のものを返す
+          const pendingList = data
+            .filter((record) => record.status === "PENDING")
+            .sort((a, b) => 
+              new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
+            );
           
-          try {
-            // 新しい ImportWorkStatus レコードを作成
-            await dataClient.models.ImportWorkStatus.create({
-              date: today,
-              departmentId: departmentId,
-              importId: queryImportId,
-              status: StatusTemplate.IN_PROGRESS // 直接 IN_PROGRESS で作成
-            });
-          } catch (err) {
-            console.error('ImportWorkStatus の作成に失敗しました:', err);
-            setError('作業データの作成に失敗しました');
-          }
+          if (pendingList.length > 0) return pendingList[0].importId;
+
+          return null;
+        } catch (error) {
+          console.error("importIdの読み取り中にエラーが発生しました:", error);
+          return null;
         }
-        
-        // importId を状態として保存
-        setImportId(queryImportId);
+      };
+
+      const latestImportId = await getImportIdReadOnly();
+      let queryImportId = '20250609_103000'; // デフォルトのテスト用importId
+      
+      if (latestImportId) {
+        queryImportId = latestImportId;
+        console.log(`既存の importId を使用: ${queryImportId}`);
+      } else {
+        console.log(`ImportWorkStatus が見つからないため、テスト用のimportIdを使用: ${queryImportId}`);
+      }
+      
+      // importId を状態として保存
+      setImportId(queryImportId);
+      
+      console.log(`データ取得に使用する importId: ${queryImportId}`);
         
         console.log(`データ取得に使用する importId: ${queryImportId}`);
         
@@ -251,7 +263,7 @@ const filteredStores = useMemo(() => {
         }
       } catch (err) {
         console.error('データの読み込みに失敗しました:', err);
-        setError('データの読み込みに失敗しました');
+        setError('データの読み込みに失敗しました: ' + (err instanceof Error ? err.message : String(err)));
       } finally {
         setLoading(false);
       }
@@ -261,7 +273,7 @@ const filteredStores = useMemo(() => {
   }, [departmentId]);
 
   // 複数importIdの注文データを処理する関数
-  const processMultipleImportOrders = (allOrders: OrderData[]): OrderData[] => {
+  function processMultipleImportOrders(allOrders: OrderData[]): OrderData[] {
     // 店舗ID + 商品IDごとに最新の注文データを保持するマップ
     const orderMap = new Map<string, OrderData>();
     
@@ -280,10 +292,10 @@ const filteredStores = useMemo(() => {
     
     // itemCount が 0 の注文を除外
     return processedOrders.filter(order => order.itemCount > 0);
-  };
+  }
 
   // 完了済み店舗の処理を分離
-  const processCompletedStores = (boxData: BoxData[]) => {
+  function processCompletedStores(boxData: BoxData[]) {
     const storeBoxMap = new Map<string, CompletedStore>();
     
     // 箱データがある店舗のみを完了済みとして扱う
@@ -304,12 +316,12 @@ const filteredStores = useMemo(() => {
     const completed = Array.from(storeBoxMap.values());
     console.log('完了済み店舗リスト:', completed);
     setCompletedStores(completed);
-  };
+  }
 
   // グループ化された注文データから店舗リストを抽出
-  const extractStoresFromGroupedOrders = (
+  function extractStoresFromGroupedOrders(
     groupedOrders: { [storeTc: string]: { [storeId: string]: OrderData[] } }
-  ): Store[] => {
+  ): Store[] {
     const stores: Store[] = [];
     
     Object.keys(groupedOrders).forEach(storeTc => {
@@ -326,10 +338,10 @@ const filteredStores = useMemo(() => {
     });
     
     return stores;
-  };
+  }
 
-  // 次の店舗を取得する関数（メモ化）
-  const getNextStore = useCallback((currentStoreId: string, storeList = allStores): Store | null => {
+  // 次の店舗を取得する関数
+  function getNextStore(currentStoreId: string, storeList = allStores): Store | null {
     if (!storeList.length) return null;
 
     const currentIndex = storeList.findIndex(s => s.storeId === currentStoreId);
@@ -338,19 +350,19 @@ const filteredStores = useMemo(() => {
       return storeList[currentIndex + 1];
     }
     return null;
-  }, [allStores]);
+  }
 
   // 内部用の店舗選択処理（キャッシュデータを使用）
-  const handleStoreSelectInternal = (
+  function handleStoreSelectInternal(
     storeId: string,
     orderData: OrderData[],
     boxData: BoxData[]
-  ) => {
+  ) {
     setSelectedStoreId(storeId);
 
     const filtered = orderData.filter(order => order.storeId === storeId);
     if (filtered.length === 0) {
-      setError('店舗データが見つかりませんでした');
+      setError(`店舗ID: ${storeId} のデータが見つかりませんでした`);
       return;
     }
     
@@ -406,16 +418,19 @@ const filteredStores = useMemo(() => {
     if (allStores.length > 0) {
       setNextStore(getNextStore(storeId));
     }
-  };
+  }
 
   // 店舗選択時の処理（外部向け - キャッシュデータを使用）
-  const handleStoreSelect = useCallback(async (storeId: string) => {
+  function handleStoreSelect(storeId: string) {
     handleStoreSelectInternal(storeId, orders, boxDataCache);
-  }, [orders, boxDataCache, completedStores, allStores, getNextStore]);
+  }
 
-  const handleQuantityUpdate = useCallback(() => {
+  function handleQuantityUpdate() {
     const quantity = parseInt(inputValue, 10);
-    if (isNaN(quantity)) return;
+    if (isNaN(quantity)) {
+      setError('有効な数値を入力してください');
+      return;
+    }
     
     // 選択されている全ての商品の数量を更新
     setProducts(prevProducts => 
@@ -431,15 +446,15 @@ const filteredStores = useMemo(() => {
     
     // 確認ダイアログを表示
     setShowConfirmDialog(true);
-  }, [inputValue, selectedProductIds]);
+  }
 
-  // 色変更ハンドラー（メモ化）
-  const handleColorChange = useCallback((color: BoxColor) => {
+  // 色変更ハンドラー
+  function handleColorChange(color: BoxColor) {
     setSelectedColor(color);
-  }, []);
+  }
 
-  // 商品の選択を処理する関数（メモ化）
-  const handleProductSelect = useCallback((productId: string) => {
+  // 商品の選択を処理する関数
+  function handleProductSelect(productId: string) {
     setSelectedProductIds(prev => {
       if (prev.includes(productId)) {
         return prev.filter(id => id !== productId);
@@ -447,16 +462,19 @@ const filteredStores = useMemo(() => {
         return [...prev, productId];
       }
     });
-  }, []);
+  }
 
-  // テンキーからの入力を処理する関数（メモ化）
-  const handleInputChange = useCallback((value: string) => {
+  // テンキーからの入力を処理する関数
+  function handleInputChange(value: string) {
     setInputValue(value);
-  }, []);
+  }
 
   // 次の店舗へ移動する関数
-  const navigateToNextStore = useCallback(async () => {
-    if (!selectedStoreId || !storeData || !importId) return;
+  async function navigateToNextStore() {
+    if (!selectedStoreId || !storeData || !importId) {
+      setError('店舗情報が不足しています');
+      return;
+    }
 
     try {
       setSavingData(true);
@@ -560,16 +578,12 @@ const filteredStores = useMemo(() => {
         .filter(cs => nakanoshimaStores.some(ns => ns.storeId === cs.storeId))
         .map(cs => cs.storeId);
       const newlyCompleted = [...new Set([...completedNakanoshima, selectedStoreId])];
-      
+
       if (newlyCompleted.length === nakanoshimaStores.length) {
         // 全中之島店舗が完了 → 商品数確認画面へ遷移
-        // ImportWorkStatus を更新
-        await dataClient.models.ImportWorkStatus.update({
-          date: currentDate,
-          departmentId: departmentId,
-          importId: importId,
-          status: StatusTemplate.DONE
-        });
+        console.log('中之島エリアの作業が完了しました');
+        
+        // ImportWorkStatus は更新せず、画面遷移のみ行う
         navigateTo('SortingCheckScreen');
         return;
       }
@@ -585,34 +599,19 @@ const filteredStores = useMemo(() => {
       // 選択をクリア
       setInputValue('');
     } catch (err) {
-      setError('データの保存に失敗しました');
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(`データの保存に失敗しました: ${errorMessage}`);
       console.error('データ保存エラー:', err);
     } finally {
       setSavingData(false);
       setShowConfirmDialog(false);
     }
-  }, [
-    selectedStoreId,
-    storeData,
-    selectedProductIds,
-    products,
-    selectedColor,
-    inputValue,
-    boxDataCache,
-    completedStores,
-    allStores,
-    nextStore,
-    orders,
-    navigateTo,
-    currentDate,
-    importId,
-    departmentId
-  ]);
+  }
 
-  // 確認ダイアログをキャンセルする関数（メモ化）
-  const handleDialogCancel = useCallback(() => {
+  // 確認ダイアログをキャンセルする関数
+  function handleDialogCancel() {
     setShowConfirmDialog(false);
-  }, []);
+  }
 
   return (
     <Box display="flex" height="100vh">
@@ -631,18 +630,17 @@ const filteredStores = useMemo(() => {
             {/* 左側：店舗リスト */}
             <Box sx={{pr:0.2, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
               <StoreList
-                key={refreshKey}
-                selectedStoreId={selectedStoreId}
-                onSelectStore={handleStoreSelect}
-                completedStores={completedStores}
-                // 以下のプロパティを追加
-                stores={allStores.map(store => ({
-                  id: store.storeId,
-                  storeNumber: store.storeId,
-                  storeName: store.storeName,
-                  storeTc: store.storeTc
-                }))}
-              />
+              key={refreshKey}
+              selectedStoreId={selectedStoreId}
+              onSelectStore={handleStoreSelect}
+              completedStores={completedStores}
+              stores={filteredStores.map(store => ({
+                id: store.storeId,
+                storeNumber: store.storeId,
+                storeName: store.storeName,
+                storeTc: store.storeTc
+              }))}
+            />
             </Box>
             {/* 中央：統合された店舗情報と商品リスト */}
             <Box sx={{px:3}}
