@@ -90,33 +90,6 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
   const [orders, setOrders] = useState<OrderData[]>([]);
   const [boxDataCache, setBoxDataCache] = useState<BoxData[]>([]);
 
-  // 認証情報から部門IDを取得する部分
-  useEffect(() => {
-    const fetchUserInfo = async () => {
-      try {     
-        // ユーザー属性を取得
-        const attributes = await fetchUserAttributes();
-        console.log('ユーザー属性:', attributes);
-        
-        // カスタム属性から部門IDを取得
-        const userDepartmentId = attributes['custom:departmentId'];
-        
-        if (userDepartmentId) {
-          console.log('部門ID:', userDepartmentId);
-          setDepartmentId(userDepartmentId);
-        } else {
-          // 取得できない場合はエラーを設定
-          setError('ユーザーに部門IDが設定されていません');
-        }
-      } catch (error) {
-        console.error('ユーザー情報の取得に失敗しました:', error);
-        setError('ユーザー情報の取得に失敗しました');
-      }
-    };
-    
-    fetchUserInfo();
-  }, []);
-
   // 確定ボタンを有効にするための条件をチェックする関数
   const isConfirmButtonEnabled = useMemo(() => {
     // 条件1: 全ての商品が選択されている
@@ -129,25 +102,113 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
     return allProductsSelected && hasQuantityInput;
   }, [selectedProductIds, inputValue, products]);
 
-  // 完了済み店舗IDのリスト（メモ化）
-  const completedStoreIds = useMemo(() =>
-    completedStores.map(item => item.storeId),
-    [completedStores]
-  );
-  
-  // フィルタリングされた店舗リスト（メモ化）
-  const filteredStores = useMemo(() => {
-    return allStores.filter(store => store.storeTc === currentRegion);
-  }, [allStores, currentRegion]);
+  // 商品データの処理を行う関数
+  function processProductData(
+    storeId: string,
+    orderData: OrderData[],
+    boxData: BoxData[]
+  ): Product[] {
+    const filtered = orderData.filter(order => order.storeId === storeId);
+    if (filtered.length === 0) {
+      setError(`店舗ID: ${storeId} のデータが見つかりませんでした`);
+      return [];
+    }
+    
+    const matchingOrder = filtered[0];
+    const newStoreData = {
+      storeId: matchingOrder.storeId,
+      storeName: matchingOrder.storeName || '',
+      storeTc: matchingOrder.storeTc || ''
+    };
+    setStoreData(newStoreData);
+    
+    // 店舗の箱データをフィルタリング
+    const storeBoxData = boxData.filter(box => 
+      box.storeId === storeId && 
+      box.boxCreatedBy === departmentId
+    );
+    
+    // 選択した店舗が完了済みかどうかをチェック
+    const isCompletedStore = completedStores.some(store => store.storeId === storeId);
+    
+    const productList = filtered.map(order => {
+      // 該当する箱データを検索
+      const box = storeBoxData.find(b => b.boxCreatedBy === departmentId);
+      
+      return {
+        id: order.itemId,
+        itemId: order.itemId,
+        itemName: order.itemName || '',
+        itemFormalName: order.itemFormalName || '',
+        orderCount: order.itemCount,
+        quantity: box ? box.boxCount : 0,
+        isChecked: false
+      };
+    });
+    
+    // 完了済み店舗または箱データがある場合、すべての商品を選択状態にする
+    if (isCompletedStore || storeBoxData.length > 0) {
+      const allProductIds = productList.map(p => p.id);
+      setSelectedProductIds(allProductIds);
+    } else {
+      setSelectedProductIds([]);
+    }
+    
+    return productList;
+  }
+
+  // 店舗選択の処理を行う関数
+  function handleStoreSelection(
+    storeId: string,
+    orderData: OrderData[],
+    boxData: BoxData[]
+  ) {
+    setSelectedStoreId(storeId);
+    setInputValue('');
+    
+    const productList = processProductData(storeId, orderData, boxData);
+    setProducts(productList);
+    
+    // 次の店舗を設定
+    if (allStores.length > 0) {
+      const nextStoreObj = getNextStore(storeId);
+      setNextStore(nextStoreObj);
+      
+      // リージョンの切り替え
+      if (nextStoreObj && nextStoreObj.storeTc !== currentRegion) {
+        setCurrentRegion(nextStoreObj.storeTc);
+      }
+    }
+  }
+
+  // 内部用の店舗選択処理（キャッシュデータを使用）
+  function handleStoreSelectInternal(
+    storeId: string,
+    orderData: OrderData[],
+    boxData: BoxData[]
+  ) {
+    handleStoreSelection(storeId, orderData, boxData);
+  }
+
+  // 店舗選択時の処理（外部向け - キャッシュデータを使用）
+  function handleStoreSelect(storeId: string) {
+    handleStoreSelection(storeId, orders, boxDataCache);
+  }
 
   // 初期データの一括取得
   useEffect(() => {
-    // 部門IDが設定されるまで待機
-    if (!departmentId) return;
-    
-    const fetchAllData = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
+        
+        // ユーザー属性を取得
+        const attributes = await fetchUserAttributes();
+        const userDepartmentId = attributes['custom:departmentId'];
+        
+        if (!userDepartmentId) {
+          setError('ユーザーに部門IDが設定されていません');
+          return;
+        }
         
         // 現在の日付を取得（実際の運用では当日の日付を使用）
         // テスト用に固定日付を使用
@@ -155,7 +216,7 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
         setCurrentDate(today);
         
         // resolveImportId を使用して最新の importId とワークフロー状態を取得
-        const importResult = await resolveImportId(today, departmentId);
+        const importResult = await resolveImportId(today, userDepartmentId);
         if (!importResult || !importResult.importId) {
           setError('有効な importId が見つかりませんでした');
           return;
@@ -188,7 +249,7 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
           date: today,
           departmentIdImportId: {
             eq: {
-              departmentId,
+              departmentId: userDepartmentId,
               importId: importResult.importId
             }
           }
@@ -223,7 +284,7 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
         // 箱データを取得
         const boxResponse = await dataClient.models.Box.listBoxesByDate({
           date: today,
-          departmentId: { eq: departmentId }
+          departmentId: { eq: userDepartmentId }
         });
         
         // BoxData の型と実際のデータ構造の違いを解消するためにマッピング
@@ -250,11 +311,12 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
         console.log('抽出された店舗リスト:', stores);
         
         setAllStores(stores);
+        setDepartmentId(userDepartmentId);
         
         // 最初の店舗を選択
         if (stores.length > 0) {
           const firstStoreId = stores[0].storeId;
-          handleStoreSelectInternal(firstStoreId, typedOrders, mappedBoxData);
+          handleStoreSelection(firstStoreId, typedOrders, mappedBoxData);
           setNextStore(getNextStore(firstStoreId, stores));
         } else {
           setError('この部門に割り当てられた店舗がありません');
@@ -267,8 +329,8 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
       }
     };
     
-    fetchAllData();
-  }, [departmentId, navigateTo]);
+    fetchData();
+  }, [navigateTo]);
 
   // 完了済み店舗の処理を分離
   function processCompletedStores(boxData: BoxData[]) {
@@ -337,85 +399,6 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
     }
     
     return null;
-  }
-
-  // 内部用の店舗選択処理（キャッシュデータを使用）
-  function handleStoreSelectInternal(
-    storeId: string,
-    orderData: OrderData[],
-    boxData: BoxData[]
-  ) {
-    setSelectedStoreId(storeId);
-
-    const filtered = orderData.filter(order => order.storeId === storeId);
-    if (filtered.length === 0) {
-      setError(`店舗ID: ${storeId} のデータが見つかりませんでした`);
-      return;
-    }
-    
-    const matchingOrder = filtered[0];
-    const newStoreData = {
-      storeId: matchingOrder.storeId,
-      storeName: matchingOrder.storeName || '',
-      storeTc: matchingOrder.storeTc || ''
-    };
-    setStoreData(newStoreData);
-    
-    // 店舗の箱データをフィルタリング
-    const storeBoxData = boxData.filter(box => 
-      box.storeId === storeId && 
-      box.boxCreatedBy === departmentId
-    );
-    
-    // 選択した店舗が完了済みかどうかをチェック
-    const isCompletedStore = completedStores.some(store => store.storeId === storeId);
-    
-    const productList = filtered.map(order => {
-      // 該当する箱データを検索
-      const box = storeBoxData.find(b => b.boxCreatedBy === departmentId);
-      
-      return {
-        id: order.itemId,
-        itemId: order.itemId,
-        itemName: order.itemName || '',
-        itemFormalName: order.itemFormalName || '',
-        orderCount: order.itemCount,
-        quantity: box ? box.boxCount : 0,
-        isChecked: false // デフォルト値を設定
-      };
-    });
-    
-    // 商品データを設定
-    setProducts(productList);
-    
-    // 入力値をクリア
-    setInputValue('');
-    
-    // 完了済み店舗または箱データがある場合、すべての商品を選択状態にする
-    const shouldSelectAll = isCompletedStore || storeBoxData.length > 0;
-    if (shouldSelectAll) {
-      const allProductIds = productList.map(p => p.id);
-      setSelectedProductIds(allProductIds);
-    } else {
-      // 選択をクリア
-      setSelectedProductIds([]);
-    }
-    
-    // 次の店舗を設定
-    if (allStores.length > 0) {
-      const nextStoreObj = getNextStore(storeId);
-      setNextStore(nextStoreObj);
-      
-      // リージョンの切り替え
-      if (nextStoreObj && nextStoreObj.storeTc !== currentRegion) {
-        setCurrentRegion(nextStoreObj.storeTc);
-      }
-    }
-  }
-
-  // 店舗選択時の処理（外部向け - キャッシュデータを使用）
-  function handleStoreSelect(storeId: string) {
-    handleStoreSelectInternal(storeId, orders, boxDataCache);
   }
 
   function handleQuantityUpdate() {
@@ -709,7 +692,7 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
                 selectedStoreId={selectedStoreId}
                 onSelectStore={handleStoreSelect}
                 completedStores={completedStores}
-                stores={filteredStores.map(store => ({
+                stores={allStores.map(store => ({
                   id: store.storeId,
                   storeNumber: store.storeId,
                   storeName: store.storeName,
@@ -730,7 +713,7 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
                 onProductSelect={handleProductSelect}
                 loading={loading}
                 error={error}
-                completedStoreIds={completedStoreIds}
+                completedStoreIds={completedStores.map(store => store.storeId)}
               />
             </Box>
             {/* 右側：テンキー */}
