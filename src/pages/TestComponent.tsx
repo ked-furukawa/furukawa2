@@ -5,6 +5,7 @@ import { generateClient } from "aws-amplify/data";
 
 import testDataOrder1 from '../services/testDataOrder1.json';
 import testDataOrder2 from '../services/testDataOrder2.json';
+import testDataBox from '../services/testDataBox.json'
 
 const boxClient = generateClient<Schema>();
 
@@ -213,14 +214,13 @@ const handleDeleteOrder = async () => {
 
     const handleDeleteImportId = async () => {
     try {
-      // 1. 全 Order を取得
         const { data } = await boxClient.models.ImportWorkStatus.list();
 
         if (data) {
             await Promise.all(
             data.map((data) =>
                 boxClient.models.ImportWorkStatus.delete({
-                    date:'20250609', 
+                    date:data.date, 
                     importId:data.importId,
                     departmentId:data.departmentId,
                 })
@@ -234,6 +234,17 @@ const handleDeleteOrder = async () => {
         alert('削除に失敗しました');
         }
     };
+    const saveBoxData = async (testDataBox:any) => {
+        try{
+            for (const box of testDataBox) {
+                await boxClient.models.Box.create({
+                    ...box
+                });
+    }
+        }catch(err){
+            alert('保存に失敗')
+        }
+    }
 
 
 return (
@@ -271,6 +282,9 @@ return (
         </Button>
         <Button variant="contained" color="error" onClick={handleDeleteImportId}>
             ImportWorkStatusテーブル削除
+        </Button>
+        <Button variant="contained" color="secondary" onClick={() => saveBoxData(testDataBox)}> {/*DB保存用関数を呼び出す*/}
+            テスト用箱データ保存
         </Button>
         <Button variant="contained" color="error" onClick={handleDeleteBox}>
             Boxテーブル削除

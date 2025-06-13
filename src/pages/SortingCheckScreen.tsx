@@ -79,7 +79,7 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
   const [hasNakanoShimaPending, setHasNakanoShimaPending] = useState(false);// 中之島が完了してるかのフラグ 
   const [hasAnyPending, setHasAnyPending] = useState<boolean>(false);
 
-  const date="20250612" //テスト用固定日付
+  const date="20250609" //テスト用固定日付
 
 const loadProducts = async () => {
   setLoading(true);
