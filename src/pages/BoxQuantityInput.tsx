@@ -89,6 +89,8 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
   // データキャッシュ
   const [orders, setOrders] = useState<OrderData[]>([]);
   const [boxDataCache, setBoxDataCache] = useState<BoxData[]>([]);
+  const [productDataCache, setProductDataCache] = useState<{ [storeId: string]: Product[] }>({});
+  const [storeDataCache, setStoreDataCache] = useState<{ [storeId: string]: Store }>({});
 
   // 確定ボタンを有効にするための条件をチェックする関数
   const isConfirmButtonEnabled = useMemo(() => {
@@ -108,6 +110,11 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
     orderData: OrderData[],
     boxData: BoxData[]
   ): Product[] {
+    // キャッシュにデータがある場合はそれを使用
+    if (productDataCache[storeId]) {
+      return productDataCache[storeId];
+    }
+
     const filtered = orderData.filter(order => order.storeId === storeId);
     if (filtered.length === 0) {
       setError(`店舗ID: ${storeId} のデータが見つかりませんでした`);
@@ -120,6 +127,12 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
       storeName: matchingOrder.storeName || '',
       storeTc: matchingOrder.storeTc || ''
     };
+
+    // 店舗データをキャッシュに保存
+    setStoreDataCache(prev => ({
+      ...prev,
+      [storeId]: newStoreData
+    }));
     setStoreData(newStoreData);
     
     // 店舗の箱データをフィルタリング
@@ -145,6 +158,12 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
         isChecked: false
       };
     });
+
+    // 商品データをキャッシュに保存
+    setProductDataCache(prev => ({
+      ...prev,
+      [storeId]: productList
+    }));
     
     // 完了済み店舗または箱データがある場合、すべての商品を選択状態にする
     if (isCompletedStore || storeBoxData.length > 0) {
@@ -165,6 +184,11 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
   ) {
     setSelectedStoreId(storeId);
     setInputValue('');
+    
+    // 店舗データがキャッシュにある場合はそれを使用
+    if (storeDataCache[storeId]) {
+      setStoreData(storeDataCache[storeId]);
+    }
     
     const productList = processProductData(storeId, orderData, boxData);
     setProducts(productList);
@@ -230,16 +254,11 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
           setSortingPhase(importResult.sortingPhase);
         }
         
-        console.log(`データ取得に使用する importId: ${importResult.importId}`);
-        console.log(`現在の作業フェーズ: ${importResult.sortingPhase}`);
-        
         // 作業フェーズに応じた画面遷移
         if (importResult.sortingPhase === 'COMPLETED_NAKANOSHIMA') {
-          // 中之島エリアが完了している場合は仕分け確認画面へ
           navigateTo('SortingCheckScreen');
           return;
         } else if (importResult.sortingPhase === 'COMPLETED_JYOETSU') {
-          // 上越エリアも完了している場合はダブルチェックリスト画面へ
           navigateTo('StoreDoubleCheckList');
           return;
         }
@@ -259,8 +278,6 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
         const pendingOrders = ordersResponse.data.filter(order => 
           order.status === StatusTemplate.PENDING
         );
-        
-        console.log(`未処理の注文データ (${pendingOrders.length}件) を取得しました`);
         
         // 型変換を行ってからステートに保存
         const typedOrders: OrderData[] = pendingOrders.map(order => ({
@@ -305,10 +322,7 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
         
         // 店舗リストの作成
         const groupedOrders = groupOrdersByTcAndStore(typedOrders);
-        console.log('グループ化された注文データ:', groupedOrders);
-        
         const stores = extractStoresFromGroupedOrders(groupedOrders);
-        console.log('抽出された店舗リスト:', stores);
         
         setAllStores(stores);
         setDepartmentId(userDepartmentId);
@@ -705,16 +719,19 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
               width={{ xs: '100%', md: '35%' }} 
               height={{ xs: 'auto', md: '600px' }}
             >
-              <StoreProductPanel
-                storeNumber={storeData?.storeId || ''}
-                storeName={storeData?.storeName || ''}
-                products={products}
-                selectedProductIds={selectedProductIds}
-                onProductSelect={handleProductSelect}
-                loading={loading}
-                error={error}
-                completedStoreIds={completedStores.map(store => store.storeId)}
-              />
+              {storeData && (
+                <StoreProductPanel
+                  key={`${storeData.storeId}-${selectedProductIds.length}`}
+                  storeNumber={storeData.storeId}
+                  storeName={storeData.storeName}
+                  products={products}
+                  selectedProductIds={selectedProductIds}
+                  onProductSelect={handleProductSelect}
+                  loading={loading}
+                  error={error}
+                  completedStoreIds={completedStores.map(store => store.storeId)}
+                />
+              )}
             </Box>
             {/* 右側：テンキー */}
             <Box
