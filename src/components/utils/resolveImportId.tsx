@@ -3,11 +3,17 @@ import type { Schema } from "../../../amplify/data/resource";
 
 const client = generateClient<Schema>();
 
+// 返り値の型定義
+type ImportResult = {
+    importId: string;
+    importProgress: string | null;
+    sortingPhase: string | null;
+} | null;
 
 export const resolveImportId = async (
     date: string,
     departmentId: string
-): Promise<string | null> => {
+): Promise<ImportResult> => {
     try {
         const { data } = await client.models.ImportWorkStatus.list({
         filter: {
@@ -19,13 +25,17 @@ export const resolveImportId = async (
     if (!data || data.length === 0) return null;
 
     // ① IN_PROGRESS があればそれを返す
-    const inProgress = data.find((record) => record.status === "IN_PROGRESS");
-    if (inProgress) return inProgress.importId;
+    const inProgress = data.find((record) => record.importProgress === "IN_PROGRESS");
+    if (inProgress) return {
+            importId: inProgress.importId,
+            importProgress: inProgress.importProgress,
+            sortingPhase: inProgress.sortingPhase
+        };
 
     // ② PENDING の中から createdAt の新しい順に並び替え
     // createdAtベースのソートを、importIdベースに変更
     const pendingList = data
-        .filter((record) => record.status === "PENDING")
+        .filter((record) => record.importProgress === "PENDING")
         .sort(
             (a, b) =>
                 b.importId.localeCompare(a.importId) // 文字列として降順（新しい順）
@@ -42,7 +52,7 @@ export const resolveImportId = async (
         date: latestPending.date,
         departmentId: latestPending.departmentId,
         importId: latestPending.importId,
-        status: "IN_PROGRESS",
+        importProgress: "IN_PROGRESS",
     });
 
     // ④ 他のPENDINGをすべて DONE に更新
@@ -52,12 +62,17 @@ export const resolveImportId = async (
                 date: record.date,
                 departmentId: record.departmentId,
                 importId: record.importId,
-                status: "DONE",
+                importProgress: "DONE",
             })
         )
     );
 
-    return latestPending.importId;
+    return {
+            importId: latestPending.importId,
+            importProgress: latestPending.importProgress,
+            sortingPhase: latestPending.sortingPhase
+        };
+
 
     } catch (error) {
         console.error("importIdの取得・更新中にエラーが発生しました:", error);
@@ -65,22 +80,26 @@ export const resolveImportId = async (
     }
 };
 //以下使用例
+    // useEffect(() => {
+    //     const fetchImportInfo = async () => {
+    //         try {
+    //             const result = await resolveImportId(date, departmentId);
+    //             setImportInfo(result);
 
-// import { useEffect, useState } from "react";
-// import { getLatestImportId } from "@/utils/getLatestImportId";
+    //             if (result) {
+    //                 console.log(`インポート情報取得成功: ${result.importId}`);
+    //             } else {
+    //                 console.log('該当するインポート情報なし');
+    //             }
+    //         } catch (err) {
+    //             setError('インポート情報の取得に失敗しました');
+    //             console.error('Error fetching import info:', err);
+    //         } finally {
+    //             setLoading(false);
+    //         }
+    //     };
 
-// const ExampleComponent = () => {
-//   const [importId, setImportId] = useState<string | null>(null);
+    //     fetchImportInfo();
+    // }, [date, departmentId]); // date, departmentIdが変更されたら再実行
 
-//   useEffect(() => {
-//     const fetchImportId = async () => {
-//       const id = await getLatestImportId("20250609", "souzai2");
-//       setImportId(id);
-//     };
-
-//     fetchImportId();
-//   }, []);
-
-//   return <div>importId: {importId ?? "取得できませんでした"}</div>;
-// };
 

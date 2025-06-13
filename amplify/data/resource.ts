@@ -68,7 +68,8 @@ export const schema = a.schema({
     departmentId: a.string().required(),     // 'test'
 
     importId: a.string().required(),   // '20250606_103000'
-    status: a.string().default('PENDING') // 'PENDING' | 'IN_PROGRESS' | 'DONE'
+    importProgress: a.string().default('PENDING'), // 'PENDING' | 'IN_PROGRESS' | 'DONE'
+    sortingPhase: a.string().default('PENDING') // 'PENDING' | 'COMPLETED_NAKANOSHIMA' | 'COMPLETED_JYOETSU' | 'DONE'
   })
   .identifier(['date', 'departmentId', 'importId'])
   .authorization((allow) => [allow.authenticated()])
