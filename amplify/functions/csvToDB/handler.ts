@@ -176,7 +176,8 @@ try {
                     item.createdAt = new Date().toISOString();
                     item.updatedAt = item.createdAt;
                     item.departmentId = departmentId;
-                    item.status = 'PENDING';
+                    item.importProgress = 'PENDING';
+                    item.sortingPhase = 'PENDING';
                 item['departmentId#importId'] = `${item.departmentId}#${item.importId}`
 
                 const params = {
