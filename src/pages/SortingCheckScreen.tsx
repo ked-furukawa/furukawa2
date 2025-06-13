@@ -108,7 +108,7 @@ const loadProducts = async () => {
       departmentIdImportId: {
         eq: {
           departmentId,
-          importId: resolvedImportId,
+          importId: resolvedImportId.importId,
         },
       },
     }); 
