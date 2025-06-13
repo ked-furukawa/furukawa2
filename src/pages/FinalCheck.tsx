@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Box, Typography, Button } from "@mui/material";
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Box, Typography, Button, Tooltip } from "@mui/material";
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -32,6 +32,7 @@ interface StoreBoxSummary {
 export const FinalCheck = () => {
     const [storeData, setStoreData] = useState<StoreBoxSummary[]>([]);  
     const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+    const [isAllDone, setIsAllDone] = useState(false);
 
     useEffect(() => {
     const sub = boxClient.models.Box.observeQuery({
@@ -64,6 +65,27 @@ export const FinalCheck = () => {
 
     return () => sub.unsubscribe();
     }, [selectedDate]);
+
+    useEffect(() => {//完了状態を監視
+        const sub = boxClient.models.ImportWorkStatus.observeQuery({
+            filter: {
+            date: {
+                eq: selectedDate?.toISOString().split('T')[0].replace(/-/g, '') || ''
+            }
+            }
+        }).subscribe({
+            next: ({ items }) => {
+                const filtered = items.filter(item => item != null);
+                const allDone = filtered.length > 0 && filtered.every(item => item.importProgress === 'DONE');
+                setIsAllDone(allDone);
+            },
+            error: (err) => {
+            console.error('ImportWorkStatusデータ取得エラー:', err);
+            }
+        });
+
+        return () => sub.unsubscribe();
+        }, [selectedDate]);
 
     const getDetailDataSomehow = () =>{
         console.log("storeData",storeData)
@@ -328,10 +350,29 @@ export const FinalCheck = () => {
     <SummaryTable title="全体 合計" total={totalAll} />
     <SummaryTable title="中之島物流センター 合計" total={totalNakanoshima} />
     <SummaryTable title="上越物流センター 合計" total={totalJyoetsu} />
-    </Box>
-    <Button onClick={handleDownloadExcel}>
+    <Tooltip title="仕分け作業が完了していません">
+    <span>
+        <Button
+        sx={{
+            mt: "100px",
+            backgroundColor: 'primary.main',
+            color: 'white',
+            '&:hover': {
+            backgroundColor: 'primary.dark',
+            },
+            '&.Mui-disabled': {
+            backgroundColor: 'grey.400',
+            color: 'white',
+            },
+        }}
+        onClick={handleDownloadExcel}
+        disabled={!isAllDone}
+        >
         明細表をダウンロード
-    </Button>
+        </Button>
+    </span>
+    </Tooltip>
+    </Box>
     </Box>
     );
 };
