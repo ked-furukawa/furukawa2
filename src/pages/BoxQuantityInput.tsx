@@ -77,7 +77,7 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
   const [importId, setImportId] = useState<string | null>(null);
   const [allImportIds, setAllImportIds] = useState<string[]>([]);
 
-  const [departmentId, setDepartmentId] = useState<string>('sakurai'); // テスト用のデフォルト値
+  const [departmentId, setDepartmentId] = useState<string>('furukawa'); // テスト用のデフォルト値
   const [currentRegion, setCurrentRegion] = useState<string>('中之島'); // 初期値は中之島
 
   // データキャッシュ
