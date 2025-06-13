@@ -162,8 +162,12 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
         }
         
         // importId とワークフロー状態を状態として保存
-        setImportId(importResult.importId);
-        setSortingPhase(importResult.sortingPhase);
+        if (importResult.importId) {
+          setImportId(importResult.importId);
+        }
+        if (importResult.sortingPhase) {
+          setSortingPhase(importResult.sortingPhase);
+        }
         
         console.log(`データ取得に使用する importId: ${importResult.importId}`);
         console.log(`現在の作業フェーズ: ${importResult.sortingPhase}`);
@@ -182,9 +186,12 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
         // 最新の importId に基づく注文データを取得
         const ordersResponse = await dataClient.models.Order.listOrdersByDeptAndImport({
           date: today,
-          departmentId: departmentId,
-          importId: importResult.importId,
-          // filter パラメータを削除
+          departmentIdImportId: {
+            eq: {
+              departmentId,
+              importId: importResult.importId
+            }
+          }
         });
         
         // JavaScript側でPENDINGステータスの注文をフィルタリング
@@ -216,7 +223,7 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
         // 箱データを取得
         const boxResponse = await dataClient.models.Box.listBoxesByDate({
           date: today,
-          departmentId: departmentId
+          departmentId: { eq: departmentId }
         });
         
         // BoxData の型と実際のデータ構造の違いを解消するためにマッピング
