@@ -12,7 +12,7 @@ import { fetchUserAttributes } from 'aws-amplify/auth';
 
 import {StatusTemplate} from '../types/index.ts';
 
-import { formatDateToJST } from '../components/utils/formatDateToJST.tsx';
+import { formatDateToJST } from '../components/utils/formatDateToJST.ts';
 // import { groupOrdersByTcAndStore } from '../components/utils/groupOrdersByTcAndStore.tsx';
 
 
@@ -131,7 +131,8 @@ const { data: existingRecords } = await boxClient.models.ImportWorkStatus.list({
         date: existing.date,
         importId: existing.importId,
         departmentId:existing.departmentId,
-        status: 'PENDING'
+        importProgress: 'PENDING',
+        sortingPhase: 'PENDING',
     });
     } else {
     // レコードが存在しない場合 → 作成
@@ -169,10 +170,10 @@ const handleDeleteBox = async () => {
             await Promise.all(
             orders.map((box) =>
                 boxClient.models.Box.delete({
-                    date:'20250602', 
+                    date:box.date, 
                     storeId:box.storeId, 
                     boxColor:box.boxColor,
-                    departmentId:'test'
+                    departmentId:box.departmentId
                 })
             )
             );

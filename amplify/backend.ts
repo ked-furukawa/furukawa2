@@ -35,7 +35,9 @@ const dynamoDBAccessPolicy = new PolicyStatement({
 		"dynamodb:UpdateItem",
 		"dynamodb:DeleteItem",
 		"dynamodb:Query",
-		"dynamodb:Scan"
+		"dynamodb:Scan",
+		"dynamodb:BatchWriteItem",
+		"dynamodb:Put"
 	],
 	resources: [
 		backend.data.resources.tables["Order"].tableArn,
