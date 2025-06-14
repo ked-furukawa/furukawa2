@@ -1,5 +1,5 @@
 // src/pages/BoxQuantityInput.tsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { fetchUserAttributes } from 'aws-amplify/auth';
 import {
   Box,
@@ -62,6 +62,9 @@ interface ImportResult {
   sortingPhase: string;
   importProgress: string;
 }
+
+// StoreProductPanelをメモ化
+const MemoizedStoreProductPanel = React.memo(StoreProductPanel);
 
 export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }) => {
   // 状態管理
@@ -415,14 +418,40 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
     return null;
   }
 
-  function handleQuantityUpdate() {
+  // 商品選択ハンドラーを最適化
+  const handleProductSelect = useCallback((productId: string) => {
+    setSelectedProductIds(prev => {
+      if (prev.includes(productId)) {
+        return prev.filter(id => id !== productId);
+      } else {
+        return [...prev, productId];
+      }
+    });
+  }, []);
+
+  // 色変更ハンドラーを最適化
+  const handleColorChange = useCallback((color: BoxColor) => {
+    setSelectedColor(color);
+  }, []);
+
+  // テンキーからの入力を処理する関数を最適化
+  const handleInputChange = useCallback((value: string) => {
+    setInputValue(value);
+  }, []);
+
+  // 確認ダイアログをキャンセルする関数を最適化
+  const handleDialogCancel = useCallback(() => {
+    setShowConfirmDialog(false);
+  }, []);
+
+  // 数量更新ハンドラーを最適化
+  const handleQuantityUpdate = useCallback(() => {
     const quantity = parseInt(inputValue, 10);
     if (isNaN(quantity)) {
       setError('有効な数値を入力してください');
       return;
     }
     
-    // 選択されている全ての商品の数量を更新
     setProducts(prevProducts => 
       prevProducts.map(product => 
         selectedProductIds.includes(product.id) 
@@ -431,33 +460,9 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
       )
     );
     
-    // エラーをクリア
     setError(null);
-    
-    // 確認ダイアログを表示
     setShowConfirmDialog(true);
-  }
-
-  // 色変更ハンドラー
-  function handleColorChange(color: BoxColor) {
-    setSelectedColor(color);
-  }
-
-  // 商品の選択を処理する関数
-  function handleProductSelect(productId: string) {
-    setSelectedProductIds(prev => {
-      if (prev.includes(productId)) {
-        return prev.filter(id => id !== productId);
-      } else {
-        return [...prev, productId];
-      }
-    });
-  }
-
-  // テンキーからの入力を処理する関数
-  function handleInputChange(value: string) {
-    setInputValue(value);
-  }
+  }, [inputValue, selectedProductIds]);
 
   // エリア完了状態を更新する関数
   async function updateSortingPhase(newPhase: string) {
@@ -673,11 +678,6 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
     }
   }
 
-  // 確認ダイアログをキャンセルする関数
-  function handleDialogCancel() {
-    setShowConfirmDialog(false);
-  }
-
   // sortingPhase を使用する箇所を追加（未使用変数エラー対策）
   useEffect(() => {
     if (sortingPhase === 'DONE') {
@@ -720,8 +720,8 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
               height={{ xs: 'auto', md: '600px' }}
             >
               {storeData && (
-                <StoreProductPanel
-                  key={`${storeData.storeId}-${selectedProductIds.length}`}
+                <MemoizedStoreProductPanel
+                  key={storeData.storeId}
                   storeNumber={storeData.storeId}
                   storeName={storeData.storeName}
                   products={products}
