@@ -95,6 +95,11 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
   const [productDataCache, setProductDataCache] = useState<{ [storeId: string]: Product[] }>({});
   const [storeDataCache, setStoreDataCache] = useState<{ [storeId: string]: Store }>({});
 
+  // 商品リストと選択IDリストをメモ化
+  const memoizedProducts = useMemo(() => products, [products]);
+  const memoizedSelectedProductIds = useMemo(() => selectedProductIds, [selectedProductIds]);
+  const memoizedCompletedStoreIds = useMemo(() => completedStores.map(store => store.storeId), [completedStores]);
+
   // 確定ボタンを有効にするための条件をチェックする関数
   const isConfirmButtonEnabled = useMemo(() => {
     // 条件1: 全ての商品が選択されている
@@ -418,7 +423,7 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
     return null;
   }
 
-  // 商品選択ハンドラーを最適化
+  // 商品選択ハンドラーをメモ化
   const handleProductSelect = useCallback((productId: string) => {
     setSelectedProductIds(prev => {
       if (prev.includes(productId)) {
@@ -724,12 +729,12 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
                   key={storeData.storeId}
                   storeNumber={storeData.storeId}
                   storeName={storeData.storeName}
-                  products={products}
-                  selectedProductIds={selectedProductIds}
+                  products={memoizedProducts}
+                  selectedProductIds={memoizedSelectedProductIds}
                   onProductSelect={handleProductSelect}
                   loading={loading}
                   error={error}
-                  completedStoreIds={completedStores.map(store => store.storeId)}
+                  completedStoreIds={memoizedCompletedStoreIds}
                 />
               )}
             </Box>
