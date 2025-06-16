@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import {
   Box,
-  Button,
   Drawer,
   IconButton,
   List,
@@ -20,8 +19,7 @@ import StoreDoubleCheckList from "./StoreDoubleCheckList.tsx";
 import AdditionalOrderInput from "./AdditionalOrderInput.tsx";
 import ExcelUpload from "./ExcelUpload.tsx";
 
-import { Authenticator } from "@aws-amplify/ui-react";
-import "@aws-amplify/ui-react/styles.css";
+
 import { useParams } from "react-router-dom";
 
 const drawerWidth = 240;
@@ -70,14 +68,14 @@ const pageList: {
 
 const App = () => {
     const {departmentId}=useParams();
-    const initialView = departmentId === 'kurosawa' ? 'FinalCheck' : 'SortingCheckScreen'; 
+    const initialView = departmentId === 'office' ? 'FinalCheck' : 'SortingCheckScreen'; 
     const [view, setView] = useState(initialView);
     const [drawerOpen, setDrawerOpen] = useState(false);
 
 
     const filteredPages = useMemo(() => {
-        if (departmentId === 'kurosawa') {
-        return pageList.filter(p => ['Test', 'FinalCheck'].includes(p.key));
+        if (departmentId === 'office') {
+        return pageList.filter(p => ['Test', 'FinalCheck', 'AdditionalOrderInput'].includes(p.key));
         }
         return pageList.filter(p => p.key !== 'FinalCheck');
     }, [departmentId]);
@@ -92,19 +90,8 @@ const App = () => {
     setDrawerOpen(!drawerOpen);
   };
 
-  //アカウント作成時にdepartmentIdを決める
-  const formFields = {
-    signUp: {
-      "custom:departmentId": {
-        label: "部門ID",
-        order: 1,
-      },
-    },
-  };
 
   return (
-    <Authenticator formFields={formFields}>
-      {({ signOut }) => (
         <Box sx={{ minHeight: "100vh", display: "flex" }}>
           <IconButton
             color="primary"
@@ -175,16 +162,14 @@ const App = () => {
                 </ListItem>
               ))}
             </List>
-            <Button onClick={signOut}>Sign out</Button>
+            
           </Drawer>
 
           <Box component="main" sx={{ flexGrow: 1 }}>
             {currentPage && currentPage.component({ navigateTo })}
           </Box>
         </Box>
-      )}
-    </Authenticator>
-  );
+      )
 };
 
 export default App;

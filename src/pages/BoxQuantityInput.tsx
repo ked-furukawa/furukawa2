@@ -1,6 +1,5 @@
 // src/pages/BoxQuantityInput.tsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { fetchUserAttributes } from 'aws-amplify/auth';
 import {
   Box,
   Container,
@@ -19,6 +18,7 @@ import type { Schema } from "../../amplify/data/resource";
 import { StoreProductPanel } from '../components/StoreProductPanel';
 import { OrderData, BoxData, StatusTemplate } from '../types';
 import { groupOrdersByTcAndStore } from '../components/utils/groupOrdersByTcAndStore';
+import { useParams } from 'react-router-dom';
 
 // 型定義
 type BoxColor = 'green' | 'red' | 'blue' | 'yellow';
@@ -75,30 +75,25 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
   const [importId, setImportId] = useState<string | null>(null);
   const [allImportIds, setAllImportIds] = useState<string[]>([]);
 
-  const [departmentId, setDepartmentId] = useState<string>(''); // 初期値を空文字列に変更
+  // const [departmentId, setDepartmentId] = useState<string>(''); // 初期値を空文字列に変更
   const [currentRegion, setCurrentRegion] = useState<string>('中之島'); // 初期値は中之島
 
   // データキャッシュ
   const [orders, setOrders] = useState<OrderData[]>([]);
   const [boxDataCache, setBoxDataCache] = useState<BoxData[]>([]);
 
+const { departmentId } = useParams<{ departmentId: string }>();
+
+
   // 認証情報から部門IDを取得する部分
 useEffect(() => {
   const fetchUserInfo = async () => {
     try {     
-      // ユーザー属性を取得
-      const attributes = await fetchUserAttributes();
-      console.log('ユーザー属性:', attributes);
       
-      // カスタム属性から部門IDを取得
-      const userDepartmentId = attributes['custom:departmentId'];
-      
-      if (userDepartmentId) {
-        console.log('部門ID:', userDepartmentId);
-        setDepartmentId(userDepartmentId);
+      if (departmentId) {
+        console.log('部門ID:', departmentId);
       } else {
-        // 取得できない場合はエラーを設定
-        setError('ユーザーに部門IDが設定されていません');
+        return <div>部門IDが必要です</div>;
       }
     } catch (error) {
       console.error('ユーザー情報の取得に失敗しました:', error);
@@ -376,7 +371,7 @@ useEffect(() => {
     // 店舗の箱データをフィルタリング（データベースアクセスなし）
     const storeBoxData = boxData.filter(box => 
       box.storeId === storeId && 
-      box.boxCreatedBy === departmentId
+      box.boxCreatedBy === departmentId as string
     );
     
     // 選択した店舗が完了済みかどうかをチェック
@@ -486,7 +481,7 @@ useEffect(() => {
         storeTc: storeData.storeTc,
         boxColor: selectedColor,
         boxCount: parseInt(inputValue, 10),
-        departmentId: departmentId,
+        departmentId: departmentId as string,
         status: StatusTemplate.PENDING
       };
       
@@ -504,7 +499,7 @@ useEffect(() => {
           date: currentDate,
           storeId: selectedStoreId,
           boxColor: selectedColor,
-          departmentId: departmentId,
+          departmentId: departmentId as string,
           boxCount: parseInt(inputValue, 10),
           status: StatusTemplate.CONFIRMED
         });

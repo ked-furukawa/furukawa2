@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { TextField, Button, Box, Typography } from '@mui/material';
 import { Schema } from '../../amplify/data/resource';
 import { generateClient } from "aws-amplify/data";
@@ -9,7 +9,6 @@ import testDataBox from '../services/testDataBox.json'
 
 const boxClient = generateClient<Schema>();
 
-import { fetchUserAttributes } from 'aws-amplify/auth';
 
 import {StatusTemplate} from '../types/index.ts';
 
@@ -22,9 +21,12 @@ export const TestComponent = () => {
     const [value, setValue] = useState('');
     const [submittedValue, setSubmittedValue] = useState<number | null>(null);
     const [message, setMessage] = useState<string>('');
-    let { departmentId } = useParams<{ departmentId?: string }>();
-    departmentId = departmentId ?? 'default'; // 'default'は任意の安全な初期値
+    const { departmentId } = useParams<{ departmentId: string }>();
 
+    if (!departmentId) {
+    // エラー処理や、リダイレクト処理
+    return <div>部門IDが必要です</div>;
+    }
 
 
     const fetchProducts = async () => {
