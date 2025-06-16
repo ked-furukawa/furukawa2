@@ -77,7 +77,7 @@ const App = () => {
         if (departmentId === 'office') {
         return pageList.filter(p => ['Test', 'FinalCheck', 'AdditionalOrderInput'].includes(p.key));
         }
-        return pageList.filter(p => p.key !== 'FinalCheck');
+        return pageList.filter(p => p.key !== 'FinalCheck'|| 'AdditionalOrderInput');
     }, [departmentId]);
 
   const navigateTo = (key: string) => {
@@ -135,7 +135,7 @@ const App = () => {
         </Box> */}
 
             <List sx={{ mt: 6 }}>
-              {pageList.map((page) => (
+              {filteredPages.map((page) => (
                 <ListItem key={page.key} disablePadding>
                   <ListItemButton
                     selected={view === page.key}

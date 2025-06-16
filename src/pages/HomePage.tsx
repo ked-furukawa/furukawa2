@@ -48,6 +48,7 @@ const HomePage: React.FC = () => {
               <MenuItem value="furukawa">古川（テスト用）</MenuItem>
               <MenuItem value="kurosawa">黒澤（テスト用）</MenuItem>
               <MenuItem value="sakurai">櫻井（テスト用）</MenuItem>
+              <MenuItem value="office">事務所</MenuItem>
             </Select>
           </FormControl>
           <Box mt={2}>
