@@ -13,8 +13,8 @@ const dynamodbClient = new DynamoDBClient({region: 'ap-northeast-1',});
 // ここで、↑で初期化したDynamoDBClientを用いてDynamoDBDocumentClientを初期化
 const docClient = DynamoDBDocumentClient.from(dynamodbClient);
 
-import { alignmentToDepartmentId } from '../../../src/components/utils/alignmentToDepartmentId';
-import { formatDateToJST } from '../../../src/components/utils/formatDateToJST';
+import { alignmentToDepartmentId } from './utils/alignmentToDepartmentId';
+import { formatDateToJST } from './utils/formatDateToJST'
 
 
 const columnMapping: { [csvKey: string] : string} = {
@@ -100,7 +100,7 @@ function getFormattedTimestamp(): string {//importId作成用
     return `${year}${month}${day}_${hours}${minutes}${seconds}`;//YYYYMMDD_hhmmss形式
 }
 
-export const handler: Handler = async (event, context) => {
+export const handler: Handler = async (event) => {
 
 try {
     // S3イベントからバケット名とオブジェクトキーを取得

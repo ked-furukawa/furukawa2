@@ -57,8 +57,8 @@ export const schema = a.schema({
     .queryField("listBoxesByDate") //フロントでこのメソッド名を使えばこのGSIが使える
     .name("GSI_BoxDateDept"),
   index("date") //GSI 事務所で全部合計する用
-    .sortKeys(["storeId", "boxColor"])
-    .queryField("listBoxesByDateAll")
+    .sortKeys(["storeId"])
+    .queryField("listBoxesByDateAndStore")
     .name("GSI_BoxDateAll")
   ])
   .authorization((allow) => [allow.authenticated()]), //認証情報の設定

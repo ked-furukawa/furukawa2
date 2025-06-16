@@ -89,7 +89,9 @@ const loadProducts = async () => {
   try {
     const attrs = await fetchUserAttributes();
     console.log('attrs:',attrs)
+        console.log('attrs:',attrs)
     const departmentId = attrs['custom:departmentId'] as string;
+        console.log('departmentId:',departmentId)
     if (!departmentId) {
       setError("ユーザー情報が取得できませんでした");
       setLoading(false);
