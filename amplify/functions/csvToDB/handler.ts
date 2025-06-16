@@ -100,7 +100,7 @@ function getFormattedTimestamp(): string {//importId作成用
     return `${year}${month}${day}_${hours}${minutes}${seconds}`;//YYYYMMDD_hhmmss形式
 }
 
-export const handler: Handler = async (event, context) => {
+export const handler: Handler = async (event) => {
 
 try {
     // S3イベントからバケット名とオブジェクトキーを取得
