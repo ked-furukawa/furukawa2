@@ -1,8 +1,7 @@
-import React from 'react';
-import { 
-  Box, 
-  Typography, 
-  Button, 
+import {
+  Box,
+  Typography,
+  Button,
   Paper,
   IconButton,
   Table,
@@ -11,7 +10,6 @@ import {
   TableContainer,
   TableRow
 } from '@mui/material';
-import { useParams, useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 // 仮の商品データ
@@ -22,18 +20,26 @@ const productData = {
   '4': { name: '焼き鳥', expectedCount: 12 },
 };
 
-const ProductDetailScreen: React.FC = () => {
-  const { productId } = useParams<{ productId: string }>();
-  const navigate = useNavigate();
+interface ProductDetailScreenProps {
+  productId?: string;
+  onBack?: () => void;
+  onConfirm?: () => void;
+}
+
+const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ 
+  productId = '1', // デフォルト値を設定
+  onBack = () => {}, // デフォルトは空の関数
+  onConfirm = () => {} // デフォルトは空の関数
+}) => {
   
   // 商品が存在しない場合の処理
-  if (!productId || !productData[productId as keyof typeof productData]) {
+  if (!productData[productId as keyof typeof productData]) {
     return (
       <Box sx={{ p: 3, textAlign: 'center' }}>
         <Typography variant="h6">商品が見つかりません</Typography>
         <Button 
           variant="contained" 
-          onClick={() => navigate(-1)}
+          onClick={onBack}
           sx={{ mt: 2 }}
         >
           戻る
@@ -41,29 +47,29 @@ const ProductDetailScreen: React.FC = () => {
       </Box>
     );
   }
-  
+
   const product = productData[productId as keyof typeof productData];
-  
+
   // 確認完了ボタンを押した時の処理
   const handleConfirm = () => {
     // ここで確認済みとしてマークする処理を実装
     // 例: API呼び出しやステート更新など
     
-    // 前の画面に戻る
-    navigate(-1);
+    // 親コンポーネントに通知
+    onConfirm();
   };
-  
+
   return (
     <Box sx={{ maxWidth: 600, margin: '0 auto', p: 2 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <IconButton onClick={() => navigate(-1)}>
+        <IconButton onClick={onBack}>
           <ArrowBackIcon />
         </IconButton>
         <Typography variant="h5" component="h1">
           {product.name}
         </Typography>
       </Box>
-      
+    
       <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
         <TableContainer>
           <Table>
@@ -79,7 +85,7 @@ const ProductDetailScreen: React.FC = () => {
             </TableBody>
           </Table>
         </TableContainer>
-        
+      
         <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
           <Button
             variant="contained"

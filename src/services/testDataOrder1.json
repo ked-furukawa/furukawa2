@@ -1,0 +1,348 @@
+
+[
+    {
+        "importId": "20250609_103000",
+
+        "date": "20250609",
+
+        "storeId": "019",
+        "storeName": "内野店",
+        "storeTc": "中之島",
+
+        "itemId": "210014",
+        "itemName": "あさり",
+        "itemFormalName": "あさりと生姜の炊き込みご飯",
+        "itemCount": 5,
+
+        "departmentId":  "kurosawa",
+        "departmentName": "黒澤"
+    },
+
+    {
+        "importId": "20250609_103000",
+
+        "date": "20250609",
+
+        "storeId": "025",
+        "storeName": "春日山店",
+        "storeTc": "上越",
+
+        "itemId": "210090",
+        "itemName": "筍",
+        "itemFormalName": "筍とアスパラの炊き込みご飯",
+        "itemCount": 5,
+
+        "departmentId":  "kurosawa",
+        "departmentName": "黒澤"
+    },
+
+    {
+        "importId": "20250609_103000",
+
+        "date": "20250609",
+
+        "storeId": "019",
+        "storeName": "内野店",
+        "storeTc": "中之島",
+
+        "itemId": "210278",
+        "itemName": "かつ重",
+        "itemFormalName": "新かつ重キット",
+        "itemCount": 5,
+
+        "departmentId":  "sakurai",
+        "departmentName": "櫻井"
+    },
+
+    {
+        "importId": "20250609_103000",
+
+        "date": "20250609",
+
+        "storeId": "025",
+        "storeName": "春日山店",
+        "storeTc": "上越",
+
+        "itemId": "210181",
+        "itemName": "デミ",
+        "itemFormalName": "洋風デミカツ丼キット",
+        "itemCount": 5,
+
+        "departmentId":  "sakurai",
+        "departmentName": "櫻井"
+    },
+
+    {
+        "importId": "20250609_103000",
+
+        "date": "20250609",
+
+        "storeId": "019",
+        "storeName": "内野店",
+        "storeTc": "中之島",
+
+        "itemId": "210205",
+        "itemName": "ムネ肉",
+        "itemFormalName": "若鶏ムネ肉あんかけセット",
+        "itemCount": 5,
+
+        "departmentId":  "furukawa",
+        "departmentName": "古川"
+    },
+    
+    {
+        "importId": "20250609_103000",
+
+        "date": "20250609",
+
+        "storeId": "025",
+        "storeName": "春日山店",
+        "storeTc": "上越",
+
+        "itemId": "210126",
+        "itemName": "甘辛",
+        "itemFormalName": "豚肉の甘辛揚げ",
+        "itemCount": 5,
+
+        "departmentId":  "furukawa",
+        "departmentName": "古川"
+    },
+    {
+        "importId": "20250609_103000",
+
+        "date": "20250609",
+
+        "storeId": "028",
+        "storeName": "柏崎東店",
+        "storeTc": "中之島",
+
+        "itemId": "210278",
+        "itemName": "かつ重",
+        "itemFormalName": "新かつ重キット",
+        "itemCount": 5,
+
+        "departmentId":  "sakurai",
+        "departmentName": "櫻井"
+    },
+    {
+        "importId": "20250609_103000",
+
+        "date": "20250609",
+
+        "storeId": "032",
+        "storeName": "五泉店",
+        "storeTc": "中之島",
+
+        "itemId": "210278",
+        "itemName": "かつ重",
+        "itemFormalName": "新かつ重キット",
+        "itemCount": 3,
+
+        "departmentId":  "sakurai",
+        "departmentName": "櫻井"
+    },
+    {
+        "importId": "20250609_103000",
+
+        "date": "20250609",
+
+        "storeId": "019",
+        "storeName": "内野店",
+        "storeTc": "中之島",
+
+        "itemId": "210999",
+        "itemName": "からあげ",
+        "itemFormalName": "からあげ定食キット",
+        "itemCount": 2,
+
+        "departmentId":  "sakurai",
+        "departmentName": "櫻井"
+    },
+    {
+        "importId": "20250609_103000",
+
+        "date": "20250609",
+
+        "storeId": "039",
+        "storeName": "新井中川店",
+        "storeTc": "上越",
+
+        "itemId": "210999",
+        "itemName": "からあげ",
+        "itemFormalName": "からあげ定食キット",
+        "itemCount": 3,
+
+        "departmentId":  "sakurai",
+        "departmentName": "櫻井"
+    },
+    {
+        "importId": "20250609_103000",
+
+        "date": "20250609",
+
+        "storeId": "025",
+        "storeName": "春日山店",
+        "storeTc": "上越",
+
+        "itemId": "210999",
+        "itemName": "からあげ",
+        "itemFormalName": "からあげ定食キット",
+        "itemCount": 1,
+
+        "departmentId":  "sakurai",
+        "departmentName": "櫻井"
+    },
+    {
+        "importId": "20250609_103000",
+
+        "date": "20250609",
+
+        "storeId": "104",
+        "storeName": "中野店",
+        "storeTc": "上越",
+
+        "itemId": "210999",
+        "itemName": "からあげ",
+        "itemFormalName": "からあげ定食キット",
+        "itemCount": 1,
+
+        "departmentId":  "sakurai",
+        "departmentName": "櫻井"
+    },
+    {
+        "importId": "20250609_103000",
+
+        "date": "20250609",
+
+        "storeId": "019",
+        "storeName": "内野店",
+        "storeTc": "中之島",
+
+        "itemId": "210128",
+        "itemName": "天ぷら",
+        "itemFormalName": "天ぷらセット",
+        "itemCount": 3,
+
+        "departmentId":  "sakurai",
+        "departmentName": "櫻井"
+    },
+    {
+        "importId": "20250609_103000",
+
+        "date": "20250609",
+
+        "storeId": "019",
+        "storeName": "内野店",
+        "storeTc": "中之島",
+
+        "itemId": "210111",
+        "itemName": "節分そば",
+        "itemFormalName": "節分そばキット",
+        "itemCount": 2,
+
+        "departmentId":  "sakurai",
+        "departmentName": "櫻井"
+    },
+    {
+        "importId": "20250609_103000",
+
+        "date": "20250609",
+
+        "storeId": "019",
+        "storeName": "内野店",
+        "storeTc": "中之島",
+
+        "itemId": "210200",
+        "itemName": "黒酢",
+        "itemFormalName": "極醸黒酢のまろコク酢豚",
+        "itemCount": 1,
+
+        "departmentId":  "sakurai",
+        "departmentName": "櫻井"
+    },
+    {
+        "importId": "20250609_103000",
+
+        "date": "20250609",
+
+        "storeId": "019",
+        "storeName": "内野店",
+        "storeTc": "中之島",
+
+        "itemId": "210268",
+        "itemName": "かき揚げ",
+        "itemFormalName": "海老かき揚げ（粉付き）",
+        "itemCount": 3,
+
+        "departmentId":  "sakurai",
+        "departmentName": "櫻井"
+    },
+    {
+        "importId": "20250609_103000",
+
+        "date": "20250609",
+
+        "storeId": "019",
+        "storeName": "内野店",
+        "storeTc": "中之島",
+
+        "itemId": "210225",
+        "itemName": "八宝菜",
+        "itemFormalName": "極醸八宝菜セット",
+        "itemCount": 1,
+
+        "departmentId":  "sakurai",
+        "departmentName": "櫻井"
+    },
+    {
+        "importId": "20250609_103000",
+
+        "date": "20250609",
+
+        "storeId": "019",
+        "storeName": "内野店",
+        "storeTc": "中之島",
+
+        "itemId": "210082",
+        "itemName": "バジル",
+        "itemFormalName": "バジルチキンと根菜セット",
+        "itemCount": 1,
+
+        "departmentId":  "sakurai",
+        "departmentName": "櫻井"
+    },
+    {
+        "importId": "20250609_103000",
+
+        "date": "20250609",
+
+        "storeId": "022",
+        "storeName": "十日町店",
+        "storeTc": "中之島",
+
+        "itemId": "210128",
+        "itemName": "天ぷら",
+        "itemFormalName": "天ぷらセット",
+        "itemCount": 5,
+
+        "departmentId":  "sakurai",
+        "departmentName": "櫻井"
+    },
+    {
+        "importId": "20250609_103000",
+
+        "date": "20250609",
+
+        "storeId": "028",
+        "storeName": "柏崎東店",
+        "storeTc": "中之島",
+
+        "itemId": "210128",
+        "itemName": "天ぷら",
+        "itemFormalName": "天ぷらセット",
+        "itemCount": 5,
+
+        "departmentId":  "sakurai",
+        "departmentName": "櫻井"
+    }
+]

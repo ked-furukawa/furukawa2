@@ -1,60 +1,179 @@
 import { useState } from "react";
-import { Button, Box } from '@mui/material';
+import {
+  Box,
+  Button,
+  Drawer,
+  IconButton,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+} from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
+// import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 
-//各画面のimport
-import FinalCheck from "./pages/FinalCheck"
-import Test from "./pages/TestComponent.tsx"
+import FinalCheck from "./pages/FinalCheck";
+import TestComponent from "./pages/TestComponent.tsx";
 import BoxQuantityInput from "./pages/BoxQuantityInput.tsx";
+import SortingCheckScreen from "./pages/SortingCheckScreen.tsx";
+import StoreDoubleCheckList from "./pages/StoreDoubleCheckList.tsx";
+import AdditionalOrderInput from "./pages/AdditionalOrderInput.tsx";
+import ExcelUpload from "./pages/ExcelUpload.tsx";
 
-const pageList = [//- key:stateで使う識別子 - component: 実際に表示する React コンポーネント
-  { key: 'FinalCheck', label: '最終確認', component: <FinalCheck /> },
-  { key: 'Test', label: 'テスト画面', component: <Test /> },
-  { key: 'BoxQuantityInput', label: '仕分け箱数入力', component: <BoxQuantityInput /> },
-  
-  // { key: 'C', label: 'C画面', component: <CComponent /> },
-];
+import { Authenticator } from "@aws-amplify/ui-react";
+import "@aws-amplify/ui-react/styles.css";
+
+const drawerWidth = 240;
 
 const App = () => {
-  const [view, setView] = useState('FinalCheck'); // 初期画面の指定
+  const [view, setView] = useState("FinalCheck");
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // ✅ 今選択されているページ情報を取得
+  const navigateTo = (key: string) => {
+    setView(key);
+  };
+
+  const pageList: {
+    key: string;
+    label: string;
+    component: (props: { navigateTo: (key: string) => void }) => JSX.Element;
+  }[] = [
+    {
+      key: "Test",
+      label: "テスト画面",
+      component: () => <TestComponent />,
+    },
+    {
+      key: "ExcelUpload",
+      label: "S3テスト用",
+      component: () => <ExcelUpload />,
+    },
+    {
+      key: "SortingCheckScreen",
+      label: "仕分け前商品数確認",
+      component: (props) => <SortingCheckScreen {...props} />,
+    },
+    {
+      key: "BoxQuantityInput",
+      label: "仕分け箱数入力",
+      component: (props) => <BoxQuantityInput {...props} />,
+    },
+    {
+      key: "StoreDoubleCheckList",
+      label: "ダブルチェック",
+      component: () => <StoreDoubleCheckList />,
+    },
+    {
+      key: "FinalCheck",
+      label: "最終確認",
+      component: () => <FinalCheck />,
+    },
+    {
+      key: 'AdditionalOrderInput',
+      label: '追加注文',
+      component: () => <AdditionalOrderInput />,
+    },
+  ];
+
   const currentPage = pageList.find((p) => p.key === view);
 
+  const toggleDrawer = () => {
+    setDrawerOpen(!drawerOpen);
+  };
+
+  //アカウント作成時にdepartmentIdを決める
+  const formFields = {
+    signUp: {
+      "custom:departmentId": {
+        label: "部門ID",
+        order: 1,
+      },
+    },
+  };
+
   return (
-    <Box sx={{ minHeight: '100vh' }}>
-    <div>
-      {/* 🔸 ページ切り替えボタンを自動生成 */}
-      <nav>
-        <Box sx={{ position: 'fixed', top: 10, left: 10, zIndex:1300 }}>
-        {pageList.map((page) => (
-          <Button
-          sx={{border: '2px solid #1976d2', //切り替えボタンのスタイル設定
-                borderRadius: '4px',
-                color: '#1976d2',
-                backgroundColor: 'transparent', 
-                '&:hover': { // ホバー時の設定
-                  backgroundColor: '#e3f2fd',
-                  borderColor: '#115293',
-          }}}
-            key={page.key}
-            // 🔁 押されたボタンの key を state にセット
-            onClick={() => setView(page.key)} 
+    <Authenticator formFields={formFields}>
+      {({ signOut }) => (
+        <Box sx={{ minHeight: "100vh", display: "flex" }}>
+          <IconButton
+            color="primary"
+            aria-label="open menu"
+            onClick={toggleDrawer}
+            sx={{
+              position: "fixed",
+              top: 20,
+              left: 20,
+              zIndex: 1300,
+              backgroundColor: "white",
+              boxShadow: 1,
+              "&:hover": {
+                backgroundColor: "#e3f2fd",
+              },
+            }}
           >
-            {page.label}
-          </Button>
-        ))}
+            <MenuIcon />
+          </IconButton>
+
+          {/* サイドバー */}
+          <Drawer
+            disableScrollLock
+            anchor="left"
+            open={drawerOpen}
+            onClose={toggleDrawer}
+            sx={{
+              width: drawerWidth,
+              flexShrink: 0,
+              "& .MuiDrawer-paper": {
+                width: drawerWidth,
+                boxSizing: "border-box",
+                paddingTop: 2,
+              },
+            }}
+          >
+            {/* <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', px: 1 }}>
+          <IconButton onClick={toggleDrawer}>
+            <ChevronLeftIcon />
+          </IconButton>
+        </Box> */}
+
+            <List sx={{ mt: 6 }}>
+              {pageList.map((page) => (
+                <ListItem key={page.key} disablePadding>
+                  <ListItemButton
+                    selected={view === page.key}
+                    onClick={() => {
+                      setView(page.key);
+                      if (window.innerWidth < 600) {
+                        setDrawerOpen(false);
+                      }
+                    }}
+                    sx={{
+                      py: 2,
+                      pl: 3,
+                      borderLeft:
+                        view === page.key
+                          ? "4px solid #1976d2"
+                          : "4px solid transparent",
+                      "&:hover": {
+                        backgroundColor: "#e3f2fd",
+                      },
+                    }}
+                  >
+                    <ListItemText primary={page.label} />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+            <Button onClick={signOut}>Sign out</Button>
+          </Drawer>
+
+          <Box component="main" sx={{ flexGrow: 1 }}>
+            {currentPage && currentPage.component({ navigateTo })}
+          </Box>
         </Box>
-      </nav>
-
-      {/* 🔸 現在のページのコンポーネントを表示 */}
-      <main>
-        {currentPage?.component || <p>ページが見つかりません</p>}
-      </main>
-    </div>
-    </Box>
+      )}
+    </Authenticator>
   );
-
 };
 
 export default App;
-
