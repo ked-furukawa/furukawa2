@@ -58,6 +58,9 @@ backend.addOutput({
 backend.csvToDB.resources.lambda.addToRolePolicy(s3AccessPolicy);
 backend.csvToDB.resources.lambda.addToRolePolicy(dynamoDBAccessPolicy);
 
+//S3のバケット名を環境変数に追加
+backend.csvToDB.addEnvironment("STORAGE_BUCKET_NAME", backend.storage.resources.bucket.bucketName);
+
 // Lambda関数にDynamoDBテーブル名を環境変数として追加
 backend.csvToDB.addEnvironment(
 	'AMPLIFY_DATA_ORDER_TABLE_NAME',

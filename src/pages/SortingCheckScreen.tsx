@@ -24,11 +24,11 @@ import type { Schema } from "../../amplify/data/resource";
 
 import ProductStoresModal from '../components/ProductStoresModal'; //逆引きモーダル
 
-import { fetchUserAttributes } from 'aws-amplify/auth';
 
 const client= generateClient<Schema>();
 
 import { resolveImportId } from "../components/utils/resolveImportId";
+import { useParams } from 'react-router-dom';
 
 
 // 商品データの型定義（Orderモデルベース）
@@ -79,6 +79,8 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
   const [hasNakanoShimaPending, setHasNakanoShimaPending] = useState(false);// 中之島が完了してるかのフラグ 
   const [hasAnyPending, setHasAnyPending] = useState<boolean>(false);
 
+  const {departmentId} = useParams();
+
   const date="20250609" //テスト用固定日付
 
 const loadProducts = async () => {
@@ -87,10 +89,6 @@ const loadProducts = async () => {
   setProducts([]);
 
   try {
-    const attrs = await fetchUserAttributes();
-    console.log('attrs:',attrs)
-        console.log('attrs:',attrs)
-    const departmentId = attrs['custom:departmentId'] as string;
         console.log('departmentId:',departmentId)
     if (!departmentId) {
       setError("ユーザー情報が取得できませんでした");
