@@ -1,244 +1,271 @@
 
 [
     {
-    "date": "2025-06-02",
+    "date": "20250616",
 
     "storeId": "019",
     "storeName": "内野店",
     "storeTc": "中之島",
 
-    "color": "green",
-    "boxCount": 20
+    "boxColor": "green",
+    "boxCount": 20,
+    "departmentId":"sakurai"
     },
     {
-    "date": "2025-06-02",
+    "date": "20250616",
 
     "storeId": "019",
     "storeName": "内野店",
     "storeTc": "中之島",
-    "color": "red",
-    "boxCount": 2
+    "boxColor": "red",
+    "boxCount": 2,
+    "departmentId":"sakurai"
     },
     {
-    "date": "2025-06-02",
+    "date": "20250616",
 
     "storeId": "020",
     "storeName": "吉田店",
     "storeTc": "中之島",
 
-    "color": "green",
-    "boxCount": 30
+    "boxColor": "green",
+    "boxCount": 30,
+    "departmentId":"furukawa"
     },
     {
-    "date": "2025-06-02",
+    "date": "20250616",
 
     "storeId": "020",
     "storeName": "吉田店",
     "storeTc": "中之島",
 
-    "color": "red",
-    "boxCount": 5
+    "boxColor": "red",
+    "boxCount": 5,
+    "departmentId":"furukawa"
     },
     {
-    "date": "2025-06-02",
+    "date": "20250616",
 
     "storeId": "020",
     "storeName": "吉田店",
     "storeTc": "中之島",
 
-    "color": "blue",
-    "boxCount": 1
+    "boxColor": "blue",
+    "boxCount": 1,
+    "departmentId":"kurosawa"
     },
     {
-    "date": "2025-06-02",
+    "date": "20250616",
 
     "storeId": "032",
     "storeName": "五泉店",
     "storeTc": "中之島",
 
-    "color": "green",
-    "boxCount": 12
+    "boxColor": "green",
+    "boxCount": 12,
+    "departmentId":"kurosawa"
     },
     {
-    "date": "2025-06-02",
+    "date": "20250616",
 
     "storeId": "160",
     "storeName": "阿賀野店",
     "storeTc": "中之島",
 
-    "color": "green",
-    "boxCount": 17
+    "boxColor": "green",
+    "boxCount": 17,
+    "departmentId":"kurosawa"
     },
     {
-    "date": "2025-06-02",
+    "date": "20250616",
 
     "storeId": "025",
     "storeName": "春日山店",
     "storeTc": "上越",
 
-    "color": "green",
-    "boxCount": 17
+    "boxColor": "green",
+    "boxCount": 17,
+    "departmentId":"kurosawa"
     },
     {
-    "date": "2025-06-02",
+    "date": "20250616",
 
     "storeId": "040",
     "storeName": "黒部店",
     "storeTc": "上越",
 
-    "color": "green",
-    "boxCount": 10
+    "boxColor": "green",
+    "boxCount": 10,
+    "departmentId":"sakurai"
     },
     {
-    "date": "2025-06-02",
+    "date": "20250616",
 
     "storeId": "123",
     "storeName": "若里店",
     "storeTc": "上越",
 
-    "color": "green",
-    "boxCount": 32
+    "boxColor": "green",
+    "boxCount": 32,
+    "departmentId":"sakurai"
     },
     {
-    "date": "2025-06-02",
+    "date": "20250616",
 
     "storeId": "123",
     "storeName": "若里店",
     "storeTc": "上越",
 
-    "color": "yellow",
-    "boxCount": 1
+    "boxColor": "yellow",
+    "boxCount": 1,
+    "departmentId":"sakurai"
     },
     {
-    "date": "2025-06-02",
+    "date": "20250616",
 
     "storeId": "123",
     "storeName": "若里店",
     "storeTc": "上越",
 
-    "color": "red",
-    "boxCount": 2
+    "boxColor": "red",
+    "boxCount": 2,
+    "departmentId":"sakurai"
     },
     {
-    "date": "2025-06-02",
+    "date": "20250616",
 
     "storeId": "123",
     "storeName": "若里店",
     "storeTc": "上越",
 
-    "color": "red",
-    "boxCount": 100
+    "boxColor": "red",
+    "boxCount": 100,
+    "departmentId":"sakurai"
     },
     {
-    "date": "2025-06-02",
+    "date": "20250616",
     "storeId": "021",
     "storeName": "高田店",
     "storeTc": "上越",
-    "color": "red",
-    "boxCount": 15
+    "boxColor": "red",
+    "boxCount": 15,
+    "departmentId":"sakurai"
     },
     {
-    "date": "2025-06-02",
+    "date": "20250616",
     "storeId": "125",
     "storeName": "直江津店",
     "storeTc": "上越",
-    "color": "yellow",
-    "boxCount": 18
+    "boxColor": "yellow",
+    "boxCount": 18,
+    "departmentId":"sakurai"
     },
     {
-    "date": "2025-06-02",
+    "date": "20250616",
     "storeId": "017",
     "storeName": "青山店",
     "storeTc": "中之島",
-    "color": "green",
-    "boxCount": 20
+    "boxColor": "green",
+    "boxCount": 20,
+    "departmentId":"sakurai"
     },
     {
-    "date": "2025-06-02",
+    "date": "20250616",
     "storeId": "200",
     "storeName": "柏崎店",
     "storeTc": "上越",
-    "color": "blue",
-    "boxCount": 25
+    "boxColor": "blue",
+    "boxCount": 25,
+    "departmentId":"furukawa"
     },
     {
-    "date": "2025-06-02",
+    "date": "20250616",
     "storeId": "023",
     "storeName": "長岡店",
     "storeTc": "中之島",
-    "color": "yellow",
-    "boxCount": 17
+    "boxColor": "yellow",
+    "boxCount": 17,
+    "departmentId":"furukawa"
     },
     {
-    "date": "2025-06-02",
+    "date": "20250616",
     "storeId": "027",
     "storeName": "糸魚川店",
     "storeTc": "上越",
-    "color": "green",
-    "boxCount": 30
+    "boxColor": "green",
+    "boxCount": 30,
+    "departmentId":"furukawa"
     },
     {
-    "date": "2025-06-02",
+    "date": "20250616",
     "storeId": "018",
     "storeName": "寺尾店",
     "storeTc": "中之島",
-    "color": "red",
-    "boxCount": 12
+    "boxColor": "red",
+    "boxCount": 12,
+    "departmentId":"furukawa"
     },
     {
-    "date": "2025-06-02",
+    "date": "20250616",
     "storeId": "024",
     "storeName": "吉田店",
     "storeTc": "上越",
-    "color": "blue",
-    "boxCount": 19
+    "boxColor": "blue",
+    "boxCount": 19,
+    "departmentId":"kurosawa"
     },
     {
-    "date": "2025-06-02",
+    "date": "20250616",
     "storeId": "024",
     "storeName": "吉田店",
     "storeTc": "上越",
-    "color": "yellow",
-    "boxCount": 21
+    "boxColor": "yellow",
+    "boxCount": 21,
+    "departmentId":"kurosawa"
     },
     {
-    "date": "2025-06-02",
+    "date": "20250616",
     "storeId": "026",
     "storeName": "能生店",
     "storeTc": "上越",
-    "color": "green",
-    "boxCount": 14
+    "boxColor": "green",
+    "boxCount": 14,
+    "departmentId":"kurosawa"
     },
     {
-    "date": "2025-06-02",
+    "date": "20250616",
     "storeId": "026",
     "storeName": "能生店",
     "storeTc": "上越",
-    "color": "red",
-    "boxCount": 16
+    "boxColor": "red",
+    "boxCount": 16,
+    "departmentId":"kurosawa"
     },
     {
-    "date": "2025-06-02",
+    "date": "20250616",
     "storeId": "028",
     "storeName": "妙高店",
     "storeTc": "上越",
-    "color": "yellow",
-    "boxCount": 13
+    "boxColor": "yellow",
+    "boxCount": 13,
+    "departmentId":"kurosawa"
     },
     {
-    "date": "2025-06-02",
+    "date": "20250616",
     "storeId": "015",
     "storeName": "新発田店",
     "storeTc": "中之島",
-    "color": "blue",
-    "boxCount": 26
+    "boxColor": "blue",
+    "boxCount": 26,
+    "departmentId":"kurosawa"
     },
     {
-    "date": "2025-06-02",
+    "date": "20250616",
     "storeId": "029",
     "storeName": "三条店",
     "storeTc": "上越",
-    "color": "red",
-    "boxCount": 24
+    "boxColor": "red",
+    "boxCount": 24,
+    "departmentId":"kurosawa"
     }
 ]

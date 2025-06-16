@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Box, Typography, Button, Tooltip } from "@mui/material";
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Box, Typography, Button, Tooltip, Dialog, DialogTitle, IconButton, DialogContent, List, ListItem, ListItemText, Divider } from "@mui/material";
+import CloseIcon from '@mui/icons-material/Close';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -15,6 +16,8 @@ import ExcelJS from 'exceljs';
 import { createDetailListFromTemplate } from '../components/utils/createDetailListFromTemplate';
 import { downloadData } from 'aws-amplify/storage';
 import { saveAs } from 'file-saver';
+import theme from "../theme/theme";
+import React from "react";
 
 // 店舗集計データの型
 interface StoreBoxSummary {
@@ -27,12 +30,28 @@ interface StoreBoxSummary {
     blueBoxes: number;
     yellowBoxes: number;
 }
+type StoreData = {
+    date: string;
+    storeId: string;
+    boxColor: string;
+    boxCount: number;
+    departmentId: string;
+    storeName: string | null;
+    storeTc: string | null;
+    status: string | null;
+    readonly createdAt: string;
+    readonly updatedAt: string;
+};
 
 
 export const FinalCheck = () => {
     const [storeData, setStoreData] = useState<StoreBoxSummary[]>([]);  
     const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
     const [isAllDone, setIsAllDone] = useState(false);
+
+    const [open, setOpen] = useState(false);//モーダル用state
+    const [selectedStoreId, setSelectedStoreId] = useState<string>('');
+    const [boxDetails, setBoxDetails] = useState<StoreData[]>([]);
 
     useEffect(() => {
     const sub = boxClient.models.Box.observeQuery({
@@ -248,6 +267,34 @@ export const FinalCheck = () => {
     );
     }
 
+    // 箱詳細情報を取得する関数
+    const fetchBoxDetails = async (storeId:string, date:string) => {
+    try {
+        const response = await boxClient.models.Box.listBoxesByDateAndStore({
+        date: date,
+        storeId: { eq: storeId }
+        });
+        
+        console.log('取得した箱情報:', response.data);
+        setBoxDetails(response.data || []);
+    } catch (error) {
+        console.error('箱情報の取得エラー:', error);
+        setBoxDetails([]);
+    }
+    };
+
+    const handleStoreClick = async(store:StoreBoxSummary) => {//モーダル開閉用関数
+        setSelectedStoreId(store.storeId);
+        setOpen(true);
+        // 箱詳細情報を取得
+        await fetchBoxDetails(store.storeId, selectedDate?.toISOString().split('T')[0].replace(/-/g, '')||'');
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+        setSelectedStoreId('');
+    };
+
     return (
     <Box sx={{ //表部分の親Box
         display: 'flex',
@@ -296,7 +343,20 @@ export const FinalCheck = () => {
             ].map((store) => (
                 <TableRow key={store.storeId} hover>
                 <TableCell>{store.storeTc}</TableCell>
-                <TableCell>{store.storeId}</TableCell>
+                <TableCell 
+                    sx={{ 
+                    cursor: 'pointer', 
+                    color: 'primary.main', 
+                    textDecoration: 'underline',
+                    '&:hover': {
+                        backgroundColor: 'primary.light',
+                        color: 'white'
+                    }
+                    }}
+                    onClick={() => handleStoreClick(store)}
+                >
+                    {store.storeId}
+                </TableCell>
                 <TableCell>{store.storeName}</TableCell>
                 <TableCell  //店舗IDごとの箱の合計
                     align="right"
@@ -333,6 +393,172 @@ export const FinalCheck = () => {
             </TableBody>
         </Table>
     </TableContainer>
+     {/* モーダル */}
+    <Dialog
+        open={open}
+        onClose={handleClose}
+        maxWidth="sm"
+        fullWidth
+        >
+        <DialogTitle sx={{ 
+            bgcolor: theme.palette.primary.main, 
+            color: 'white',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            py: 2,
+            px: 3
+        }}>
+            <Typography variant="h6" component="div" sx={{ 
+            fontWeight: 'bold',
+            fontSize:  '1.5rem'
+            }}>
+            店舗CD:{selectedStoreId} - 箱数詳細
+            </Typography>
+            <IconButton
+            edge="end"
+            color="inherit"
+            onClick={handleClose}
+            aria-label="close"
+            >
+            <CloseIcon />
+            </IconButton>
+        </DialogTitle>
+        <DialogContent dividers sx={{ p: 0 }}>
+                {boxDetails.length > 0 ? (
+                <List sx={{ width: '100%', bgcolor: 'background.paper', p: 0 }}>
+                    <ListItem sx={{ 
+                    bgcolor: '#f5f5f5', 
+                    py: 1.5,
+                    borderBottom: '1px solid #e0e0e0'
+                    }}>
+                    <ListItemText 
+                        primary={
+                        <Typography 
+                            variant="subtitle1" 
+                            sx={{ 
+                            fontWeight: 'bold',
+                            fontSize: '1.3rem' 
+                            }}
+                        >
+                            部門名
+                        </Typography>
+                        } 
+                        sx={{ flex: 2 }}
+                    />
+                    <ListItemText 
+                        primary={
+                        <Typography 
+                            variant="subtitle1" 
+                            align="right"
+                            sx={{ 
+                            fontWeight: 'bold',
+                            fontSize:'1.3rem'
+                            }}
+                        >
+                            色
+                        </Typography>
+                        } 
+                        sx={{ flex: 1 }}
+                    />
+                    <ListItemText 
+                        primary={
+                        <Typography 
+                            variant="subtitle1" 
+                            align="right"
+                            sx={{ 
+                            fontWeight: 'bold',
+                            fontSize:'1.3rem'
+                            }}
+                        >
+                            箱数
+                        </Typography>
+                        } 
+                        sx={{ flex: 1 }}
+                    />
+                    </ListItem>
+                    
+                    {boxDetails.map((box, index) => (
+                    <React.Fragment key={`${box.storeId}-${index}`}>
+                        <ListItem sx={{ 
+                        py: 2,
+                        '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.04)' }
+                        }}>
+                        <ListItemText 
+                            primary={
+                            <Typography 
+                                variant="body1"
+                                sx={{ 
+                                fontSize: '1.2rem',
+                                fontWeight: 500
+                                }}
+                            >
+                                {box.departmentId === '1souzai' ? '惣菜1' :
+                                box.departmentId === '2souzai' ? '惣菜2' :
+                                box.departmentId === '3souzai' ? '惣菜3' :
+                                box.departmentId === 'kakou1' ? '加工' :
+                                box.departmentId === 'kakou2' ? '加工' :
+                                box.departmentId === 'seiniku' ? '精肉' :
+                                box.departmentId === 'namashitsu1' ? '生室' :
+                                box.departmentId === 'namashitsu2' ? '生室' :
+                                box.departmentId === 'honsyabuturyu' ? '本社物流' :
+                                box.departmentId === 'seika' ? '青果' :
+                                box.departmentId === 'kurosawa' ? '黒澤(テスト用)' :
+                                box.departmentId === 'furukawa' ? '古川(テスト用)' :
+                                box.departmentId === 'sakurai' ? '櫻井(テスト用)' :
+                                box.departmentId}
+                            </Typography>
+                            } 
+                            sx={{ flex: 2 }}
+                        />
+                        <ListItemText 
+                            primary={
+                            <Typography 
+                                variant="body1" 
+                                align="right"
+                                sx={{ 
+                                fontSize: '1.2rem',
+                                fontWeight: 'bold'
+                                }}
+                            >
+                                {box.boxColor === 'red' ? '赤色' : 
+                                box.boxColor === 'blue' ? '青色' : 
+                                box.boxColor === 'green' ? '緑色' : 
+                                box.boxColor === 'yellow' ? '黄色' :
+                                `${box.boxColor}色`}
+                            </Typography>
+                            } 
+                            sx={{ flex: 1 }}
+                        />
+                        <ListItemText 
+                            primary={
+                            <Typography 
+                                variant="body1" 
+                                align="right"
+                                sx={{ 
+                                fontSize: '1.2rem',
+                                fontWeight: 'bold'
+                                }}
+                            >
+                                {box.boxCount}個
+                            </Typography>
+                            } 
+                            sx={{ flex: 1 }}
+                        />
+                        </ListItem>
+                        {index < boxDetails.length - 1 && <Divider />}
+                    </React.Fragment>
+                    ))}
+                </List>
+                ) : (
+                <Box sx={{ p: 3, textAlign: 'center' }}>
+                    <Typography variant="body1" color="text.secondary">
+                    データがありません
+                    </Typography>
+                </Box>
+                )}
+            </DialogContent>
+        </Dialog>
     </Box>
 
     <Box //右表Box
@@ -366,7 +592,7 @@ export const FinalCheck = () => {
             },
         }}
         onClick={handleDownloadExcel}
-        disabled={!isAllDone}
+        disabled={!true}
         >
         明細表をダウンロード
         </Button>
