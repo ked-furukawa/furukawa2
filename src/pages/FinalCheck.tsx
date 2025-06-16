@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Box, Typography, Button, Tooltip, Dialog, DialogTitle, IconButton, DialogContent, List, ListItem, ListItemText, Divider } from "@mui/material";
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Box, Typography, Button, Tooltip, Dialog, DialogTitle, IconButton, DialogContent, List, ListItem, ListItemText, Divider, Tab, Tabs } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -49,6 +49,8 @@ export const FinalCheck = () => {
     const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
     const [isAllDone, setIsAllDone] = useState(false);
 
+    const [tabValue, setTabValue] = useState(0);//タブ切り替え用state
+
     const [open, setOpen] = useState(false);//モーダル用state
     const [selectedStoreId, setSelectedStoreId] = useState<string>('');
     const [boxDetails, setBoxDetails] = useState<StoreData[]>([]);
@@ -62,20 +64,38 @@ export const FinalCheck = () => {
     }
     }).subscribe({ //Boxテーブルの変更をサブスクライブ
         next: ({ items }) => { //変更があった際に呼び出される処理、filterしてないのでBoxテーブル全体がitemsに入っている
-            const storeMap = items.filter((item:Box)=>item !=null)
-            .map(item => ({ //itemsの中身をこの画面で使いたい形にマッピング
-                date: item.date,
-                storeId: item.storeId,
-                storeName: item.storeName,
-                storeTc: item.storeTc,
+            let filteredItems: Box[];
+            //第二工場にある部門のID一覧
+            const dai2 = ['1souzai', '2souzai', '3souzai', 'namashitsu1', 'namashitu2'];
+            if (tabValue === 2) {
+        // 惣菜・生質のみ
+        filteredItems = items.filter(
+            (item) => item != null && dai2.includes(item.departmentId)
+            );
+        } else if (tabValue === 1) {
+            // 上記以外
+            filteredItems = items.filter(
+            (item) => item != null && !dai2.includes(item.departmentId)
+            );
+        } else {
+            // 全件
+            filteredItems = items.filter((item) => item != null);
+        }
+        const storeMap = filteredItems.filter((item:Box)=>item !=null)
+        .map(item => ({ //itemsの中身をこの画面で使いたい形にマッピング
+            date: item.date,
+            storeId: item.storeId,
+            storeName: item.storeName,
+            storeTc: item.storeTc,
+            departmentId: item.departmentId,
 
-                greenBoxes: item.boxColor === 'green' ? item.boxCount : 0,
-                redBoxes: item.boxColor === 'red' ? item.boxCount : 0,
-                blueBoxes: item.boxColor === 'blue' ? item.boxCount : 0,
-                yellowBoxes: item.boxColor === 'yellow' ? item.boxCount : 0
-            })) //マッピングしたものはstoreMapに入っている、以降はこれを使う
+            greenBoxes: item.boxColor === 'green' ? item.boxCount : 0,
+            redBoxes: item.boxColor === 'red' ? item.boxCount : 0,
+            blueBoxes: item.boxColor === 'blue' ? item.boxCount : 0,
+            yellowBoxes: item.boxColor === 'yellow' ? item.boxCount : 0
+        })) //マッピングしたものはstoreMapに入っている、以降はこれを使う
 
-            aggregateStoreData(storeMap);
+        aggregateStoreData(storeMap);
         },
         error: (err) => {
         console.error('データ取得エラー:', err);
@@ -83,7 +103,7 @@ export const FinalCheck = () => {
     });
 
     return () => sub.unsubscribe();
-    }, [selectedDate]);
+    }, [selectedDate,tabValue]);
 
     useEffect(() => {//完了状態を監視
         const sub = boxClient.models.ImportWorkStatus.observeQuery({
@@ -105,6 +125,7 @@ export const FinalCheck = () => {
 
         return () => sub.unsubscribe();
         }, [selectedDate]);
+
 
     const getDetailDataSomehow = () =>{
         console.log("storeData",storeData)
@@ -175,7 +196,12 @@ export const FinalCheck = () => {
     };
 
 
-  // 店舗データの集計
+    //タブ切り替え用関数
+    const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+    };
+
+    // 店舗データの集計
     const aggregateStoreData = (storeMap: any) => {
         const aggregatedMap = new Map<string, StoreBoxSummary>();
 
@@ -313,6 +339,12 @@ export const FinalCheck = () => {
     <Typography variant="h5" component="h2" gutterBottom sx={{ alignSelf: 'flex-start' }}>
         店舗別箱数一覧
     </Typography>
+    <Tabs value={tabValue} onChange={handleTabChange} sx={{ mb: 2 }}>
+        <Tab label="センター" />
+        <Tab label="本社工場" />
+        <Tab label="第二工場" />
+    </Tabs>
+
     
     <TableContainer component={Paper} sx={{ width: '100%',maxHeight: '600px',  overflowY: 'auto', mt: 2 }}>
         <Table stickyHeader aria-label="店舗データテーブル" >
