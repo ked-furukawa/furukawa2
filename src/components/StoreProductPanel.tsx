@@ -1,5 +1,5 @@
 // src/components/StoreProductPanel.tsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
 Box,
 Typography,
@@ -51,6 +51,12 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
     error = null,
     completedStoreIds,
     }) => {
+useEffect(() => {
+    console.log('[StoreProductPanel] mounted or updated:', { storeNumber, storeName });
+    return () => {
+        console.log('[StoreProductPanel] unmounted:', { storeNumber, storeName });
+    };
+}, [storeNumber, storeName]); // 依存配列を追加
         
     return (
         <Paper
