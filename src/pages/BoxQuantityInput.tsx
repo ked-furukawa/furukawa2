@@ -18,7 +18,7 @@ import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../../amplify/data/resource";
 import { StoreProductPanel } from '../components/StoreProductPanel';
 import { OrderData, BoxData, StatusTemplate, OrderStatus } from '../types';
-import { formatDateToJST } from '../components/utils/formatDateToJST';
+// import { formatDateToJST } from '../components/utils/formatDateToJST';
 import { groupOrdersByTcAndStore } from '../components/utils/groupOrdersByTcAndStore';
 import { resolveImportId } from '../components/utils/resolveImportId';
 
@@ -57,11 +57,11 @@ interface BoxQuantityInputProps {
 }
 
 // ImportResult 型の定義（resolveImportId の戻り値型）
-interface ImportResult {
-  importId: string;
-  sortingPhase: string;
-  importProgress: string;
-}
+// interface ImportResult {
+//   importId: string;
+//   sortingPhase: string;
+//   importProgress: string;
+// }
 
 // StoreProductPanelをメモ化
 const MemoizedStoreProductPanel = React.memo(StoreProductPanel);
