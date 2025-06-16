@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Box,
   Button,
@@ -22,60 +22,71 @@ import ExcelUpload from "./ExcelUpload.tsx";
 
 import { Authenticator } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
+import { useParams } from "react-router-dom";
 
 const drawerWidth = 240;
 
+const pageList: {
+        key: string;
+        label: string;
+        component: (props: { navigateTo: (key: string) => void }) => JSX.Element;
+    }[] = [
+        {
+        key: "Test",
+        label: "テスト画面",
+        component: () => <TestComponent />,
+        },
+        {
+        key: "ExcelUpload",
+        label: "S3テスト用",
+        component: () => <ExcelUpload />,
+        },
+        {
+        key: "SortingCheckScreen",
+        label: "仕分け前商品数確認",
+        component: (props) => <SortingCheckScreen {...props} />,
+        },
+        {
+        key: "BoxQuantityInput",
+        label: "仕分け箱数入力",
+        component: (props) => <BoxQuantityInput {...props} />,
+        },
+        {
+        key: "StoreDoubleCheckList",
+        label: "ダブルチェック",
+        component: () => <StoreDoubleCheckList />,
+        },
+        {
+        key: "FinalCheck",
+        label: "最終確認",
+        component: () => <FinalCheck />,
+        },
+        {
+        key: 'AdditionalOrderInput',
+        label: '追加注文',
+        component: () => <AdditionalOrderInput />,
+        },
+    ];
+
 const App = () => {
-  const [view, setView] = useState("FinalCheck");
-  const [drawerOpen, setDrawerOpen] = useState(false);
+    const {departmentId}=useParams();
+    const initialView = departmentId === 'kurosawa' ? 'FinalCheck' : 'SortingCheckScreen'; 
+    const [view, setView] = useState(initialView);
+    const [drawerOpen, setDrawerOpen] = useState(false);
+
+
+    const filteredPages = useMemo(() => {
+        if (departmentId === 'kurosawa') {
+        return pageList.filter(p => ['Test', 'FinalCheck'].includes(p.key));
+        }
+        return pageList.filter(p => p.key !== 'FinalCheck');
+    }, [departmentId]);
 
   const navigateTo = (key: string) => {
     setView(key);
   };
 
-  const pageList: {
-    key: string;
-    label: string;
-    component: (props: { navigateTo: (key: string) => void }) => JSX.Element;
-  }[] = [
-    {
-      key: "Test",
-      label: "テスト画面",
-      component: () => <TestComponent />,
-    },
-    {
-      key: "ExcelUpload",
-      label: "S3テスト用",
-      component: () => <ExcelUpload />,
-    },
-    {
-      key: "SortingCheckScreen",
-      label: "仕分け前商品数確認",
-      component: (props) => <SortingCheckScreen {...props} />,
-    },
-    {
-      key: "BoxQuantityInput",
-      label: "仕分け箱数入力",
-      component: (props) => <BoxQuantityInput {...props} />,
-    },
-    {
-      key: "StoreDoubleCheckList",
-      label: "ダブルチェック",
-      component: () => <StoreDoubleCheckList />,
-    },
-    {
-      key: "FinalCheck",
-      label: "最終確認",
-      component: () => <FinalCheck />,
-    },
-    {
-      key: 'AdditionalOrderInput',
-      label: '追加注文',
-      component: () => <AdditionalOrderInput />,
-    },
-  ];
-
-  const currentPage = pageList.find((p) => p.key === view);
+  const currentPage = filteredPages.find((p) => p.key === view);
 
   const toggleDrawer = () => {
     setDrawerOpen(!drawerOpen);

@@ -14,6 +14,7 @@ import { fetchUserAttributes } from 'aws-amplify/auth';
 import {StatusTemplate} from '../types/index.ts';
 
 import { formatDateToJST } from '../components/utils/formatDateToJST.ts';
+import { useParams } from 'react-router-dom';
 // import { groupOrdersByTcAndStore } from '../components/utils/groupOrdersByTcAndStore.tsx';
 
 
@@ -21,16 +22,10 @@ export const TestComponent = () => {
     const [value, setValue] = useState('');
     const [submittedValue, setSubmittedValue] = useState<number | null>(null);
     const [message, setMessage] = useState<string>('');
-    const [departmentId, setDepartmentId] = useState<string>('');
+    let { departmentId } = useParams<{ departmentId?: string }>();
+    departmentId = departmentId ?? 'default'; // 'default'は任意の安全な初期値
 
-    useEffect(()=>{
-        const fetchDepartmentId = async() =>{
-            const attrs = await fetchUserAttributes();
-            setDepartmentId(attrs['custom:departmentId'] as string)
-        }
-    
-        fetchDepartmentId();
-    },[])
+
 
     const fetchProducts = async () => {
     try {
@@ -52,7 +47,7 @@ export const TestComponent = () => {
         const result = await boxClient.models.Order.listOrdersByDeptAndImport({
         date, // GSI の partitionKey
         departmentIdImportId: {
-            eq: {departmentId:departmentId,
+            eq: {departmentId:departmentId as string,
                 importId:'20250606_130000'} // sortKey の条件
         },
     });
