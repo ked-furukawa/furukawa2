@@ -1,5 +1,5 @@
 import type { Handler } from 'aws-lambda';
-import { env } from '$amplify/env/csv-to-DB'
+// import { env } from '$amplify/env/csv-to-DB'
 
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
@@ -38,6 +38,12 @@ async function streamToString(stream: Readable): Promise<string> {
 
 const date = formatDateToJST(new Date);
 const importId = getFormattedTimestamp();
+
+const REGION = process.env.AWS_REGION || 'ap-northeast-1';
+const TABLES = {
+    order: process.env.ORDER_TABLE_NAME || 'Order',
+    importWorkStatus: process.env.IMPORT_WORK_STATUS_TABLE_NAME || 'ImportWorkStatus'
+};
 
 // マッピング変換
 function mapCsvToDynamoItem(csvRow: { [key: string]: string }): Record<string, any> {
@@ -110,7 +116,7 @@ try {
     console.log(`Processing image from bucket: ${bucket}, key: ${key}`);
 
     //S3からeventファイルを取得
-        const s3Client = new S3Client({ region: env.AWS_REGION || 'ap-northeast-1' });
+        const s3Client = new S3Client(REGION);
         
         const params = { Bucket: bucket, Key: key };
         const s3Object = await s3Client.send(new GetObjectCommand(params));
@@ -144,7 +150,7 @@ try {
         console.log('isArray:', Array.isArray(jsonArray));
 
         try {
-            console.log('tablename',env.AMPLIFY_DATA_ORDER_TABLE_NAME)
+            console.log('tablename',TABLES.order)
             const departmentIdSet = new Set<string>();
             for (const [index,row] of jsonArray.entries()) {//Order登録
                 const storeId = row['店ＣＤ'];
@@ -159,7 +165,7 @@ try {
                 // console.log(`Processing item ${index + 1}:`, JSON.stringify(item));
 
                 const params = {
-                    TableName: env.AMPLIFY_DATA_ORDER_TABLE_NAME,
+                    TableName: TABLES.order,
                     Item: item
                 };
                 const command = new PutCommand(params);
@@ -181,7 +187,7 @@ try {
                 item['departmentId#importId'] = `${item.departmentId}#${item.importId}`
 
                 const params = {
-                    TableName: env.AMPLIFY_DATA_IMPORTWORKSTATUS_TABLE_NAME,
+                    TableName: TABLES.importWorkStatus,
                     Item: item
                 }
                 const command = new PutCommand(params);
