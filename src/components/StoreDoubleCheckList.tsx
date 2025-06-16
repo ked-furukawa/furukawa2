@@ -31,7 +31,7 @@ loading?: boolean;
 error?: string | null;
 boxCounts?: Record<string, Record<string, number>>;
 }
-type BoxColor = 'green' | 'red' | 'blue' | 'yellow';
+type BoxColor = 'green' | 'red' | 'blue' | 'orange';
 
 export const StoreDoubleCheckList: React.FC<StoreDoubleCheckListProps> = ({
 stores,

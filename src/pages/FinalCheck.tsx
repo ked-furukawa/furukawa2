@@ -28,7 +28,7 @@ interface StoreBoxSummary {
     greenBoxes: number;
     redBoxes: number;
     blueBoxes: number;
-    yellowBoxes: number;
+    orangeBoxes: number;
 }
 type StoreData = {
     date: string;
@@ -92,7 +92,7 @@ export const FinalCheck = () => {
             greenBoxes: item.boxColor === 'green' ? item.boxCount : 0,
             redBoxes: item.boxColor === 'red' ? item.boxCount : 0,
             blueBoxes: item.boxColor === 'blue' ? item.boxCount : 0,
-            yellowBoxes: item.boxColor === 'yellow' ? item.boxCount : 0
+            orangeBoxes: item.boxColor === 'orange' ? item.boxCount : 0
         })) //マッピングしたものはstoreMapに入っている、以降はこれを使う
 
         aggregateStoreData(storeMap);
@@ -212,14 +212,14 @@ export const FinalCheck = () => {
                     greenBoxes: 0,
                     redBoxes: 0,
                     blueBoxes: 0,
-                    yellowBoxes: 0
+                    orangeBoxes: 0
                 });
             }
         const aggregated = aggregatedMap.get(item.storeId)!;
             aggregated.greenBoxes += item.greenBoxes;
             aggregated.redBoxes += item.redBoxes;
             aggregated.blueBoxes += item.blueBoxes;
-            aggregated.yellowBoxes += item.yellowBoxes;
+            aggregated.orangeBoxes += item.orangeBoxes;
         });
         const result = Array.from(aggregatedMap.values());
         setStoreData(result)
@@ -232,7 +232,7 @@ export const FinalCheck = () => {
         green: data.reduce((sum: any, s: { greenBoxes: any; }) => sum + s.greenBoxes, 0),
         red: data.reduce((sum: any, s: { redBoxes: any; }) => sum + s.redBoxes, 0),
         blue: data.reduce((sum: any, s: { blueBoxes: any; }) => sum + s.blueBoxes, 0),
-        yellow: data.reduce((sum: any, s: { yellowBoxes: any; }) => sum + s.yellowBoxes, 0),
+        orange: data.reduce((sum: any, s: { orangeBoxes: any; }) => sum + s.orangeBoxes, 0),
     });
 
     const totalNakanoshima = calcTotal(nakanoshimaData); //各TCの合計
@@ -243,7 +243,7 @@ export const FinalCheck = () => {
         green: number;
         red: number;
         blue: number;
-        yellow: number;
+        orange: number;
     };
 
     type SummaryTableProps = {
@@ -271,7 +271,7 @@ export const FinalCheck = () => {
                 <TableCell sx={{ fontWeight: 'bold', bgcolor: 'success.light', boxColor: 'white', }}>Box緑</TableCell>
                 <TableCell sx={{ fontWeight: 'bold', bgcolor: 'error.light', boxColor: 'white', }}>Box赤</TableCell>
                 <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.light', boxColor: 'white', }}>Box青</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'warning.light', boxColor: 'white', }}>Box黄</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'warning.light', boxColor: 'white', }}>Box橙</TableCell>
                 <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.main', boxColor: 'white', }}>合計</TableCell>
                 </TableRow>
             </TableHead>
@@ -280,9 +280,9 @@ export const FinalCheck = () => {
                 <TableCell align="right" sx={cellStyle('success.light', true)}>{total.green}</TableCell>
                 <TableCell align="right" sx={cellStyle('error.light', true)}>{total.red}</TableCell>
                 <TableCell align="right" sx={cellStyle('primary.light', true)}>{total.blue}</TableCell>
-                <TableCell align="right" sx={cellStyle('warning.light', true)}>{total.yellow}</TableCell>
+                <TableCell align="right" sx={cellStyle('warning.light', true)}>{total.orange}</TableCell>
                 <TableCell align="right" sx={{ fontSize, fontWeight: 'bold' }}>
-                    {total.green + total.red + total.blue + total.yellow}
+                    {total.green + total.red + total.blue + total.orange}
                 </TableCell>
                 </TableRow>
             </TableBody>
@@ -356,7 +356,7 @@ export const FinalCheck = () => {
                 <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'success.light', boxColor: 'white' }}>トートーbox緑</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'error.light', boxColor: 'white' }}>トートーbox赤</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'primary.light', boxColor: 'white' }}>トートーbox青</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'warning.light', boxColor: 'white' }}>トートーbox黄</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'warning.light', boxColor: 'white' }}>トートーbox橙</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'primary.main', boxColor: 'white',width: '15%' }}>合計</TableCell>
             </TableRow>
             </TableHead>
@@ -412,13 +412,13 @@ export const FinalCheck = () => {
                     align="right" 
                     sx={{ fontSize: '1.5rem' , bgcolor: 'warning.light', fontWeight: 'bold' }}
                 >
-                    {store.yellowBoxes}
+                    {store.orangeBoxes}
                 </TableCell>
                 <TableCell //店舗IDごとの全ての合計
                     align="right"
                     sx={{ fontSize: '1.5rem' , fontWeight: 'bold' }}
                 >
-                    {store.greenBoxes + store.redBoxes + store.blueBoxes + store.yellowBoxes}
+                    {store.greenBoxes + store.redBoxes + store.blueBoxes + store.orangeBoxes}
                 </TableCell>
                 </TableRow>
             ))}
@@ -556,7 +556,7 @@ export const FinalCheck = () => {
                                 {box.boxColor === 'red' ? '赤色' : 
                                 box.boxColor === 'blue' ? '青色' : 
                                 box.boxColor === 'green' ? '緑色' : 
-                                box.boxColor === 'yellow' ? '黄色' :
+                                box.boxColor === 'orange' ? '橙色' :
                                 `${box.boxColor}色`}
                             </Typography>
                             } 

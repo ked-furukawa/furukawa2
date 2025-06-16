@@ -23,7 +23,7 @@ import { groupOrdersByTcAndStore } from '../components/utils/groupOrdersByTcAndS
 import { resolveImportId } from '../components/utils/resolveImportId';
 
 // 型定義
-type BoxColor = 'green' | 'red' | 'blue' | 'yellow';
+type BoxColor = 'green' | 'red' | 'blue' | 'orange';
 
 // Amplify クライアントの生成
 const dataClient = generateClient<Schema>();

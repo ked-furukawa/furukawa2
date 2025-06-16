@@ -42,7 +42,7 @@ interface StoresByDestination {
 }
 
 // BoxColor 型の定義
-type BoxColor = 'green' | 'red' | 'blue' | 'yellow';
+type BoxColor = 'green' | 'red' | 'blue' | 'orange';
 
 // BoxData 型の定義を追加
 interface BoxData {

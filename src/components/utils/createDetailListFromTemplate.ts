@@ -8,7 +8,7 @@ interface DetailData {
     greenBoxes: number;
     redBoxes: number;
     blueBoxes: number;
-    yellowBoxes: number;
+    orangeBoxes: number;
 }
 
 export function createDetailListFromTemplate(workbook:ExcelJS.Workbook, detailData:DetailData[]) {
@@ -50,7 +50,7 @@ export function createDetailListFromTemplate(workbook:ExcelJS.Workbook, detailDa
         row.getCell('D').value = item.greenBoxes;
         row.getCell('F').value = item.redBoxes;
         row.getCell('H').value = item.blueBoxes;
-        row.getCell('J').value = item.yellowBoxes;
+        row.getCell('J').value = item.orangeBoxes;
         row.commit();
         const row2 = sheetC.getRow(startRow + i);
         row2.getCell('A').value = item.storeId;
@@ -67,7 +67,7 @@ export function createDetailListFromTemplate(workbook:ExcelJS.Workbook, detailDa
         row.getCell('D').value = item.greenBoxes;
         row.getCell('F').value = item.redBoxes;
         row.getCell('H').value = item.blueBoxes;
-        row.getCell('J').value = item.yellowBoxes;
+        row.getCell('J').value = item.orangeBoxes;
         row.commit();
         const row2 = sheetD.getRow(startRow + i);
         row2.getCell('A').value = item.storeId;

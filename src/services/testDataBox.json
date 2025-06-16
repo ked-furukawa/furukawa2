@@ -116,7 +116,7 @@
     "storeName": "若里店",
     "storeTc": "上越",
 
-    "boxColor": "yellow",
+    "boxColor": "orange",
     "boxCount": 1,
     "departmentId":"sakurai"
     },
@@ -156,7 +156,7 @@
     "storeId": "125",
     "storeName": "直江津店",
     "storeTc": "上越",
-    "boxColor": "yellow",
+    "boxColor": "orange",
     "boxCount": 18,
     "departmentId":"sakurai"
     },
@@ -183,7 +183,7 @@
     "storeId": "023",
     "storeName": "長岡店",
     "storeTc": "中之島",
-    "boxColor": "yellow",
+    "boxColor": "orange",
     "boxCount": 17,
     "departmentId":"furukawa"
     },
@@ -219,7 +219,7 @@
     "storeId": "024",
     "storeName": "吉田店",
     "storeTc": "上越",
-    "boxColor": "yellow",
+    "boxColor": "orange",
     "boxCount": 21,
     "departmentId":"kurosawa"
     },
@@ -246,7 +246,7 @@
     "storeId": "028",
     "storeName": "妙高店",
     "storeTc": "上越",
-    "boxColor": "yellow",
+    "boxColor": "orange",
     "boxCount": 13,
     "departmentId":"kurosawa"
     },
