@@ -13,8 +13,8 @@ const dynamodbClient = new DynamoDBClient({region: 'ap-northeast-1',});
 // ここで、↑で初期化したDynamoDBClientを用いてDynamoDBDocumentClientを初期化
 const docClient = DynamoDBDocumentClient.from(dynamodbClient);
 
-import { alignmentToDepartmentId } from '../../../src/components/utils/alignmentToDepartmentId';
-import { formatDateToJST } from '../../../src/components/utils/formatDateToJST';
+import { alignmentToDepartmentId } from './utils/alignmentToDepartmentId';
+import { formatDateToJST } from './utils/formatDateToJST'
 
 
 const columnMapping: { [csvKey: string] : string} = {
