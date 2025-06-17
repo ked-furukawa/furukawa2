@@ -22,6 +22,7 @@ import ExcelUpload from "./pages/ExcelUpload.tsx";
 
 import { Authenticator } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
+import Cutlet from "./pages/Cutlet.tsx";
 
 const drawerWidth = 240;
 
@@ -72,6 +73,11 @@ const App = () => {
       key: 'AdditionalOrderInput',
       label: '追加注文',
       component: () => <AdditionalOrderInput />,
+    },
+    {
+      key: 'Cutlet',
+      label: '特殊注文',
+      component: () => <Cutlet />,
     },
   ];
 
