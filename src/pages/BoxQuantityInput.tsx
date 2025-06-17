@@ -129,10 +129,21 @@ useEffect(() => {
     [completedStores]
   );
  
-  // フィルタリングされた店舗リスト（メモ化）
-  const filteredStores = useMemo(() => {
-    return allStores.filter(store => store.storeTc === currentRegion);
-  }, [allStores, currentRegion]);
+// フィルタリングされた店舗リスト（メモ化）
+const filteredStores = useMemo(() => {
+  const filtered = allStores.filter(store => store.storeTc === currentRegion);
+  
+  // 店舗IDで昇順にソート
+  filtered.sort((a, b) => {
+    // 数値として比較（店舗IDが数値の場合）
+    const storeIdA = parseInt(a.storeId, 10);
+    const storeIdB = parseInt(b.storeId, 10);
+    
+    return storeIdA - storeIdB;
+  });
+  
+  return filtered;
+}, [allStores, currentRegion]);
 
 // 初期データの一括取得
 useEffect(() => {
@@ -328,14 +339,34 @@ const fetchAllData = async () => {
     setCompletedStores(completed);
   }
 
-  // グループ化された注文データから店舗リストを抽出
-  function extractStoresFromGroupedOrders(
-    groupedOrders: { [storeTc: string]: { [storeId: string]: OrderData[] } }
-  ): Store[] {
-    const stores: Store[] = [];
-   
-    Object.keys(groupedOrders).forEach(storeTc => {
-      Object.keys(groupedOrders[storeTc]).forEach(storeId => {
+// グループ化された注文データから店舗リストを抽出（物流センターごとにグループ化して店舗IDで昇順ソート）
+function extractStoresFromGroupedOrders(
+  groupedOrders: { [storeTc: string]: { [storeId: string]: OrderData[] } }
+): Store[] {
+  const stores: Store[] = [];
+  
+  // 物流センターの順序を定義（中之島を先に処理）
+  const tcOrder = ['中之島', '上越'];
+  
+  // 物流センターの順序に従って処理
+  tcOrder.forEach(storeTc => {
+    if (groupedOrders[storeTc]) {
+      // 各物流センター内の店舗をIDで昇順ソート
+      const storeIds = Object.keys(groupedOrders[storeTc]).sort((a, b) => {
+        // 数値として比較（店舗IDが数値の場合）
+        const storeIdA = parseInt(a, 10);
+        const storeIdB = parseInt(b, 10);
+        
+        // 数値変換できない場合は文字列として比較
+        if (isNaN(storeIdA) || isNaN(storeIdB)) {
+          return a.localeCompare(b);
+        }
+        
+        return storeIdA - storeIdB;
+      });
+      
+      // ソートされた店舗IDに基づいて店舗リストを作成
+      storeIds.forEach(storeId => {
         const orders = groupedOrders[storeTc][storeId];
         if (orders.length > 0) {
           stores.push({
@@ -345,9 +376,10 @@ const fetchAllData = async () => {
           });
         }
       });
-    });
-   
-    return stores;
+    }
+  });
+  
+  return stores;
   }
 
   // 次の店舗を取得する関数
