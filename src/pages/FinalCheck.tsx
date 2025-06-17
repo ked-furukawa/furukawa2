@@ -136,7 +136,7 @@ export const FinalCheck = () => {
         try{
         // Downloads file content to memory
         const { body ,eTag } = await downloadData({
-        path: "excel-files/1749535537569-納品箱数明細票テンプレート.xlsx"
+        path: "excel-files/納品箱数明細票テンプレート.xlsx"
         }).result;
         console.log('eTag',eTag)
         console.log('body',body)

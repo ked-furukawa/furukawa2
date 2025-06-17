@@ -1,5 +1,5 @@
 // src/components/StoreProductPanel.tsx
-import React, { useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import {
 Box,
 Typography,
@@ -51,12 +51,47 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
     error = null,
     completedStoreIds,
     }) => {
-useEffect(() => {
-    console.log('[StoreProductPanel] mounted or updated:', { storeNumber, storeName });
-    return () => {
-        console.log('[StoreProductPanel] unmounted:', { storeNumber, storeName });
+    // テーブルコンテナへの参照を作成
+    const tableContainerRef = useRef<HTMLDivElement>(null);
+     // タッチされた商品IDを記録するための状態
+    const [touchedProductIds, setTouchedProductIds] = useState<string[]>([]);
+
+        // 商品行タッチ時のハンドラー
+    const handleRowTouch = (productId: string) => {
+    // すでにタッチされている場合は何もしない
+    console.log('Row touched:', productId); // デバッグ用
+    if (touchedProductIds.includes(productId)) {
+        return;
+    }
+    
+    // タッチされた商品IDを記録
+    setTouchedProductIds(prev => [...prev, productId]);
     };
-}, [storeNumber, storeName]); // 依存配列を追加
+    
+    // 商品選択時に自動スクロールを行う関数
+    const handleProductSelect = (productId: string) => {
+        // 元の選択処理を実行
+        onProductSelect(productId);
+        
+        // 少し遅延させてスクロール処理を実行（選択状態の更新後に実行するため）
+        setTimeout(() => {
+            if (tableContainerRef.current) {
+                // 現在のスクロール位置を取得
+                const currentScrollTop = tableContainerRef.current.scrollTop;
+                
+                // 少し下にスクロール（約1アイテム分）
+                const scrollAmount = 60; // スクロール量（ピクセル）- 調整可能
+                
+                // スムーズにスクロール
+                tableContainerRef.current.scrollTo({
+                    top: currentScrollTop + scrollAmount,
+                    behavior: 'smooth'
+                });
+            }
+        }, 100);
+    };
+
+
         
     return (
         <Paper
@@ -147,7 +182,10 @@ useEffect(() => {
             <Typography>商品がありません</Typography>
         </Box>
         ) : (
-        <TableContainer sx={{ flex: 1, overflowY: 'auto' }}>
+        <TableContainer 
+                ref={tableContainerRef} // ここにrefを追加
+                sx={{ flex: 1, overflowY: 'auto' }}
+            >
             <Table stickyHeader size="medium" sx={{ tableLayout: 'fixed' }}>
             <TableHead>
             <TableRow>
@@ -160,13 +198,16 @@ useEffect(() => {
                 {products.map((product) => (
                 <TableRow
                     key={product.id}
-                    hover
-                    selected={completedStoreIds?.includes(storeNumber)||selectedProductIds.includes(product.id)}
+                    hover={!touchedProductIds.includes(product.id)} // タッチ済みの場合はホバー効果を無効化
+                    selected={completedStoreIds?.includes(storeNumber) || selectedProductIds.includes(product.id)}
+                    onClick={() => handleRowTouch(product.id)} // 行タッチ時のハンドラーを追加
                     sx={{
-                        // bgcolor: !product.isChecked ? 'rgba(255, 244, 229, 0.7)' : 'inherit',
-                        cursor: 'pointer'
+                        cursor: touchedProductIds.includes(product.id) ? 'default' : 'pointer', // タッチ済みの場合はカーソルスタイルを変更
+                        backgroundColor: touchedProductIds.includes(product.id) ? 'rgba(144, 202, 249, 0.3)' : 'inherit', // タッチ済みの場合は背景色を変更
+                        '&:hover': {
+                        backgroundColor: touchedProductIds.includes(product.id) ? 'rgba(144, 202, 249, 0.3)' : undefined, // タッチ済みの場合はホバー時の背景色も固定
+                        }
                     }}
-                    // onClick={() => onProductSelect(product.id)} // 行クリックでも選択できるようにする
                     >
                     <TableCell sx={{ 
                     maxWidth: 0, // これが重要: テキストの省略を強制
@@ -221,7 +262,7 @@ useEffect(() => {
                     > 
                     <Checkbox
                         checked={completedStoreIds?.includes(storeNumber)||selectedProductIds.includes(product.id)}
-                        onChange={() => onProductSelect(product.id)}
+                        onChange={() => handleProductSelect(product.id)}
                         sx={{ 
                         '& .MuiSvgIcon-root': { 
                             fontSize: 35 // チェックボックスのサイズを大きく
