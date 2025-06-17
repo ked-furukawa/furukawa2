@@ -42,7 +42,7 @@ interface StoresByDestination {
 }
 
 // BoxColor 型の定義
-type BoxColor = 'green' | 'red' | 'blue' | 'yellow';
+type BoxColor = 'green' | 'red' | 'blue' | 'orange';
 
 // BoxData 型の定義を追加
 interface BoxData {
@@ -196,8 +196,16 @@ useEffect(() => {
         id: dest.id,
         name: dest.name
       },
-      stores: dest.stores
+      // ここで各送り先の店舗を昇順にソート
+      stores: dest.stores.sort((a, b) => Number(a.id) - Number(b.id))
     }));
+    
+    // 送り先の順序を調整（中之島を先頭に）
+    result.sort((a, b) => {
+      if (a.destination.id === '中之島') return -1;
+      if (b.destination.id === '中之島') return 1;
+      return 0;
+    });
     
     setStoresByDestination(result);
     

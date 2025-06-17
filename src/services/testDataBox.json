@@ -116,7 +116,7 @@
     "storeName": "若里店",
     "storeTc": "上越",
 
-    "boxColor": "yellow",
+    "boxColor": "orange",
     "boxCount": 1,
     "departmentId":"sakurai"
     },
@@ -156,7 +156,7 @@
     "storeId": "125",
     "storeName": "直江津店",
     "storeTc": "上越",
-    "boxColor": "yellow",
+    "boxColor": "orange",
     "boxCount": 18,
     "departmentId":"sakurai"
     },
@@ -183,7 +183,7 @@
     "storeId": "023",
     "storeName": "長岡店",
     "storeTc": "中之島",
-    "boxColor": "yellow",
+    "boxColor": "orange",
     "boxCount": 17,
     "departmentId":"furukawa"
     },
@@ -219,7 +219,7 @@
     "storeId": "024",
     "storeName": "吉田店",
     "storeTc": "上越",
-    "boxColor": "yellow",
+    "boxColor": "orange",
     "boxCount": 21,
     "departmentId":"kurosawa"
     },
@@ -246,7 +246,7 @@
     "storeId": "028",
     "storeName": "妙高店",
     "storeTc": "上越",
-    "boxColor": "yellow",
+    "boxColor": "orange",
     "boxCount": 13,
     "departmentId":"kurosawa"
     },
@@ -266,6 +266,231 @@
     "storeTc": "上越",
     "boxColor": "red",
     "boxCount": 24,
-    "departmentId":"kurosawa"
-    }
+    "departmentId":"2souzai"
+    },
+  {
+    "date": "20250616",
+    "storeId": "001",
+    "storeName": "a",
+    "storeTc": "中之島",
+    "boxColor": "green",
+    "boxCount": 1,
+    "departmentId": "sakurai"
+  },
+  {
+    "date": "20250616",
+    "storeId": "002",
+    "storeName": "b",
+    "storeTc": "中之島",
+    "boxColor": "green",
+    "boxCount": 2,
+    "departmentId": "sakurai"
+  },
+  {
+    "date": "20250616",
+    "storeId": "003",
+    "storeName": "c",
+    "storeTc": "中之島",
+    "boxColor": "green",
+    "boxCount": 3,
+    "departmentId": "sakurai"
+  },
+  {
+    "date": "20250616",
+    "storeId": "004",
+    "storeName": "d",
+    "storeTc": "中之島",
+    "boxColor": "green",
+    "boxCount": 4,
+    "departmentId": "sakurai"
+  },
+  {
+    "date": "20250616",
+    "storeId": "005",
+    "storeName": "e",
+    "storeTc": "中之島",
+    "boxColor": "green",
+    "boxCount": 5,
+    "departmentId": "sakurai"
+  },
+  {
+    "date": "20250616",
+    "storeId": "006",
+    "storeName": "f",
+    "storeTc": "中之島",
+    "boxColor": "green",
+    "boxCount": 6,
+    "departmentId": "sakurai"
+  },
+  {
+    "date": "20250616",
+    "storeId": "007",
+    "storeName": "g",
+    "storeTc": "中之島",
+    "boxColor": "green",
+    "boxCount": 7,
+    "departmentId": "sakurai"
+  },
+  {
+    "date": "20250616",
+    "storeId": "008",
+    "storeName": "h",
+    "storeTc": "中之島",
+    "boxColor": "green",
+    "boxCount": 8,
+    "departmentId": "sakurai"
+  },
+  {
+    "date": "20250616",
+    "storeId": "009",
+    "storeName": "i",
+    "storeTc": "中之島",
+    "boxColor": "green",
+    "boxCount": 9,
+    "departmentId": "sakurai"
+  },
+  {
+    "date": "20250616",
+    "storeId": "010",
+    "storeName": "j",
+    "storeTc": "中之島",
+    "boxColor": "green",
+    "boxCount": 10,
+    "departmentId": "sakurai"
+  },
+  {
+    "date": "20250616",
+    "storeId": "011",
+    "storeName": "k",
+    "storeTc": "中之島",
+    "boxColor": "green",
+    "boxCount": 11,
+    "departmentId": "sakurai"
+  },
+  {
+    "date": "20250616",
+    "storeId": "012",
+    "storeName": "l",
+    "storeTc": "中之島",
+    "boxColor": "green",
+    "boxCount": 12,
+    "departmentId": "sakurai"
+  },
+  {
+    "date": "20250616",
+    "storeId": "013",
+    "storeName": "m",
+    "storeTc": "中之島",
+    "boxColor": "green",
+    "boxCount": 13,
+    "departmentId": "sakurai"
+  },
+  {
+    "date": "20250616",
+    "storeId": "014",
+    "storeName": "n",
+    "storeTc": "中之島",
+    "boxColor": "green",
+    "boxCount": 14,
+    "departmentId": "sakurai"
+  },
+  {
+    "date": "20250616",
+    "storeId": "115",
+    "storeName": "o",
+    "storeTc": "中之島",
+    "boxColor": "green",
+    "boxCount": 15,
+    "departmentId": "sakurai"
+  },
+  {
+    "date": "20250616",
+    "storeId": "016",
+    "storeName": "p",
+    "storeTc": "中之島",
+    "boxColor": "green",
+    "boxCount": 16,
+    "departmentId": "sakurai"
+  },
+  {
+    "date": "20250616",
+    "storeId": "117",
+    "storeName": "q",
+    "storeTc": "中之島",
+    "boxColor": "green",
+    "boxCount": 17,
+    "departmentId": "sakurai"
+  },
+  {
+    "date": "20250616",
+    "storeId": "118",
+    "storeName": "r",
+    "storeTc": "中之島",
+    "boxColor": "green",
+    "boxCount": 18,
+    "departmentId": "sakurai"
+  },
+  {
+    "date": "20250616",
+    "storeId": "119",
+    "storeName": "s",
+    "storeTc": "中之島",
+    "boxColor": "green",
+    "boxCount": 19,
+    "departmentId": "sakurai"
+  },
+  {
+    "date": "20250616",
+    "storeId": "120",
+    "storeName": "t",
+    "storeTc": "中之島",
+    "boxColor": "green",
+    "boxCount": 20,
+    "departmentId": "sakurai"
+  },
+  {
+    "date": "20250616",
+    "storeId": "221",
+    "storeName": "u",
+    "storeTc": "中之島",
+    "boxColor": "green",
+    "boxCount": 21,
+    "departmentId": "sakurai"
+  },
+  {
+    "date": "20250616",
+    "storeId": "222",
+    "storeName": "v",
+    "storeTc": "中之島",
+    "boxColor": "green",
+    "boxCount": 22,
+    "departmentId": "sakurai"
+  },
+  {
+    "date": "20250616",
+    "storeId": "223",
+    "storeName": "w",
+    "storeTc": "中之島",
+    "boxColor": "green",
+    "boxCount": 23,
+    "departmentId": "sakurai"
+  },
+  {
+    "date": "20250616",
+    "storeId": "224",
+    "storeName": "x",
+    "storeTc": "中之島",
+    "boxColor": "green",
+    "boxCount": 24,
+    "departmentId": "sakurai"
+  },
+  {
+    "date": "20250616",
+    "storeId": "225",
+    "storeName": "y",
+    "storeTc": "中之島",
+    "boxColor": "green",
+    "boxCount": 25,
+    "departmentId": "sakurai"
+  }
 ]

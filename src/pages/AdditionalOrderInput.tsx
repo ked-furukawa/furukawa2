@@ -80,7 +80,6 @@ interface OrderItem {
   storeTc: string;
   itemId: string;
   itemName: string;
-  // itemFormalName?: string;
   orderCount: number;
   departmentId?: string; 
 }
@@ -95,7 +94,6 @@ const createEmptyOrderItem = (storeTc: string = '中之島', departmentId: strin
   storeTc,
   itemId: '',
   itemName: '',
-  // itemFormalName: '',
   orderCount: 0,
   departmentId
 });
@@ -392,7 +390,6 @@ const AdditionalOrderInput: React.FC = () => {
       ...updatedItems[index],
       itemId: product.productId,
       itemName: product.productName,
-      // itemFormalName: product.formalName || '',
       departmentId: product.departmentId || (selectedDepartment === 'all' ? '' : selectedDepartment)
     };
     setOrderItems(updatedItems);
@@ -522,7 +519,6 @@ const AdditionalOrderInput: React.FC = () => {
           storeTc: selectedDestination,
           itemId: item.itemId,
           itemName: item.itemName,
-          // itemFormalName: item.itemFormalName || null, // 空文字列の場合はnullに
           itemCount: item.orderCount,
           departmentId: item.departmentId || (selectedDepartment === 'all' ? 'additional' : selectedDepartment),
           departmentName: departmentName, // 部門名を追加
@@ -588,68 +584,70 @@ const AdditionalOrderInput: React.FC = () => {
 
       {/* 送り先と店舗選択セクション */}
       <Paper sx={{ p: 3, mb: 3 }}>
-        {/* 送り先選択 - 最初に配置 */}
-        <FormControl fullWidth sx={{ mb: 2 }}>
-          <InputLabel id="destination-select-label">送り先</InputLabel>
-          <Select
-            labelId="destination-select-label"
-            id="destination-select"
-            value={selectedDestination}
-            label="送り先"
-            onChange={handleDestinationChange}
-            disabled={loading}
-          >
-            <MenuItem value="中之島">中之島</MenuItem>
-            <MenuItem value="上越">上越</MenuItem>
-          </Select>
-        </FormControl>
+        {/* 送り先、店舗選択、部門選択を横並びに配置 */}
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 3 }}>
+          {/* 送り先選択 */}
+          <FormControl sx={{ flex: 1, minWidth: { xs: '100%', sm: '30%' } }}>
+            <InputLabel id="destination-select-label">送り先</InputLabel>
+            <Select
+              labelId="destination-select-label"
+              id="destination-select"
+              value={selectedDestination}
+              label="送り先"
+              onChange={handleDestinationChange}
+              disabled={loading}
+            >
+              <MenuItem value="中之島">中之島</MenuItem>
+              <MenuItem value="上越">上越</MenuItem>
+            </Select>
+          </FormControl>
 
-        {/* 店舗選択 - 2番目に配置 */}
-        <FormControl fullWidth sx={{ mb: 2 }} disabled={!selectedDestination}>
-          <InputLabel id="store-select-label">店舗選択</InputLabel>
-          <Select
-            labelId="store-select-label"
-            id="store-select"
-            value={selectedStore}
-            label="店舗選択"
-            onChange={handleStoreChange}
-            disabled={loading || !selectedDestination}
-          >
-            {filteredStores.map((store) => (
-              <MenuItem key={store.id} value={store.storeId}>
-                {store.storeId} - {store.storeName}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+          {/* 店舗選択 */}
+          <FormControl sx={{ flex: 1, minWidth: { xs: '100%', sm: '30%' } }} disabled={!selectedDestination}>
+            <InputLabel id="store-select-label">店舗選択</InputLabel>
+            <Select
+              labelId="store-select-label"
+              id="store-select"
+              value={selectedStore}
+              label="店舗選択"
+              onChange={handleStoreChange}
+              disabled={loading || !selectedDestination}
+            >
+              {filteredStores.map((store) => (
+                <MenuItem key={store.id} value={store.storeId}>
+                  {store.storeId} - {store.storeName}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
-        {/* 部門選択 - 3番目に配置 */}
-        <FormControl fullWidth sx={{ mb: 2 }} disabled={!selectedStore}>
-          <InputLabel id="department-select-label">部門選択</InputLabel>
-          <Select
-            labelId="department-select-label"
-            id="department-select"
-            value={selectedDepartment}
-            label="部門選択"
-            onChange={handleDepartmentChange}
-            disabled={loading || !selectedStore}
-            startAdornment={<FilterListIcon sx={{ mr: 1, color: 'action.active' }} />}
-          >
-            {departments.map((dept) => (
-              <MenuItem key={dept.id} value={dept.id}>
-                {dept.name}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+          {/* 部門選択 */}
+          <FormControl sx={{ flex: 1, minWidth: { xs: '100%', sm: '30%' } }} disabled={!selectedStore}>
+            <InputLabel id="department-select-label">部門選択</InputLabel>
+            <Select
+              labelId="department-select-label"
+              id="department-select"
+              value={selectedDepartment}
+              label="部門選択"
+              onChange={handleDepartmentChange}
+              disabled={loading || !selectedStore}
+              startAdornment={<FilterListIcon sx={{ mr: 1, color: 'action.active' }} />}
+            >
+              {departments.map((dept) => (
+                <MenuItem key={dept.id} value={dept.id}>
+                  {dept.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
 
         {/* 商品入力テーブル */}
         <TableContainer component={Paper} sx={{ mb: 2 }}>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell width="40%">商品</TableCell>
-                {/* <TableCell width="25%">商品呼称（任意）</TableCell> */}
+                <TableCell width="65%">商品</TableCell>
                 <TableCell width="20%">商品数</TableCell>
                 <TableCell width="15%">操作</TableCell>
               </TableRow>
@@ -676,22 +674,6 @@ const AdditionalOrderInput: React.FC = () => {
                       disabled={loading}
                     />
                   </TableCell>
-                  
-                  {/* 商品呼称入力 - 日本語入力に最適化 */}
-                  {/* <TableCell>
-                    <TextField
-                      size="small"
-                      value={item.itemFormalName || ''}
-                      onChange={(e) => handleOrderItemChange(index, 'itemFormalName', e.target.value)}
-                      fullWidth
-                      inputProps={{ 
-                        lang: 'ja',
-                        style: { fontFamily: 'sans-serif' } // 日本語入力に適したフォント
-                      }}
-                      placeholder="任意"
-                      disabled={loading}
-                    />
-                  </TableCell> */}
                   
                   {/* 商品数入力 - 数値入力に最適化 */}
                   <TableCell>
