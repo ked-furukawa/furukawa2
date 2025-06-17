@@ -20,6 +20,7 @@ import { StoreProductPanel } from '../components/StoreProductPanel';
 import { OrderData, BoxData, StatusTemplate, OrderStatus } from '../types';
 // import { formatDateToJST } from '../components/utils/formatDateToJST';
 import { groupOrdersByTcAndStore } from '../components/utils/groupOrdersByTcAndStore';
+import { useParams } from 'react-router-dom';
 import { resolveImportId } from '../components/utils/resolveImportId';
 
 // 型定義
@@ -56,13 +57,6 @@ interface BoxQuantityInputProps {
   navigateTo: (key: string) => void;
 }
 
-// ImportResult 型の定義（resolveImportId の戻り値型）
-// interface ImportResult {
-//   importId: string;
-//   sortingPhase: string;
-//   importProgress: string;
-// }
-
 // StoreProductPanelをメモ化
 const MemoizedStoreProductPanel = React.memo(StoreProductPanel);
 
@@ -85,7 +79,6 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
   const [refreshKey, setRefreshKey] = useState(0);
   const [currentDate, setCurrentDate] = useState<string>('');
   const [importId, setImportId] = useState<string>(''); // null から '' に変更
-  const [departmentId, setDepartmentId] = useState<string>('');
   const [currentRegion, setCurrentRegion] = useState<string>('中之島');
   const [sortingPhase, setSortingPhase] = useState<string>('PENDING');
 
@@ -99,6 +92,8 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
   const memoizedProducts = useMemo(() => products, [products]);
   const memoizedSelectedProductIds = useMemo(() => selectedProductIds, [selectedProductIds]);
   const memoizedCompletedStoreIds = useMemo(() => completedStores.map(store => store.storeId), [completedStores]);
+
+  const {departmentId} = useParams(); //部門ID
 
   // 確定ボタンを有効にするための条件をチェックする関数
   const isConfirmButtonEnabled = useMemo(() => {
@@ -233,11 +228,7 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
       try {
         setLoading(true);
         
-        // ユーザー属性を取得
-        const attributes = await fetchUserAttributes();
-        const userDepartmentId = attributes['custom:departmentId'];
-        
-        if (!userDepartmentId) {
+        if (!departmentId) {
           setError('ユーザーに部門IDが設定されていません');
           return;
         }
@@ -248,7 +239,7 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
         setCurrentDate(today);
         
         // resolveImportId を使用して最新の importId とワークフロー状態を取得
-        const importResult = await resolveImportId(today, userDepartmentId);
+        const importResult = await resolveImportId(today, departmentId);
         if (!importResult || !importResult.importId) {
           setError('有効な importId が見つかりませんでした');
           return;
@@ -276,7 +267,7 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
           date: today,
           departmentIdImportId: {
             eq: {
-              departmentId: userDepartmentId,
+              departmentId: departmentId,
               importId: importResult.importId
             }
           }
@@ -309,7 +300,7 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
         // 箱データを取得
         const boxResponse = await dataClient.models.Box.listBoxesByDate({
           date: today,
-          departmentId: { eq: userDepartmentId }
+          departmentId: { eq: departmentId }
         });
         
         // BoxData の型と実際のデータ構造の違いを解消するためにマッピング
@@ -333,7 +324,6 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
         const stores = extractStoresFromGroupedOrders(groupedOrders);
         
         setAllStores(stores);
-        setDepartmentId(userDepartmentId);
         
         // 最初の店舗を選択
         if (stores.length > 0) {
@@ -509,7 +499,7 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
         storeTc: storeData.storeTc,
         boxColor: selectedColor,
         boxCount: parseInt(inputValue, 10),
-        departmentId: departmentId,
+        departmentId: departmentId as string,
         status: StatusTemplate.CONFIRMED // 直接 CONFIRMED に設定
       };
       
@@ -518,7 +508,7 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
         date: currentDate,
         storeId: selectedStoreId,
         boxColor: selectedColor,
-        departmentId: departmentId
+        departmentId: departmentId as string
       });
       
       if (existingBoxResponse.data) {
@@ -527,7 +517,7 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
           date: currentDate,
           storeId: selectedStoreId,
           boxColor: selectedColor,
-          departmentId: departmentId,
+          departmentId: departmentId as string,
           boxCount: parseInt(inputValue, 10),
           status: StatusTemplate.CONFIRMED
         });

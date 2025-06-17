@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Box, Typography, Button, Tooltip, Dialog, DialogTitle, IconButton, DialogContent, List, ListItem, ListItemText, Divider, Tab, Tabs } from "@mui/material";
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Box, Typography, Button, Tooltip, Dialog, DialogTitle, IconButton, DialogContent, List, ListItem, ListItemText, Divider, Tab, Tabs, ListItemButton } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -42,6 +42,24 @@ type StoreData = {
     readonly createdAt: string;
     readonly updatedAt: string;
 };
+type OrderItem = {
+    importId: string;
+    date: string;
+
+    storeId: string;
+    storeName?: string | null;
+    storeTc?: string | null;
+
+    itemId: string;
+    itemName?: string | null;
+    itemFormalName?: string | null;
+    itemCount: number;
+
+    departmentId: string;
+    departmentName?: string | null;
+
+    status?: string | null;
+};
 
 
 export const FinalCheck = () => {
@@ -53,7 +71,11 @@ export const FinalCheck = () => {
 
     const [open, setOpen] = useState(false);//モーダル用state
     const [selectedStoreId, setSelectedStoreId] = useState<string>('');
+    const [openSecond, setOpenSecond] = useState(false);//二段階目モーダル用state
+    const [selectedDepartmentName, setSelectedDepartmentName] = useState<string>('');
+
     const [boxDetails, setBoxDetails] = useState<StoreData[]>([]);
+    const [orderDetails, setOrderDetails] = useState<OrderItem[]>([]);
 
     const [rawItems, setRawItems] = useState<Box[]>([]);
 
@@ -317,6 +339,37 @@ export const FinalCheck = () => {
     );
     }
 
+        const getDepartmentName = (departmentId:string) => {
+        switch (departmentId) {
+            case '1souzai':
+                return '惣菜1';
+            case '2souzai':
+                return '惣菜2';
+            case '3souzai':
+                return '惣菜3';
+            case 'kakou1':
+            case 'kakou2':
+                return '加工';
+            case 'seiniku':
+                return '精肉';
+            case 'namashitsu1':
+            case 'namashitsu2':
+                return '生室';
+            case 'honsyabuturyu':
+                return '本社物流';
+            case 'seika':
+                return '青果';
+            case 'kurosawa':
+                return '黒澤(テスト用)';
+            case 'furukawa':
+                return '古川(テスト用)';
+            case 'sakurai':
+                return '櫻井(テスト用)';
+            default:
+            return departmentId;
+        }
+        };
+
     // 箱詳細情報を取得する関数
     const fetchBoxDetails = async (storeId:string, date:string) => {
     try {
@@ -333,6 +386,7 @@ export const FinalCheck = () => {
     }
     };
 
+
     const handleStoreClick = async(store:StoreBoxSummary) => {//モーダル開閉用関数
         setSelectedStoreId(store.storeId);
         setOpen(true);
@@ -344,6 +398,64 @@ export const FinalCheck = () => {
         setOpen(false);
         setSelectedStoreId('');
     };
+
+    const fetchOrderDetails = async (departmentId: string,date:string) => {
+    let latestRecord=null
+    try{
+        const { data }= await boxClient.models.ImportWorkStatus.list({
+            filter: {
+            date: {
+                eq:date
+            },
+            departmentId:{
+                eq:departmentId
+            },
+            importProgress:{
+                eq:'DONE'
+            },
+            }
+        });
+        if (!data || data.length === 0) {
+        console.log('該当データがありません。');
+        } else {
+        // importId が文字列で最大のもの（最新）を取得
+        latestRecord = data.reduce((max, current) => {
+            return current.importId > max.importId ? current : max;
+        })};
+    }catch(error){
+        console.error('importId情報の取得エラー:', error);
+    }
+    try {
+        const response = await boxClient.models.Order.listOrdersByDeptAndImport({
+        date: date,
+            departmentIdImportId: {
+                eq: {
+                departmentId: departmentId,
+                importId: latestRecord?.importId  ?? ""
+                }
+            }
+        });
+        
+        console.log('取得したOrder情報:', response.data);
+        setOrderDetails(response.data || []);
+    } catch (error) {
+        console.error('Order情報の取得エラー:', error);
+        setOrderDetails([]);
+    }
+    };
+
+    const handleDepartmentClick = async(box:StoreData) => {//モーダル開閉用関数
+        const departmentName = getDepartmentName(box.departmentId);
+        setSelectedDepartmentName(departmentName);
+        setOpenSecond(true);
+        await fetchOrderDetails(box.departmentId, selectedDate?.toISOString().split('T')[0].replace(/-/g, '')||'');
+    };
+
+    const handleClose2 = () => {
+        setOpenSecond(false);
+        setSelectedDepartmentName('');
+    };
+
 
     return (
     <Box sx={{ //表部分の親Box
@@ -536,7 +648,10 @@ export const FinalCheck = () => {
                     
                     {boxDetails.map((box, index) => (
                     <React.Fragment key={`${box.storeId}-${index}`}>
-                        <ListItem sx={{ 
+                        <ListItemButton
+                            onClick={() => {
+                            handleDepartmentClick(box)
+                            }} sx={{ 
                         py: 2,
                         '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.04)' }
                         }}>
@@ -549,20 +664,7 @@ export const FinalCheck = () => {
                                 fontWeight: 500
                                 }}
                             >
-                                {box.departmentId === '1souzai' ? '惣菜1' :
-                                box.departmentId === '2souzai' ? '惣菜2' :
-                                box.departmentId === '3souzai' ? '惣菜3' :
-                                box.departmentId === 'kakou1' ? '加工' :
-                                box.departmentId === 'kakou2' ? '加工' :
-                                box.departmentId === 'seiniku' ? '精肉' :
-                                box.departmentId === 'namashitsu1' ? '生室' :
-                                box.departmentId === 'namashitsu2' ? '生室' :
-                                box.departmentId === 'honsyabuturyu' ? '本社物流' :
-                                box.departmentId === 'seika' ? '青果' :
-                                box.departmentId === 'kurosawa' ? '黒澤(テスト用)' :
-                                box.departmentId === 'furukawa' ? '古川(テスト用)' :
-                                box.departmentId === 'sakurai' ? '櫻井(テスト用)' :
-                                box.departmentId}
+                            {getDepartmentName(box.departmentId)}
                             </Typography>
                             } 
                             sx={{ flex: 2 }}
@@ -601,11 +703,214 @@ export const FinalCheck = () => {
                             } 
                             sx={{ flex: 1 }}
                         />
-                        </ListItem>
+                        </ListItemButton>
                         {index < boxDetails.length - 1 && <Divider />}
                     </React.Fragment>
                     ))}
                 </List>
+                ) : (
+                <Box sx={{ p: 3, textAlign: 'center' }}>
+                    <Typography variant="body1" color="text.secondary">
+                    データがありません
+                    </Typography>
+                </Box>
+                )}
+            </DialogContent>
+        </Dialog>
+        {/*モーダル2*/}
+        <Dialog open={openSecond} onClose={handleClose2} maxWidth="sm"fullWidth>
+        <DialogTitle sx={{ 
+            bgcolor: theme.palette.primary.main, 
+            color: 'white',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            py: 2,
+            px: 3
+        }}>
+            <Typography variant="h6" component="div" sx={{ 
+            fontWeight: 'bold',
+            fontSize:  '1.5rem'
+            }}>
+            担当部門:{selectedDepartmentName} - 注文詳細
+            </Typography>
+            <IconButton
+            edge="end"
+            color="inherit"
+            onClick={handleClose2}
+            aria-label="close"
+            >
+            <CloseIcon />
+            </IconButton>
+        </DialogTitle>
+        <DialogContent dividers sx={{ p: 0 }}>
+                {boxDetails.length > 0 ? (
+                <List sx={{ width: '100%', bgcolor: 'background.paper', p: 0 }}>
+                    <ListItem sx={{ 
+                    bgcolor: '#f5f5f5', 
+                    py: 1.5,
+                    borderBottom: '1px solid #e0e0e0'
+                    }}>
+                    <ListItemText 
+                        primary={
+                        <Typography 
+                            variant="subtitle1" 
+                            sx={{ 
+                            fontWeight: 'bold',
+                            fontSize: '1.3rem' 
+                            }}
+                        >
+                            TC
+                        </Typography>
+                        } 
+                        sx={{ flex: 2 }}
+                    />
+                    <ListItemText 
+                        primary={
+                        <Typography 
+                            variant="subtitle1" 
+                            align="right"
+                            sx={{ 
+                            fontWeight: 'bold',
+                            fontSize:'1.3rem'
+                            }}
+                        >
+                            店舗番号
+                        </Typography>
+                        } 
+                        sx={{ flex: 1 }}
+                    />
+                    <ListItemText 
+                        primary={
+                        <Typography 
+                            variant="subtitle1" 
+                            align="right"
+                            sx={{ 
+                            fontWeight: 'bold',
+                            fontSize:'1.3rem'
+                            }}
+                        >
+                            店舗名
+                        </Typography>
+                        } 
+                        sx={{ flex: 1 }}
+                    />
+                    <ListItemText 
+                        primary={
+                        <Typography 
+                            variant="subtitle1" 
+                            align="right"
+                            sx={{ 
+                            fontWeight: 'bold',
+                            fontSize:'1.3rem'
+                            }}
+                        >
+                            商品名・規格
+                        </Typography>
+                        } 
+                        sx={{ flex: 1 }}
+                    />
+                    <ListItemText 
+                        primary={
+                        <Typography 
+                            variant="subtitle1" 
+                            align="right"
+                            sx={{ 
+                            fontWeight: 'bold',
+                            fontSize:'1.3rem'
+                            }}
+                        >
+                            注文数
+                        </Typography>
+                        } 
+                        sx={{ flex: 1 }}
+                    />
+                    </ListItem>
+                    {orderDetails.map((order, index) => (
+                    <React.Fragment key={`${order.storeId}-${index}`}>
+                        <ListItem sx={{ 
+                        py: 2,
+                        '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.04)' }
+                        }}>
+                        <ListItemText 
+                            primary={
+                            <Typography 
+                                variant="body1"
+                                sx={{ 
+                                fontSize: '1.2rem',
+                                fontWeight: 500
+                                }}
+                            >
+                            {order.storeTc}
+                            </Typography>
+                            } 
+                            sx={{ flex: 2 }}
+                        />
+                        <ListItemText 
+                            primary={
+                            <Typography 
+                                variant="body1" 
+                                align="right"
+                                sx={{ 
+                                fontSize: '1.2rem',
+                                fontWeight: 'bold'
+                                }}
+                            >
+                                {order.storeId}
+                            </Typography>
+                            } 
+                            sx={{ flex: 1 }}
+                        />
+                        <ListItemText 
+                            primary={
+                            <Typography 
+                                variant="body1" 
+                                align="right"
+                                sx={{ 
+                                fontSize: '1.2rem',
+                                fontWeight: 'bold'
+                                }}
+                            >
+                                {order.storeName}
+                            </Typography>
+                            } 
+                            sx={{ flex: 1 }}
+                        />
+                        <ListItemText 
+                            primary={
+                            <Typography 
+                                variant="body1" 
+                                align="right"
+                                sx={{ 
+                                fontSize: '1.2rem',
+                                fontWeight: 'bold'
+                                }}
+                            >
+                                {order.itemFormalName}
+                            </Typography>
+                            } 
+                            sx={{ flex: 1 }}
+                        />
+                        <ListItemText 
+                            primary={
+                            <Typography 
+                                variant="body1" 
+                                align="right"
+                                sx={{ 
+                                fontSize: '1.2rem',
+                                fontWeight: 'bold'
+                                }}
+                            >
+                                {order.itemCount}個
+                            </Typography>
+                            } 
+                            sx={{ flex: 1 }}
+                        />
+                        </ListItem>
+                        {index < boxDetails.length - 1 && <Divider />}
+                    </React.Fragment>
+                    ))}
+                    </List>
                 ) : (
                 <Box sx={{ p: 3, textAlign: 'center' }}>
                     <Typography variant="body1" color="text.secondary">
