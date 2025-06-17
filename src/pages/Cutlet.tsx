@@ -363,9 +363,9 @@ return (
                 <TableCell>{calc.storeName}</TableCell>
                 <TableCell align="right">{calc.itemCount}</TableCell>
                 <TableCell>
-                    {calc.kitA > 0 && `A×${calc.kitA}`}
+                    {calc.kitA > 0 && `10×${calc.kitA}`}
                     {calc.kitA > 0 && calc.kitB > 0 && ' + '}
-                    {calc.kitB > 0 && `B×${calc.kitB}`}
+                    {calc.kitB > 0 && `20×${calc.kitB}`}
                 </TableCell>
                 <TableCell align="right">{calc.boxCount}</TableCell>
                 <TableCell align="center">
