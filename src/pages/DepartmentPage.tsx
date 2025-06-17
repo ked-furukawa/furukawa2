@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import {
   Box,
+  Button,
   Drawer,
   IconButton,
   List,
@@ -9,6 +10,8 @@ import {
   ListItemText,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
+
+import { useNavigate } from 'react-router-dom';
 // import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 
 import FinalCheck from "./FinalCheck";
@@ -18,6 +21,7 @@ import SortingCheckScreen from "./SortingCheckScreen.tsx";
 import StoreDoubleCheckList from "./StoreDoubleCheckList.tsx";
 import AdditionalOrderInput from "./AdditionalOrderInput.tsx";
 import ExcelUpload from "./ExcelUpload.tsx";
+import SpecialSorting from "./SpecialSorting.tsx";
 
 
 import { useParams } from "react-router-dom";
@@ -64,31 +68,76 @@ const pageList: {
         label: '追加注文',
         component: () => <AdditionalOrderInput />,
         },
+        {
+        key: 'SpecialSorting',
+        label: '特殊注文',
+        component: () => <SpecialSorting />,
+        },
     ];
 
 const App = () => {
-    const {departmentId}=useParams();
-    const initialView = departmentId === 'office' ? 'FinalCheck' : 'SortingCheckScreen'; 
+  const navigate = useNavigate();
+  const {departmentId}=useParams();
+
+    const initialView = useMemo(() => {//初期表示画面
+    if (departmentId === 'office') {
+      return 'FinalCheck';
+    }
+    if (departmentId === 'honsyabuturyu' || departmentId === 'kakou2') {
+      return 'SpecialSorting';
+    }
+    return 'SortingCheckScreen';
+  }, [departmentId]);
     const [view, setView] = useState(initialView);
     const [drawerOpen, setDrawerOpen] = useState(false);
 
 
     const filteredPages = useMemo(() => {
-        if (departmentId === 'office') {
-        return pageList.filter(p => ['Test', 'FinalCheck', 'AdditionalOrderInput'].includes(p.key));
-        }
-        return pageList.filter(p => p.key !== 'FinalCheck'|| 'AdditionalOrderInput');
+      // 無条件に表示する共通ページ
+      const alwaysVisible = ['Test'];
+      // 特定部門に応じた表示許可マップ
+      const departmentAccessMap: Record<string, string[]> = {
+        office: ['FinalCheck', 'AdditionalOrderInput'],
+        honsyabuturyu: ['SpecialSorting'],
+        kakou2: ['SpecialSorting'],
+        seiniku: ['BoxQuantityInput', 'SortingCheckScreen', 'StoreDoubleCheckList'],
+        kakou1: ['BoxQuantityInput', 'SortingCheckScreen', 'StoreDoubleCheckList'],
+        '1souzai': ['BoxQuantityInput', 'SortingCheckScreen', 'StoreDoubleCheckList'],
+        '2souzai': ['BoxQuantityInput', 'SortingCheckScreen', 'StoreDoubleCheckList'],
+        '3souzai': ['BoxQuantityInput', 'SortingCheckScreen', 'StoreDoubleCheckList'],
+        namashitsu1: ['BoxQuantityInput', 'SortingCheckScreen', 'StoreDoubleCheckList'],
+        namashitsu2: ['BoxQuantityInput', 'SortingCheckScreen', 'StoreDoubleCheckList'],
+      };
+      // フルアクセス部門
+      const fullAccessDepartments = ['kurosawa', 'sakurai', 'furukawa'];
+
+      // 表示許可されているキーを構築
+      let allowedKeys = [...alwaysVisible];
+      if (departmentId && fullAccessDepartments.includes(departmentId)) {
+        // フルアクセスならすべて
+        return pageList;
+      }
+      if (departmentId && departmentAccessMap[departmentId]) {
+        allowedKeys = [...allowedKeys, ...departmentAccessMap[departmentId]];
+      }
+
+      return pageList.filter(page => allowedKeys.includes(page.key));
     }, [departmentId]);
 
-  const navigateTo = (key: string) => {
-    setView(key);
-  };
 
-  const currentPage = filteredPages.find((p) => p.key === view);
+    const navigateTo = (key: string) => {
+      setView(key);
+    };
 
-  const toggleDrawer = () => {
-    setDrawerOpen(!drawerOpen);
-  };
+    const currentPage = filteredPages.find((p) => p.key === view);
+
+    const toggleDrawer = () => {
+      setDrawerOpen(!drawerOpen);
+    };
+
+    const goHome = () => {
+      navigate('/');
+    };
 
 
   return (
@@ -162,7 +211,11 @@ const App = () => {
                 </ListItem>
               ))}
             </List>
-            
+            <Box mt={2}>
+                <Button variant="outlined" color="primary" fullWidth onClick={goHome}>
+                トップページに戻る
+                </Button>
+            </Box>
           </Drawer>
 
           <Box component="main" sx={{ flexGrow: 1 }}>

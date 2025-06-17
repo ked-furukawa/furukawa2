@@ -48,6 +48,13 @@ const HomePage: React.FC = () => {
               <MenuItem value="furukawa">古川（テスト用）</MenuItem>
               <MenuItem value="kurosawa">黒澤（テスト用）</MenuItem>
               <MenuItem value="sakurai">櫻井（テスト用）</MenuItem>
+              <MenuItem value="seiniku">本社工場　精肉</MenuItem>
+              <MenuItem value="kakou">本社工場　加工</MenuItem>
+              <MenuItem value="honsyabuturyu">本社工場　本社物流</MenuItem>
+              <MenuItem value="1souzai">第二工場　惣菜1</MenuItem>
+              <MenuItem value="2souzai">第二工場　惣菜2</MenuItem>
+              <MenuItem value="3souzai">第二工場　惣菜3</MenuItem>
+              <MenuItem value="namashitsu">第二工場　生室</MenuItem>
               <MenuItem value="office">事務所</MenuItem>
             </Select>
           </FormControl>
