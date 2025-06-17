@@ -1,6 +1,6 @@
 // src/pages/BoxQuantityInput.tsx
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { fetchUserAttributes } from 'aws-amplify/auth';
+// import { fetchUserAttributes } from 'aws-amplify/auth';
 import {
   Box,
   Container,
