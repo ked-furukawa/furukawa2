@@ -310,6 +310,10 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
       const boxResponse = await dataClient.models.Box.listBoxesByDate({
         date: today,
         departmentId: { eq: userDepartmentId }
+      }, {
+        // GSIの設計に合わせたクエリ
+        limit: 100, // 適切な制限を設定
+        nextToken: null // ページネーションが必要な場合は管理
       });
       
       // BoxData の型と実際のデータ構造の違いを解消するためにマッピング
@@ -527,30 +531,30 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
       };
       
       // 既存の箱データを検索（DynamoDBから直接）
-      const existingBoxResponse = await dataClient.models.Box.get({
-        date: currentDate,
-        storeId: selectedStoreId,
-        boxColor: selectedColor,
-        departmentId: departmentId
-      });
-      
-      if (existingBoxResponse.data) {
-        // 更新
-        await dataClient.models.Box.update({
-          date: currentDate,
-          storeId: selectedStoreId,
-          boxColor: selectedColor,
-          departmentId: departmentId,
-          boxCount: parseInt(inputValue, 10),
-          status: StatusTemplate.CONFIRMED
-        });
-        
-        console.log('既存の箱データを更新しました');
-      } else {
-        // 新規作成
-        await dataClient.models.Box.create(boxData);
-        console.log('新しい箱データを作成しました');
-      }
+try {
+  // まず更新を試みる
+  await dataClient.models.Box.update({
+    date: currentDate,
+    storeId: selectedStoreId,
+    boxColor: selectedColor,
+    departmentId: departmentId,
+    boxCount: parseInt(inputValue, 10),
+    status: StatusTemplate.CONFIRMED
+  });
+  console.log('既存の箱データを更新しました');
+} catch (error) {
+  // エラーが「レコードが見つからない」場合は新規作成
+  if (error && typeof error === 'object' && 'message' in error && 
+      typeof error.message === 'string' && 
+      error.message.includes('not found')) {
+    
+    await dataClient.models.Box.create(boxData);
+    console.log('新しい箱データを作成しました');
+  } else {
+    console.error('箱データの更新/作成中にエラーが発生しました:', error);
+    throw error; // その他のエラーは再スロー
+  }
+}
       
       // 完了済み店舗リストに追加（既に追加されている場合は更新）
       setCompletedStores(prev => {
@@ -609,10 +613,20 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
         // 中之島エリアの全注文ステータスを更新
         const nakanoshimaStoreIds = regionStores.map(s => s.storeId);
         
-        // 注文ステータスを一括更新（バッチ処理）
-        const updatePromises = orders
-          .filter(order => nakanoshimaStoreIds.includes(order.storeId))
-          .map(order => 
+        // 更新対象の注文を特定
+        const ordersToUpdate = orders.filter(order => 
+          nakanoshimaStoreIds.includes(order.storeId)
+        );
+
+        // バッチサイズの制限（DynamoDBへの負荷を分散）
+        const BATCH_SIZE = 10;
+
+        // バッチ処理
+        for (let i = 0; i < ordersToUpdate.length; i += BATCH_SIZE) {
+          const batch = ordersToUpdate.slice(i, i + BATCH_SIZE);
+          
+          // 現在のバッチの更新プロミスを作成
+          const batchPromises = batch.map(order => 
             dataClient.models.Order.update({
               importId: order.importId,
               date: order.date,
@@ -621,8 +635,17 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
               status: StatusTemplate.DONE
             })
           );
-        
-        await Promise.all(updatePromises);
+          
+          // 現在のバッチを並列処理
+          await Promise.all(batchPromises);
+          
+          // オプション: バッチ間に少し遅延を入れてDynamoDBへの負荷を分散
+          if (i + BATCH_SIZE < ordersToUpdate.length) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+        }
+
+        console.log(`${ordersToUpdate.length}件の注文ステータスを更新しました`);
         
         // 作業フェーズを更新
         await updateSortingPhase('COMPLETED_NAKANOSHIMA');
