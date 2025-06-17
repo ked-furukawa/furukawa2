@@ -1,5 +1,5 @@
 // src/components/StoreProductPanel.tsx
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
 Box,
 Typography,
@@ -55,13 +55,6 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
     const tableContainerRef = useRef<HTMLDivElement>(null);
      // タッチされた商品IDを記録するための状態
     const [touchedProductIds, setTouchedProductIds] = useState<string[]>([]);
-    
-    useEffect(() => {
-        console.log('[StoreProductPanel] mounted or updated:', { storeNumber, storeName });
-        return () => {
-            console.log('[StoreProductPanel] unmounted:', { storeNumber, storeName });
-        };
-    }, [storeNumber, storeName]);
 
         // 商品行タッチ時のハンドラー
     const handleRowTouch = (productId: string) => {
