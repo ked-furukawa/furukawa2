@@ -408,27 +408,22 @@ function extractStoresFromGroupedOrders(
     };
     setStoreData(newStoreData);
    
-    // 店舗の箱データをフィルタリング（データベースアクセスなし）
+    // 店舗の箱データをフィルタリング（現在のimportIdのデータのみ）
     const storeBoxData = boxData.filter(box =>
       box.storeId === storeId &&
-      box.boxCreatedBy === departmentId
+      box.boxCreatedBy === departmentId &&
+      box.importId === importId  // importIdでフィルタリング
     );
    
-    // 選択した店舗が完了済みかどうかをチェック
-    const isCompletedStore = completedStores.some(store => store.storeId === storeId);
-   
     const productList = filtered.map(order => {
-      // 該当する箱データを検索
-      const box = storeBoxData.find(b => b.boxCreatedBy === departmentId);
-     
       return {
         id: order.itemId,
         itemId: order.itemId,
         itemName: order.itemName || '',
         itemFormalName: order.itemFormalName || '',
         orderCount: order.itemCount,
-        quantity: box ? box.boxCount : 0,
-        isChecked: false // デフォルト値を設定
+        quantity: 0,  // 常に0から開始
+        isChecked: false  // 常に未チェックから開始
       };
     });
    
@@ -438,15 +433,8 @@ function extractStoresFromGroupedOrders(
     // 入力値をクリア
     setInputValue('');
    
-    // 完了済み店舗または箱データがある場合、すべての商品を選択状態にする
-    const shouldSelectAll = isCompletedStore || storeBoxData.length > 0;
-    if (shouldSelectAll) {
-      const allProductIds = productList.map(p => p.id);
-      setSelectedProductIds(allProductIds);
-    } else {
-      // 選択をクリア
-      setSelectedProductIds([]);
-    }
+    // 選択をクリア
+    setSelectedProductIds([]);
    
     // 次の店舗を設定
     if (allStores.length > 0) {
@@ -525,7 +513,7 @@ function extractStoresFromGroupedOrders(
     try {
       setSavingData(true);
      
-      // 箱データを準備
+      // 箱データを準備（importIdのみで管理）
       const boxData = {
         date: currentDate,
         storeId: selectedStoreId,
@@ -534,54 +522,25 @@ function extractStoresFromGroupedOrders(
         boxColor: selectedColor,
         boxCount: parseInt(inputValue, 10),
         departmentId: departmentId as string,
-        status: StatusTemplate.PENDING
+        importId: importId  // importIdを追加
       };
      
-      // 既存の箱データを検索（キャッシュから）
-      const existingBox = boxDataCache.find(box =>
-        box.date === currentDate &&
-        box.storeId === selectedStoreId &&
-        box.color === selectedColor &&
-        box.boxCreatedBy === departmentId
-      );
-     
-      if (existingBox) {
-        // 更新（次の段階で修正）
-        await dataClient.models.Box.update({
-          date: currentDate,
-          storeId: selectedStoreId,
-          boxColor: selectedColor,
-          departmentId: departmentId as string,
-          boxCount: parseInt(inputValue, 10),
-          status: StatusTemplate.CONFIRMED
-        });
-       
-        // キャッシュも更新
-        setBoxDataCache(prev => prev.map(box =>
-          box.date === currentDate &&
-          box.storeId === selectedStoreId &&
-          box.color === selectedColor &&
-          box.boxCreatedBy === departmentId
-            ? { ...box, boxCount: parseInt(inputValue, 10), isChecked: true }
-            : box
-        ));
-      } else {
-        // 新規作成
-        const newBox = await dataClient.models.Box.create(boxData);
-        // キャッシュに追加
-        if (newBox.data) {
-          const mappedNewBox: BoxData = {
-            date: newBox.data.date,
-            storeId: newBox.data.storeId,
-            storeName: newBox.data.storeName ?? undefined,
-            storeTc: newBox.data.storeTc ?? undefined,
-            color: newBox.data.boxColor || 'green',
-            boxCount: newBox.data.boxCount,
-            boxCreatedBy: newBox.data.departmentId ?? undefined,
-            isChecked: newBox.data.status === StatusTemplate.CONFIRMED || newBox.data.status === StatusTemplate.DOUBLE_CHECKED
-          };
-          setBoxDataCache(prev => [...prev, mappedNewBox]);
-        }
+      // 新規作成のみ
+      const newBox = await dataClient.models.Box.create(boxData);
+      
+      // キャッシュに追加
+      if (newBox.data) {
+        const mappedNewBox: BoxData = {
+          date: newBox.data.date,
+          storeId: newBox.data.storeId,
+          storeName: newBox.data.storeName ?? undefined,
+          storeTc: newBox.data.storeTc ?? undefined,
+          color: newBox.data.boxColor || 'green',
+          boxCount: newBox.data.boxCount,
+          boxCreatedBy: newBox.data.departmentId ?? undefined,
+          isChecked: true
+        };
+        setBoxDataCache(prev => [...prev, mappedNewBox]);
       }
      
       // 完了済み店舗リストに追加（既に追加されている場合は更新）
