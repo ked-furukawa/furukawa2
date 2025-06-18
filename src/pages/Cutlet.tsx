@@ -53,11 +53,9 @@ interface StoreCalculation {
 storeId: string;
 storeName: string;
 itemCount: number;
-kitA: number;
-kitB: number;
-totalKits: number;
 boxCount: number;
 checked: boolean;
+isOdd: boolean;
 }
 
 // テストデータ（注文数を1/10に修正）
@@ -99,7 +97,7 @@ const testOrderData: OrderData[] = [
     "itemId": "210001",
     "itemName": "ロースカツ",
     "itemFormalName": "ロースカツキット",
-    "itemCount": 11,  
+    "itemCount": 4,  // 40個を表す
     "departmentId": "sakurai",
     "departmentName": "櫻井",
     "status": "PENDING"
@@ -149,31 +147,15 @@ const today = new Date();
 const date = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
 const departmentId = "sakurai";
 
-// キットと箱数の計算ロジック
-const calculateKitsAndBoxes = (itemCount: number): { kitA: number, kitB: number, totalKits: number, boxCount: number } => {
-    // 注文数を実際のカツの数に変換（10倍）
-    const actualCount = itemCount * 10;
-    
-    // 注文数の偶奇で判断
+// 箱数の計算ロジック（修正版）
+const calculateBoxes = (itemCount: number): { boxCount: number, isOdd: boolean } => {
+    // 注文数が奇数かどうか
     const isOdd = itemCount % 2 !== 0;
     
-    let kitA = 0;
-    let kitB = 0;
+    // 箱数: 注文数÷2（端数切り上げ）
+    const boxCount = Math.ceil(itemCount / 2);
     
-    if (isOdd) {
-    // 奇数の場合: キットA×1 + キットB×((注文数×10-10)÷20)
-    kitA = 1;
-    kitB = (actualCount - 10) / 20;
-    } else {
-    // 偶数の場合: キットB×((注文数×10)÷20)
-    kitB = actualCount / 20;
-    }
-    
-    const totalKits = kitA + kitB;
-    // 箱数: キット総数÷2（端数切り上げ）
-    const boxCount = Math.ceil(totalKits / 2);
-    
-    return { kitA, kitB, totalKits, boxCount };
+    return { boxCount, isOdd };
 };
 
 // 注文データの取得
@@ -201,16 +183,14 @@ useEffect(() => {
         
         // 計算を実行
         const calcs = data.map(order => {
-            const { kitA, kitB, totalKits, boxCount } = calculateKitsAndBoxes(order.itemCount);
+            const { boxCount, isOdd } = calculateBoxes(order.itemCount);
             return {
             storeId: order.storeId,
             storeName: order.storeName,
             itemCount: order.itemCount,
-            kitA,
-            kitB,
-            totalKits,
             boxCount,
-            checked: false
+            checked: false,
+            isOdd
             };
         });
         
@@ -344,41 +324,42 @@ return (
     )}
 
     {/* メインコンテンツ - テーブル */}
-        <TableContainer component={Paper} sx={{ mb: 4 }}>
-        <Table>
-            <TableHead>
-            <TableRow sx={{ bgcolor: 'primary.main' }}>
-                <TableCell sx={{ color: 'primary.contrastText' }}>店舗番号</TableCell>
-                <TableCell sx={{ color: 'primary.contrastText' }}>店舗名</TableCell>
-                <TableCell align="right" sx={{ color: 'primary.contrastText' }}>注文数</TableCell>
-                <TableCell sx={{ color: 'primary.contrastText' }}>キット内訳</TableCell>
-                <TableCell align="right" sx={{ color: 'primary.contrastText' }}>箱数</TableCell>
-                <TableCell align="center" sx={{ color: 'primary.contrastText' }}>確認</TableCell>
+    <TableContainer component={Paper} sx={{ mb: 4 }}>
+    <Table>
+        <TableHead>
+        <TableRow sx={{ bgcolor: 'primary.main' }}>
+            <TableCell sx={{ color: 'primary.contrastText', fontSize: '1.1rem', fontWeight: 'bold' }}>店舗番号</TableCell>
+            <TableCell sx={{ color: 'primary.contrastText', fontSize: '1.1rem', fontWeight: 'bold' }}>店舗名</TableCell>
+            <TableCell align="right" sx={{ color: 'primary.contrastText', fontSize: '1.1rem', fontWeight: 'bold' }}>箱数</TableCell>
+            <TableCell align="right" sx={{ color: 'primary.contrastText', fontSize: '1.1rem', fontWeight: 'bold' }}>注文数</TableCell>
+            <TableCell align="center" sx={{ color: 'primary.contrastText', fontSize: '1.1rem', fontWeight: 'bold' }}>確認</TableCell>
+        </TableRow>
+        </TableHead>
+        <TableBody>
+        {calculations.map((calc) => (
+            <TableRow 
+            key={calc.storeId}
+            sx={{ 
+                bgcolor: calc.isOdd ? 'rgba(255, 235, 205, 0.5)' : 'inherit',
+                '&:hover': { bgcolor: calc.isOdd ? 'rgba(255, 235, 205, 0.7)' : 'rgba(0, 0, 0, 0.04)' }
+            }}
+            >
+            <TableCell sx={{ fontSize: '1rem' }}>{calc.storeId}</TableCell>
+            <TableCell sx={{ fontSize: '1rem' }}>{calc.storeName}</TableCell>
+            <TableCell align="right" sx={{ fontSize: '1rem' }}>{calc.boxCount}</TableCell>
+            <TableCell align="right" sx={{ fontSize: '1rem' }}>{calc.itemCount}</TableCell>
+            <TableCell align="center">
+                <Checkbox 
+                checked={calc.checked} 
+                onChange={() => handleCheckboxChange(calc.storeId)}
+                sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}
+                />
+            </TableCell>
             </TableRow>
-            </TableHead>
-            <TableBody>
-            {calculations.map((calc) => (
-                <TableRow key={calc.storeId}>
-                <TableCell>{calc.storeId}</TableCell>
-                <TableCell>{calc.storeName}</TableCell>
-                <TableCell align="right">{calc.itemCount}</TableCell>
-                <TableCell>
-                    {calc.kitA > 0 && `A×${calc.kitA}`}
-                    {calc.kitA > 0 && calc.kitB > 0 && ' + '}
-                    {calc.kitB > 0 && `B×${calc.kitB}`}
-                </TableCell>
-                <TableCell align="right">{calc.boxCount}</TableCell>
-                <TableCell align="center">
-                    <Checkbox 
-                    checked={calc.checked} 
-                    onChange={() => handleCheckboxChange(calc.storeId)} 
-                    />
-                </TableCell>
-                </TableRow>
-            ))}
-            </TableBody>
-        </Table>
-        </TableContainer>
+        ))}
+        </TableBody>
+    </Table>
+    </TableContainer>
 
     {/* フッター */}
     <Box sx={{ 
@@ -391,10 +372,10 @@ return (
         boxShadow: 1
     }}>
         <Box>
-        <Typography variant="body1">
+        <Typography variant="body1" sx={{ fontSize: '1.1rem' }}>
             合計箱数: <strong>{totalBoxes}</strong>
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '1rem' }}>
             確認済み: {checkedCount} / {calculations.length}
         </Typography>
         </Box>
@@ -403,6 +384,7 @@ return (
         color="primary" 
         disabled={checkedCount < calculations.length || loading}
         onClick={confirmBoxes}
+        sx={{ fontSize: '1.1rem', py: 1, px: 3 }}
         >
         {loading ? <CircularProgress size={24} /> : "箱数確定"}
         </Button>
