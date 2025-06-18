@@ -54,7 +54,7 @@ export const schema = a.schema({
   .secondaryIndexes((index) => [ 
   index("date") //GSI 部門ごとに全部取得したいとき用
     .sortKeys(["departmentId"])
-    .queryField("listBoxesByDate") //フロントでこのメソッド名を使えばこのGSIが使える
+    .queryField("listBoxesByDateAndDept") //フロントでこのメソッド名を使えばこのGSIが使える
     .name("GSI_BoxDateDept"),
   index("date") //GSI 事務所で全部合計する用
     .sortKeys(["storeId"])
