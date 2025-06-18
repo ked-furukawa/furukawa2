@@ -616,12 +616,13 @@ if (newlyCompleted.length === nakanoshimaStores.length) {
 // 上越エリア完了時（最後の店舗チェック部分）
 if (!nextStore) {
   try {
-    // ImportWorkStatus の sortingPhase を COMPLETED_JYOETSU に更新
+    // ImportWorkStatus の sortingPhase を COMPLETED_JYOETSU に更新し、importProgress も DONE に更新
     await dataClient.models.ImportWorkStatus.update({
       date: currentDate,
       departmentId: departmentId as string,
       importId: importId,
-      sortingPhase: 'COMPLETED_JYOETSU'
+      sortingPhase: 'COMPLETED_JYOETSU',
+      importProgress: 'DONE' // importProgressをDONEに更新
     });
     
     // 上越エリアの全注文ステータスを更新
