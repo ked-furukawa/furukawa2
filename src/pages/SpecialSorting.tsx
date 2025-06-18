@@ -19,6 +19,9 @@ Alert
 } from '@mui/material';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
+import { useParams } from 'react-router-dom';
+import { formatDateToJST } from '../components/utils/formatDateToJST';
+import { resolveImportId } from '../components/utils/resolveImportId';
 
 const client = generateClient<Schema>();
 
@@ -27,15 +30,15 @@ interface OrderData {
 importId: string;
 date: string;
 storeId: string;
-storeName: string;
-storeTc: string;
+storeName: string|null;
+storeTc: string|null;
 itemId: string;
-itemName: string;
-itemFormalName: string;
+itemName: string|null;
+itemFormalName: string|null;
 itemCount: number;
 departmentId: string;
-departmentName: string;
-status: string;
+departmentName: string|null;
+status: string|null;
 }
 
 interface BoxData {
@@ -51,101 +54,33 @@ status: string;
 
 interface StoreCalculation {
 storeId: string;
-storeName: string;
+storeName: string|null;
 itemCount: number;
 boxCount: number;
 checked: boolean;
 isOdd: boolean;
 }
 
-// テストデータ（注文数を1/10に修正）
-const testOrderData: OrderData[] = [
-{
-    "importId": "20250606_103000",
-    "date": "20250606",
-    "storeId": "001",
-    "storeName": "中央店",
-    "storeTc": "中之島",
-    "itemId": "210001",
-    "itemName": "ロースカツ",
-    "itemFormalName": "ロースカツキット",
-    "itemCount": 5,  // 50個を表す
-    "departmentId": "sakurai",
-    "departmentName": "櫻井",
-    "status": "PENDING"
-},
-{
-    "importId": "20250606_103000",
-    "date": "20250606",
-    "storeId": "002",
-    "storeName": "東店",
-    "storeTc": "中之島",
-    "itemId": "210001",
-    "itemName": "ロースカツ",
-    "itemFormalName": "ロースカツキット",
-    "itemCount": 7,  // 70個を表す
-    "departmentId": "sakurai",
-    "departmentName": "櫻井",
-    "status": "PENDING"
-},
-{
-    "importId": "20250606_103000",
-    "date": "20250606",
-    "storeId": "003",
-    "storeName": "西店",
-    "storeTc": "上越",
-    "itemId": "210001",
-    "itemName": "ロースカツ",
-    "itemFormalName": "ロースカツキット",
-    "itemCount": 4,  // 40個を表す
-    "departmentId": "sakurai",
-    "departmentName": "櫻井",
-    "status": "PENDING"
-},
-{
-    "importId": "20250606_103000",
-    "date": "20250606",
-    "storeId": "004",
-    "storeName": "南店",
-    "storeTc": "上越",
-    "itemId": "210002",
-    "itemName": "棒ヒレカツ",
-    "itemFormalName": "棒ヒレカツキット",
-    "itemCount": 3,  // 30個を表す
-    "departmentId": "sakurai",
-    "departmentName": "櫻井",
-    "status": "PENDING"
-},
-{
-    "importId": "20250606_103000",
-    "date": "20250606",
-    "storeId": "005",
-    "storeName": "北店",
-    "storeTc": "中之島",
-    "itemId": "210002",
-    "itemName": "棒ヒレカツ",
-    "itemFormalName": "棒ヒレカツキット",
-    "itemCount": 6,  // 60個を表す
-    "departmentId": "sakurai",
-    "departmentName": "櫻井",
-    "status": "PENDING"
-}
-];
 
 const SpecialSorting: React.FC = () => {
 const [loading, setLoading] = useState<boolean>(true);
 const [error, setError] = useState<string | null>(null);
-const [itemId, setItemId] = useState<string>("210001"); // デフォルトはロースカツ
-const [itemName, setItemName] = useState<string>("ロースカツ");
 const [orders, setOrders] = useState<OrderData[]>([]);
 const [calculations, setCalculations] = useState<StoreCalculation[]>([]);
 const [totalBoxes, setTotalBoxes] = useState<number>(0);
 const [checkedCount, setCheckedCount] = useState<number>(0);
+const [importId, setImportId] = useState<string>('');
+
+const [currentRegion, setCurrentRegion] = useState<string>('中之島'); // 初期値は中之島
+
+const departmentId = useParams().departmentId!;
 
 // 日付は現在の日付をYYYYMMDD形式で取得
-const today = new Date();
-const date = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
-const departmentId = "sakurai";
+// const today = new Date();
+// const date = formatDateToJST(today);
+const date="20250609"
+
+const itemName = departmentId === 'kakou2' ? '柔らかロースとんかつ' : '棒ヒレカツ';
 
 // 箱数の計算ロジック（修正版）
 const calculateBoxes = (itemCount: number): { boxCount: number, isOdd: boolean } => {
@@ -161,28 +96,42 @@ const calculateBoxes = (itemCount: number): { boxCount: number, isOdd: boolean }
 // 注文データの取得
 useEffect(() => {
     const fetchOrders = async () => {
+        console.log(departmentId)
     try {
         setLoading(true);
+        const importResult= await resolveImportId(date,departmentId)
+        if (!importResult) {
+        setError('有効な importId が見つかりませんでした');
+        return;
+        }
+        setImportId(importResult.importId)
+        // sortingPhase に基づいて currentRegion を設定
+        if (importResult.sortingPhase === 'COMPLETED_NAKANOSHIMA') {
+        // 中之島エリアが完了している場合は上越に切り替え
+        setCurrentRegion('上越');
+        } else {
+        // それ以外の場合は中之島をデフォルトに
+        setCurrentRegion('中之島');
+        }
+
+        const { data } = await client.models.Order.listOrdersByDeptAndImport({
+            date: date,
+            departmentIdImportId: {
+                eq: {
+                departmentId: departmentId,
+                importId: importResult.importId
+                }
+            }
+        });
         
-        // 本番環境では以下のようにAPIから取得
-        // const { data } = await client.models.Order.list({
-        //   filter: {
-        //     date: { eq: date },
-        //     departmentId: { eq: departmentId },
-        //     itemId: { eq: itemId },
-        //     status: { eq: 'PENDING' }
-        //   }
-        // });
-        
-        // テスト用データを使用
-        const data = testOrderData.filter(order => order.itemId === itemId);
-        
-        if (data && data.length > 0) {
-        setOrders(data);
-        setItemName(data[0].itemName);
+        // storeTc === currentRegion の注文だけ残す
+        const filteredOrders = (data || []).filter(order => order.storeTc === currentRegion);
+
+        if (filteredOrders.length > 0) {
+        setOrders(filteredOrders);
         
         // 計算を実行
-        const calcs = data.map(order => {
+        const calcs = filteredOrders.map(order => {
             const { boxCount, isOdd } = calculateBoxes(order.itemCount);
             return {
             storeId: order.storeId,
@@ -192,6 +141,11 @@ useEffect(() => {
             checked: false,
             isOdd
             };
+        }).sort((a, b) => {
+            // isOddがtrueのものを先に
+            if (a.isOdd && !b.isOdd) return -1;
+            if (!a.isOdd && b.isOdd) return 1;
+            return 0;
         });
         
         setCalculations(calcs);
@@ -211,12 +165,7 @@ useEffect(() => {
     };
     
     fetchOrders();
-}, [itemId]);
-
-// 商品切り替え
-const toggleItem = () => {
-    setItemId(prev => prev === "210001" ? "210002" : "210001");
-};
+}, []);
 
 // チェックボックスの状態変更
 const handleCheckboxChange = (storeId: string) => {
@@ -241,47 +190,46 @@ const confirmBoxes = async () => {
     try {
     setLoading(true);
     
-    // 箱の色を商品IDから決定
-    const boxColor = itemId === "210001" ? "green" : "blue";
-    
     // 各店舗の箱数をBoxテーブルに保存
     const savePromises = calculations.map(calc => {
         const boxData: BoxData = {
-        date,
+        date: date,
         storeId: calc.storeId,
-        storeName: calc.storeName,
+        storeName: calc.storeName || "",
         storeTc: orders.find(o => o.storeId === calc.storeId)?.storeTc || "",
-        boxColor,
+        boxColor: "green",
         boxCount: calc.boxCount,
-        departmentId,
+        departmentId: departmentId as string,
         status: "CONFIRMED"
         };
-        
-        // 本番環境では以下のようにAPIで保存
-        // return client.models.Box.create(boxData);
-        
-        // テスト用に成功を返す
-        return Promise.resolve({ success: true, data: boxData });
+        return client.models.Box.create(boxData);
     });
     
     await Promise.all(savePromises);
     
     // 注文のステータスを更新
     const updatePromises = orders.map(order => {
-        // 本番環境では以下のようにAPIで更新
-        // return client.models.Order.update({
-        //   importId: order.importId,
-        //   date: order.date,
-        //   storeId: order.storeId,
-        //   itemId: order.itemId,
-        //   status: "DONE"
-        // });
-        
-        // テスト用に成功を返す
-        return Promise.resolve({ success: true });
+        return client.models.Order.update({
+            importId: order.importId,
+            date: order.date,
+            storeId: order.storeId,
+            itemId: order.itemId,
+            status: "DONE"
+        });
     });
     
     await Promise.all(updatePromises);
+
+    if(currentRegion==="中之島"){
+    // ImportWorkStatus の sortingPhase を COMPLETED_NAKANOSHIMA に更新
+    await client.models.ImportWorkStatus.update({
+        date: date,
+        departmentId: departmentId as string,
+        importId: importId,
+        sortingPhase: 'COMPLETED_NAKANOSHIMA'
+    });
+    }
+    
     
     alert("箱数を確定しました");
     
@@ -305,6 +253,7 @@ if (loading && orders.length === 0) {
     );
 }
 
+
 return (
     <Container maxWidth="md" sx={{ py: 4 }}>
     {/* ヘッダー */}
@@ -312,10 +261,10 @@ return (
         <Typography variant="h4" component="h1" gutterBottom>
         {itemName}
         </Typography>
-        <Button variant="outlined" onClick={toggleItem}>
-        {itemId === "210001" ? "棒ヒレカツに切替" : "ロースカツに切替"}
-        </Button>
     </Box>
+    <Typography variant="h6" color="text.secondary" sx={{ mb: 2, fontWeight: 'bold', fontSize: '1.3rem', color: 'text.primary' }}>
+        <strong>{currentRegion}</strong>
+        </Typography>
 
     {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
@@ -330,8 +279,8 @@ return (
         <TableRow sx={{ bgcolor: 'primary.main' }}>
             <TableCell sx={{ color: 'primary.contrastText', fontSize: '1.1rem', fontWeight: 'bold' }}>店舗番号</TableCell>
             <TableCell sx={{ color: 'primary.contrastText', fontSize: '1.1rem', fontWeight: 'bold' }}>店舗名</TableCell>
-            <TableCell align="right" sx={{ color: 'primary.contrastText', fontSize: '1.1rem', fontWeight: 'bold' }}>箱数</TableCell>
             <TableCell align="right" sx={{ color: 'primary.contrastText', fontSize: '1.1rem', fontWeight: 'bold' }}>注文数</TableCell>
+            <TableCell align="right" sx={{ color: 'primary.contrastText', fontSize: '1.1rem', fontWeight: 'bold' }}>箱数</TableCell>
             <TableCell align="center" sx={{ color: 'primary.contrastText', fontSize: '1.1rem', fontWeight: 'bold' }}>確認</TableCell>
         </TableRow>
         </TableHead>
@@ -346,8 +295,8 @@ return (
             >
             <TableCell sx={{ fontSize: '1rem' }}>{calc.storeId}</TableCell>
             <TableCell sx={{ fontSize: '1rem' }}>{calc.storeName}</TableCell>
-            <TableCell align="right" sx={{ fontSize: '1rem' }}>{calc.boxCount}</TableCell>
             <TableCell align="right" sx={{ fontSize: '1rem' }}>{calc.itemCount}</TableCell>
+            <TableCell align="right" sx={{ fontSize: '1rem' }}>{calc.boxCount}</TableCell>
             <TableCell align="center">
                 <Checkbox 
                 checked={calc.checked} 

@@ -230,6 +230,11 @@ useEffect(() => {
   const rowHeight = isPortrait ? '72px' : '64px';
   const navButtonHeight = isPortrait ? 56 : 50;
 
+  let destination='BoxQuantityInput'
+  if(departmentId==='kakou2' || departmentId==='honsyabuturyu'){
+    destination='SpecialSorting'
+  }
+
 
 
   // ローディング表示
@@ -570,7 +575,7 @@ useEffect(() => {
                   size="large"
                   onClick={() => {
                     setAlertOpen(false);
-                    navigateTo('BoxQuantityInput'); // 任意の画面キーへ遷移
+                    navigateTo(destination); // 任意の画面キーへ遷移
                   }}
                   sx={{ minWidth: 140, fontSize: '1rem', px: 3, py: 1 }}
                 >
