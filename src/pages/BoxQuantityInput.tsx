@@ -1,7 +1,6 @@
 // src/pages/BoxQuantityInput.tsx
 
 import React, { useState, useEffect, useMemo } from 'react';
-// import { fetchUserAttributes } from 'aws-amplify/auth';
 import {
   Box,
   Container,
@@ -19,7 +18,7 @@ import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../../amplify/data/resource";
 import { StoreProductPanel } from '../components/StoreProductPanel';
 import { OrderData, BoxData, StatusTemplate, OrderStatus } from '../types';
-// import { formatDateToJST } from '../components/utils/formatDateToJST';
+import { formatDateToJST } from '../components/utils/formatDateToJST';
 import { groupOrdersByTcAndStore } from '../components/utils/groupOrdersByTcAndStore';
 import { resolveImportId } from '../components/utils/resolveImportId';
 import { useParams } from 'react-router-dom';
@@ -77,8 +76,6 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
   const [refreshKey, setRefreshKey] = useState(0);
   const [currentDate, setCurrentDate] = useState<string>('');
   const [importId, setImportId] = useState<string | null>(null);
-  // const [allImportIds, setAllImportIds] = useState<string[]>([]);
-  // const [departmentId, setDepartmentId] = useState<string>(''); // 初期値を空文字列に変更
   const [currentRegion, setCurrentRegion] = useState<string>('中之島'); // 初期値は中之島
 
   // データキャッシュ
@@ -86,32 +83,6 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
   const [boxDataCache, setBoxDataCache] = useState<BoxData[]>([]);
 
   const {departmentId} = useParams();
-  // 認証情報から部門IDを取得する部分
-// useEffect(() => {
-//   const fetchUserInfo = async () => {
-//     try {    
-//       // ユーザー属性を取得
-//       const attributes = await fetchUserAttributes();
-//       console.log('ユーザー属性:', attributes);
-     
-//       // カスタム属性から部門IDを取得
-//       const userDepartmentId = attributes['custom:departmentId'];
-     
-//       if (userDepartmentId) {
-//         console.log('部門ID:', userDepartmentId);
-//         setDepartmentId(userDepartmentId);
-//       } else {
-//         // 取得できない場合はエラーを設定
-//         setError('ユーザーに部門IDが設定されていません');
-//       }
-//     } catch (error) {
-//       console.error('ユーザー情報の取得に失敗しました:', error);
-//       setError('ユーザー情報の取得に失敗しました');
-//     }
-//   };
- 
-//   fetchUserInfo();
-// }, []);
 
   // 確定ボタンを有効にするための条件をチェックする関数
   const isConfirmButtonEnabled = useMemo(() => {
@@ -148,7 +119,6 @@ const filteredStores = useMemo(() => {
 }, [allStores, currentRegion]);
 
 // 初期データの一括取得
-// 初期データの一括取得
 useEffect(() => {
   // 部門IDが設定されるまで待機
   if (!departmentId) return;
@@ -179,17 +149,6 @@ useEffect(() => {
         // それ以外の場合は中之島をデフォルトに
         setCurrentRegion('中之島');
       }
-   
-    // 同じ日付の全てのImportWorkStatusを取得して複数回注文の有無を確認
-    // const importStatusResponse = await dataClient.models.ImportWorkStatus.list({
-    //   filter: {
-    //     date: { eq: today },
-    //     departmentId: { eq: departmentId }
-    //   }
-    // });
-   
-    // const importIds = importStatusResponse.data.map(status => status.importId);
-    // setAllImportIds(importIds);
    
     // 最新の importId に基づく注文データを取得 (GSI_OrderDateDeptImport を使用)
     const ordersResponse = await dataClient.models.Order.listOrdersByDeptAndImport({
@@ -305,28 +264,6 @@ useEffect(() => {
    
     fetchAllData();
   }, [departmentId]);
-
-  // 複数importIdの注文データを処理する関数
-  // function processMultipleImportOrders(allOrders: OrderData[]): OrderData[] {
-  //   // 店舗ID + 商品IDごとに最新の注文データを保持するマップ
-  //   const orderMap = new Map<string, OrderData>();
-   
-  //   // 全ての注文データを処理
-  //   allOrders.forEach(order => {
-  //     const key = `${order.storeId}_${order.itemId}`;
-     
-  //     // マップに存在しない、またはより新しいimportIdの場合は更新
-  //     if (!orderMap.has(key) || order.importId > orderMap.get(key)!.importId) {
-  //       orderMap.set(key, order);
-  //     }
-  //   });
-   
-  //   // マップから注文データの配列を作成
-  //   const processedOrders = Array.from(orderMap.values());
-   
-  //   // itemCount が 0 の注文を除外
-  //   return processedOrders.filter(order => order.itemCount > 0);
-  // }
 
   // 完了済み店舗の処理を分離
   function processCompletedStores(boxData: BoxData[]) {
