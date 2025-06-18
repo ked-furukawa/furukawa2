@@ -11,26 +11,61 @@ interface DetailData {
     orangeBoxes: number;
 }
 
-export function createDetailListFromTemplate(workbook:ExcelJS.Workbook, detailData:DetailData[]) {
+export function createDetailListFromTemplate(workbook:ExcelJS.Workbook, detailData:DetailData[], tabValue:number) {
     console.log(workbook.worksheets)
+    // suffix を tabValue でマッピング
+    const suffixMap: Record<number, string> = {
+        0: "センター",
+        1: "",
+        2: "第2",
+    };
+
+    const suffix = suffixMap[tabValue];
+    if (!suffix) {
+        throw new Error(`未対応の tabValue: ${tabValue}`);
+    }
+
+    // 各シート名を構築
+    const sheetNames = {
+        A: `中之島①${suffix}`,
+        B: `上越①${suffix}`,
+        E: tabValue === 0
+        ? "上越訓練センター（手で数入力して下さい）"
+        : "上越訓練センター",
+    };
     
-    // 取引先によって書き込むシートを切り替え（例: 'A社'なら1枚目、'B社'なら2枚目）
-    const sheetA = workbook.getWorksheet("中之島①センター");
+    const sheetA = workbook.getWorksheet(sheetNames.A);
     if (!sheetA) {
-        throw new Error('中之島用のシートが見つかりません');
+        throw new Error(`シートが見つかりません: ${sheetNames.A}`);
     }
-    const sheetB = workbook.getWorksheet("上越①センター");
+
+    const sheetB = workbook.getWorksheet(sheetNames.B);
     if (!sheetB) {
-        throw new Error('上越用のシートが見つかりません');
+        throw new Error(`シートが見つかりません: ${sheetNames.B}`);
     }
-    const sheetE = workbook.getWorksheet("上越訓練センター（手で数入力して下さい）")
+    const sheetE = workbook.getWorksheet(sheetNames.E);
     if (!sheetE) {
-        throw new Error('上越訓練センター用のシートが見つかりません');
+        throw new Error(`シートが見つかりません: ${sheetNames.E}`);
     }
 
     // シートごとにデータを分割
-    const dataA = detailData.filter(item => item.storeTc === '中之島');
-    const dataB = detailData.filter(item => item.storeTc === '上越');
+    // 中之島のデータを並び替え
+    const nakanoshimaMain = detailData
+    .filter(item => item.storeTc === '中之島' && item.storeId !== '089' && item.storeId !== '057')
+    .sort((a, b) => Number(a.storeId) - Number(b.storeId));
+
+    const nakanoshima89 = detailData
+    .filter(item => item.storeTc === '中之島' && item.storeId === '089');
+
+    const nakanoshima057 = detailData
+    .filter(item => item.storeTc === '中之島' && item.storeId === '057');
+
+    const dataA = [...nakanoshimaMain, ...nakanoshima89, ...nakanoshima057];
+
+    // 上越のデータはそのまま昇順ソート
+    const dataB = detailData
+    .filter(item => item.storeTc === '上越')
+    .sort((a, b) => Number(a.storeId) - Number(b.storeId));
 
     const startRow = 14;//開始行
     const maxRow = 41;

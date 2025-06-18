@@ -94,9 +94,10 @@ export const FinalCheck = () => {
         console.error('データ取得エラー:', err);
         }
     };
-
     fetchData();
     }, [selectedDate]);
+
+
     useEffect(() => {
     const dai2 = ['1souzai', '2souzai', '3souzai', 'namashitsu1', 'namashitu2'];
 
@@ -159,10 +160,29 @@ export const FinalCheck = () => {
 
     const handleDownloadExcel = async() => {
         try{
-        // Downloads file content to memory
-        const { body ,eTag } = await downloadData({
-        path: "excel-files/1749535537569-納品箱数明細票テンプレート.xlsx"
-        }).result;
+            // tabValue に応じたテンプレートパスとファイル名のマッピング
+        const templatePathMap: Record<number, string> = {
+            0: "excel-files/センター　納品箱数明細票テンプレート.xlsx",
+            1: "excel-files/本社　納品箱数明細票テンプレート.xlsx",
+            2: "excel-files/第2工場　納品箱数明細票テンプレート.xlsx",
+        };
+
+        const filenameMap: Record<number, string> = {
+            0: "センター　納品箱数明細票",
+            1: "本社　納品箱数明細票",
+            2: "第2工場　納品箱数明細票",
+        };
+
+        const templatePath = templatePathMap[tabValue];
+        const fileNamePrefix = filenameMap[tabValue] ?? "納品箱数明細票";
+
+        if (!templatePath) {
+        console.warn("未対応の tabValue:", tabValue);
+        return;
+        }
+
+        // テンプレートファイルのダウンロード
+        const { body, eTag } = await downloadData({ path: templatePath }).result;
         console.log('eTag',eTag)
         console.log('body',body)
 
@@ -179,12 +199,13 @@ export const FinalCheck = () => {
         console.log("detailData",detailData)
 
             // テンプレートにデータを書き込む
-        createDetailListFromTemplate(workbook, detailData);
+        createDetailListFromTemplate(workbook, detailData,tabValue);
 
             // ファイル出力
         const buffer = await workbook.xlsx.writeBuffer();
         const newBlob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        saveAs(newBlob, `納品箱数明細票_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        // ファイル保存
+        saveAs(newBlob, `${fileNamePrefix}_${selectedDate?.toISOString().slice(0, 10)}.xlsx`);
 
         } catch (error) {
             console.error('Excel ファイルのダウンロードまたは処理中にエラーが発生しました:', error);
@@ -498,18 +519,26 @@ export const FinalCheck = () => {
             </TableRow>
             </TableHead>
             <TableBody >
-            {[
-                // 1. 中之島のデータ（昇順）
-                ...storeData
-                    .filter((s) => s.storeTc === '中之島')
-                    .sort((a, b) => Number(a.storeId) - Number(b.storeId)),
+            {(() => {
+                const nakanoshimaFiltered = storeData
+                .filter(s => s.storeTc === '中之島' && s.storeId !== '089' && s.storeId !== '057')
+                .sort((a, b) => Number(a.storeId) - Number(b.storeId));
 
-                // 2. 上越のデータ（昇順）
-                ...storeData
-                    .filter((s) => s.storeTc !== '中之島')
-                    .sort((a, b) => Number(a.storeId) - Number(b.storeId))
-                
-            ].map((store) => (
+                const store89 = storeData.filter(s => s.storeTc === '中之島' && s.storeId === '089');
+                const store057 = storeData.filter(s => s.storeTc === '中之島' && s.storeId === '057');
+
+                const others = storeData
+                .filter(s => s.storeTc !== '中之島')
+                .sort((a, b) => Number(a.storeId) - Number(b.storeId));
+
+                const reordered = [
+                ...nakanoshimaFiltered,
+                ...store89,
+                ...store057,
+                ...others
+                ];
+
+                return reordered.map((store) => (
                 <TableRow key={store.storeId} hover>
                 <TableCell>{store.storeTc}</TableCell>
                 <TableCell 
@@ -558,7 +587,8 @@ export const FinalCheck = () => {
                     {store.greenBoxes + store.redBoxes + store.blueBoxes + store.orangeBoxes}
                 </TableCell>
                 </TableRow>
-            ))}
+                ));
+            })()}
             </TableBody>
         </Table>
     </TableContainer>

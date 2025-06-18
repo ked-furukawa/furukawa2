@@ -134,9 +134,9 @@
     {
     "date": "20250616",
 
-    "storeId": "123",
-    "storeName": "若里店",
-    "storeTc": "上越",
+    "storeId": "057",
+    "storeName": "テストキッチン",
+    "storeTc": "中之島",
 
     "boxColor": "red",
     "boxCount": 100,
@@ -144,9 +144,9 @@
     },
     {
     "date": "20250616",
-    "storeId": "021",
-    "storeName": "高田店",
-    "storeTc": "上越",
+    "storeId": "089",
+    "storeName": "上越訓練センター",
+    "storeTc": "中之島",
     "boxColor": "red",
     "boxCount": 15,
     "departmentId":"sakurai"
