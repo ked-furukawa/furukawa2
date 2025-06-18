@@ -513,33 +513,38 @@ function extractStoresFromGroupedOrders(
     try {
       setSavingData(true);
      
-      // 箱データを準備（importIdのみで管理）
+      // 箱データを準備（importIdをstoreIdに組み込む）
       const boxData = {
         date: currentDate,
-        storeId: selectedStoreId,
+        storeId: `${selectedStoreId}_${importId}`, // importIdをstoreIdに組み込む
         storeName: storeData.storeName,
         storeTc: storeData.storeTc,
         boxColor: selectedColor,
         boxCount: parseInt(inputValue, 10),
-        departmentId: departmentId as string,
-        importId: importId  // importIdを追加
+        departmentId: departmentId as string
       };
+
+      console.log('保存する箱データ:', boxData);
      
       // 新規作成のみ
       const newBox = await dataClient.models.Box.create(boxData);
+      
+      console.log('保存された箱データ:', newBox.data);
       
       // キャッシュに追加
       if (newBox.data) {
         const mappedNewBox: BoxData = {
           date: newBox.data.date,
-          storeId: newBox.data.storeId,
+          storeId: selectedStoreId, // 元のstoreIdに戻す
           storeName: newBox.data.storeName ?? undefined,
           storeTc: newBox.data.storeTc ?? undefined,
           color: newBox.data.boxColor || 'green',
           boxCount: newBox.data.boxCount,
           boxCreatedBy: newBox.data.departmentId ?? undefined,
-          isChecked: true
+          isChecked: true,
+          importId: importId // importIdを保持
         };
+        console.log('キャッシュに追加する箱データ:', mappedNewBox);
         setBoxDataCache(prev => [...prev, mappedNewBox]);
       }
      
