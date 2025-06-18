@@ -19,7 +19,7 @@ import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../../amplify/data/resource";
 import { StoreProductPanel } from '../components/StoreProductPanel';
 import { OrderData, BoxData, StatusTemplate, OrderStatus } from '../types';
-import { formatDateToJST } from '../components/utils/formatDateToJST';
+// import { formatDateToJST } from '../components/utils/formatDateToJST';
 import { groupOrdersByTcAndStore } from '../components/utils/groupOrdersByTcAndStore';
 import { resolveImportId } from '../components/utils/resolveImportId';
 
@@ -76,7 +76,7 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
   const [refreshKey, setRefreshKey] = useState(0);
   const [currentDate, setCurrentDate] = useState<string>('');
   const [importId, setImportId] = useState<string | null>(null);
-  const [allImportIds, setAllImportIds] = useState<string[]>([]);
+  // const [allImportIds, setAllImportIds] = useState<string[]>([]);
   const [departmentId, setDepartmentId] = useState<string>(''); // 初期値を空文字列に変更
   const [currentRegion, setCurrentRegion] = useState<string>('中之島'); // 初期値は中之島
 
@@ -179,15 +179,15 @@ useEffect(() => {
       }
    
     // 同じ日付の全てのImportWorkStatusを取得して複数回注文の有無を確認
-    const importStatusResponse = await dataClient.models.ImportWorkStatus.list({
-      filter: {
-        date: { eq: today },
-        departmentId: { eq: departmentId }
-      }
-    });
+    // const importStatusResponse = await dataClient.models.ImportWorkStatus.list({
+    //   filter: {
+    //     date: { eq: today },
+    //     departmentId: { eq: departmentId }
+    //   }
+    // });
    
-    const importIds = importStatusResponse.data.map(status => status.importId);
-    setAllImportIds(importIds);
+    // const importIds = importStatusResponse.data.map(status => status.importId);
+    // setAllImportIds(importIds);
    
     // 最新の importId に基づく注文データを取得 (GSI_OrderDateDeptImport を使用)
     const ordersResponse = await dataClient.models.Order.listOrdersByDeptAndImport({
@@ -305,26 +305,26 @@ useEffect(() => {
   }, [departmentId]);
 
   // 複数importIdの注文データを処理する関数
-  function processMultipleImportOrders(allOrders: OrderData[]): OrderData[] {
-    // 店舗ID + 商品IDごとに最新の注文データを保持するマップ
-    const orderMap = new Map<string, OrderData>();
+  // function processMultipleImportOrders(allOrders: OrderData[]): OrderData[] {
+  //   // 店舗ID + 商品IDごとに最新の注文データを保持するマップ
+  //   const orderMap = new Map<string, OrderData>();
    
-    // 全ての注文データを処理
-    allOrders.forEach(order => {
-      const key = `${order.storeId}_${order.itemId}`;
+  //   // 全ての注文データを処理
+  //   allOrders.forEach(order => {
+  //     const key = `${order.storeId}_${order.itemId}`;
      
-      // マップに存在しない、またはより新しいimportIdの場合は更新
-      if (!orderMap.has(key) || order.importId > orderMap.get(key)!.importId) {
-        orderMap.set(key, order);
-      }
-    });
+  //     // マップに存在しない、またはより新しいimportIdの場合は更新
+  //     if (!orderMap.has(key) || order.importId > orderMap.get(key)!.importId) {
+  //       orderMap.set(key, order);
+  //     }
+  //   });
    
-    // マップから注文データの配列を作成
-    const processedOrders = Array.from(orderMap.values());
+  //   // マップから注文データの配列を作成
+  //   const processedOrders = Array.from(orderMap.values());
    
-    // itemCount が 0 の注文を除外
-    return processedOrders.filter(order => order.itemCount > 0);
-  }
+  //   // itemCount が 0 の注文を除外
+  //   return processedOrders.filter(order => order.itemCount > 0);
+  // }
 
   // 完了済み店舗の処理を分離
   function processCompletedStores(boxData: BoxData[]) {
