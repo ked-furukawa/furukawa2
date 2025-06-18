@@ -15,7 +15,11 @@ Checkbox,
 Button, 
 Container,
 CircularProgress,
-Alert
+Alert,
+Dialog,
+DialogTitle,
+DialogContent,
+DialogActions
 } from '@mui/material';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
@@ -60,9 +64,12 @@ boxCount: number;
 checked: boolean;
 isOdd: boolean;
 }
+interface SpecialSortingProps {
+    navigateTo: (key: string) => void;
+}
 
 
-const SpecialSorting: React.FC = () => {
+const SpecialSorting: React.FC<SpecialSortingProps> = ({navigateTo}) => {
 const [loading, setLoading] = useState<boolean>(true);
 const [error, setError] = useState<string | null>(null);
 const [orders, setOrders] = useState<OrderData[]>([]);
@@ -72,6 +79,8 @@ const [checkedCount, setCheckedCount] = useState<number>(0);
 const [importId, setImportId] = useState<string>('');
 
 const [currentRegion, setCurrentRegion] = useState<string>('中之島'); // 初期値は中之島
+const [savingData, setSavingData] = useState<boolean>(false);
+const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
 
 const departmentId = useParams().departmentId!;
 
@@ -95,7 +104,7 @@ const calculateBoxes = (itemCount: number): { boxCount: number, isOdd: boolean }
 
 // 注文データの取得
 useEffect(() => {
-    const fetchOrders = async () => {
+    const fetchImportResult = async () => {
         console.log(departmentId)
     try {
         setLoading(true);
@@ -113,17 +122,30 @@ useEffect(() => {
         // それ以外の場合は中之島をデフォルトに
         setCurrentRegion('中之島');
         }
+        } catch (err) {
+        console.error("importIdの取得に失敗しました:", err);
+        setError("importIdの取得に失敗しました");
+    } finally {
+        setLoading(false);
+    }
+    };
+    fetchImportResult();
+}, []);
 
+useEffect(() => {
+    const fetchOrders = async () => {
+        console.log(departmentId)
+    try {
         const { data } = await client.models.Order.listOrdersByDeptAndImport({
             date: date,
             departmentIdImportId: {
                 eq: {
                 departmentId: departmentId,
-                importId: importResult.importId
+                importId: importId
                 }
             }
         });
-        
+        console.log('currentRegion',currentRegion)
         // storeTc === currentRegion の注文だけ残す
         const filteredOrders = (data || []).filter(order => order.storeTc === currentRegion);
 
@@ -153,8 +175,6 @@ useEffect(() => {
         // 合計箱数を計算
         const total = calcs.reduce((sum, item) => sum + item.boxCount, 0);
         setTotalBoxes(total);
-        } else {
-        setError("該当する注文データが見つかりませんでした");
         }
     } catch (err) {
         console.error("注文データの取得に失敗しました:", err);
@@ -165,7 +185,7 @@ useEffect(() => {
     };
     
     fetchOrders();
-}, []);
+}, [importId]);
 
 // チェックボックスの状態変更
 const handleCheckboxChange = (storeId: string) => {
@@ -186,9 +206,10 @@ const handleCheckboxChange = (storeId: string) => {
 };
 
 // 箱数確定処理
-const confirmBoxes = async () => {
+const navigateToNextStore = async () => {
     try {
     setLoading(true);
+    setSavingData(true);
     
     // 各店舗の箱数をBoxテーブルに保存
     const savePromises = calculations.map(calc => {
@@ -208,42 +229,64 @@ const confirmBoxes = async () => {
     await Promise.all(savePromises);
     
     // 注文のステータスを更新
-    const updatePromises = orders.map(order => {
-        return client.models.Order.update({
+    const updatePromises = orders.map(async order => {
+        try {
+        const result = await client.models.Order.update({
             importId: order.importId,
             date: order.date,
             storeId: order.storeId,
             itemId: order.itemId,
-            status: "DONE"
+            departmentId: order.departmentId,
+            status: 'DONE'
         });
+        
+        if (result.errors && result.errors.length > 0) {
+          throw new Error(`更新エラー: ${result.errors[0].message}`);
+        }
+        
+        return result;
+      } catch (error) {
+        throw error;
+      }
     });
     
     await Promise.all(updatePromises);
 
-    if(currentRegion==="中之島"){
+    let sortingPahse='COMPLETED_NAKANOSHIMA'
+    if(currentRegion!=="中之島"){
+        sortingPahse='COMPLETED_JYOETSU'
+    }
     // ImportWorkStatus の sortingPhase を COMPLETED_NAKANOSHIMA に更新
     await client.models.ImportWorkStatus.update({
         date: date,
         departmentId: departmentId as string,
         importId: importId,
-        sortingPhase: 'COMPLETED_NAKANOSHIMA'
+        sortingPhase: sortingPahse
     });
+
+    if(currentRegion==="中之島"){
+        navigateTo('SortingCheckScreen');
+    }else{
+        navigateTo('StoreDoubleCheckList');
     }
-    
-    
-    alert("箱数を確定しました");
-    
-    // 全てのチェックをリセット
-    setCalculations(prev => prev.map(calc => ({ ...calc, checked: false })));
-    setCheckedCount(0);
-    
     } catch (err) {
     console.error("箱数の確定に失敗しました:", err);
     setError("箱数の確定に失敗しました");
     } finally {
     setLoading(false);
+    setSavingData(false);
+    setShowConfirmDialog(false);
     }
-};
+    };
+    function handleDialogOpen() {
+        // 確認ダイアログを表示
+        setShowConfirmDialog(true);
+    }
+
+    // 確認ダイアログをキャンセルする関数
+    function handleDialogCancel() {
+        setShowConfirmDialog(false);
+    }
 
 if (loading && orders.length === 0) {
     return (
@@ -332,11 +375,40 @@ return (
         variant="contained" 
         color="primary" 
         disabled={checkedCount < calculations.length || loading}
-        onClick={confirmBoxes}
+        onClick={handleDialogOpen}
         sx={{ fontSize: '1.1rem', py: 1, px: 3 }}
         >
         {loading ? <CircularProgress size={24} /> : "箱数確定"}
         </Button>
+        <Dialog
+        open={showConfirmDialog}
+        onClose={handleDialogCancel}
+      >
+        <DialogTitle>次の店舗に進みますか？</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1">
+            {`${currentRegion}の処理を完了します。`}
+            {
+                currentRegion==="中之島"
+                ? '中之島の作業が完了しました。商品数確認画面に進みます。'
+                : `上越の作業が完了しました。箱数ダブルチェック画面に進みます。`
+            }
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDialogCancel} disabled={savingData}>
+            キャンセル
+          </Button>
+          <Button 
+            onClick={navigateToNextStore} 
+            color="primary" 
+            variant="contained"
+            disabled={savingData}
+          >
+            {savingData ? '保存中...' : '次へ進む'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
     </Container>
 );
