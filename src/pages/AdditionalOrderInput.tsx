@@ -36,8 +36,9 @@ import {
   FilterList as FilterListIcon
 } from '@mui/icons-material';
 import { generateClient } from 'aws-amplify/data';
-import { fetchUserAttributes } from 'aws-amplify/auth';
+// import { fetchUserAttributes } from 'aws-amplify/auth';
 import type { Schema } from "../../amplify/data/resource";
+import { useParams } from 'react-router-dom';
 
 // Amplify クライアントの初期化
 const client = generateClient<Schema>();
@@ -136,6 +137,8 @@ const AdditionalOrderInput: React.FC = () => {
     severity: 'success'
   });
 
+  const {departmentId} = useParams();
+
   // =========== データ取得関数 ===========
   
   /**
@@ -229,8 +232,7 @@ const AdditionalOrderInput: React.FC = () => {
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        const attributes = await fetchUserAttributes();
-        const departmentId = attributes['custom:departmentId'];
+        console.log('departmentId',departmentId)
         
         if (departmentId) {
           // 部門情報が取得できるまで待機

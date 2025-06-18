@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Box, Typography, Button, Tooltip, Dialog, DialogTitle, IconButton, DialogContent, List, ListItem, ListItemText, Divider, Tab, Tabs } from "@mui/material";
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Box, Typography, Button, Tooltip, Dialog, DialogTitle, IconButton, DialogContent, List, ListItem, ListItemText, Divider, Tab, Tabs, ListItemButton } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -28,7 +28,7 @@ interface StoreBoxSummary {
     greenBoxes: number;
     redBoxes: number;
     blueBoxes: number;
-    yellowBoxes: number;
+    orangeBoxes: number;
 }
 type StoreData = {
     date: string;
@@ -42,68 +42,93 @@ type StoreData = {
     readonly createdAt: string;
     readonly updatedAt: string;
 };
+type OrderItem = {
+    importId: string;
+    date: string;
+
+    storeId: string;
+    storeName?: string | null;
+    storeTc?: string | null;
+
+    itemId: string;
+    itemName?: string | null;
+    itemFormalName?: string | null;
+    itemCount: number;
+
+    departmentId: string;
+    departmentName?: string | null;
+
+    status?: string | null;
+};
 
 
 export const FinalCheck = () => {
     const [storeData, setStoreData] = useState<StoreBoxSummary[]>([]);  
     const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
-    const [isAllDone, setIsAllDone] = useState(false);
+    // const [isAllDone, setIsAllDone] = useState(false);
 
     const [tabValue, setTabValue] = useState(0);//タブ切り替え用state
 
     const [open, setOpen] = useState(false);//モーダル用state
     const [selectedStoreId, setSelectedStoreId] = useState<string>('');
+    const [openSecond, setOpenSecond] = useState(false);//二段階目モーダル用state
+    const [selectedDepartmentName, setSelectedDepartmentName] = useState<string>('');
+
     const [boxDetails, setBoxDetails] = useState<StoreData[]>([]);
+    const [orderDetails, setOrderDetails] = useState<OrderItem[]>([]);
+
+    const [rawItems, setRawItems] = useState<Box[]>([]);
 
     useEffect(() => {
-    const sub = boxClient.models.Box.observeQuery({
-    filter: {
-        date: {
-        eq: selectedDate?.toISOString().split('T')[0].replace(/-/g, '') || ''
-        }
-    }
-    }).subscribe({ //Boxテーブルの変更をサブスクライブ
-        next: ({ items }) => { //変更があった際に呼び出される処理、filterしてないのでBoxテーブル全体がitemsに入っている
-            let filteredItems: Box[];
-            //第二工場にある部門のID一覧
-            const dai2 = ['1souzai', '2souzai', '3souzai', 'namashitsu1', 'namashitu2'];
-            if (tabValue === 2) {
-        // 惣菜・生質のみ
-        filteredItems = items.filter(
-            (item) => item != null && dai2.includes(item.departmentId)
-            );
-        } else if (tabValue === 1) {
-            // 上記以外
-            filteredItems = items.filter(
-            (item) => item != null && !dai2.includes(item.departmentId)
-            );
-        } else {
-            // 全件
-            filteredItems = items.filter((item) => item != null);
-        }
-        const storeMap = filteredItems.filter((item:Box)=>item !=null)
-        .map(item => ({ //itemsの中身をこの画面で使いたい形にマッピング
-            date: item.date,
-            storeId: item.storeId,
-            storeName: item.storeName,
-            storeTc: item.storeTc,
-            departmentId: item.departmentId,
-
-            greenBoxes: item.boxColor === 'green' ? item.boxCount : 0,
-            redBoxes: item.boxColor === 'red' ? item.boxCount : 0,
-            blueBoxes: item.boxColor === 'blue' ? item.boxCount : 0,
-            yellowBoxes: item.boxColor === 'yellow' ? item.boxCount : 0
-        })) //マッピングしたものはstoreMapに入っている、以降はこれを使う
-
-        aggregateStoreData(storeMap);
-        },
-        error: (err) => {
+    const fetchData = async () => {
+        try {
+        const { data } = await boxClient.models.Box.list({
+            filter: {
+            date: {
+                eq: selectedDate?.toISOString().split('T')[0].replace(/-/g, '') || ''
+            }
+            }
+        });
+        setRawItems(data); // データを保存
+        } catch (err) {
         console.error('データ取得エラー:', err);
         }
-    });
+    };
+    fetchData();
+    }, [selectedDate]);
 
-    return () => sub.unsubscribe();
-    }, [selectedDate,tabValue]);
+
+    useEffect(() => {
+    const dai2 = ['1souzai', '2souzai', '3souzai', 'namashitsu1', 'namashitu2'];
+
+    let filteredItems: Box[];
+    if (tabValue === 2) {
+        filteredItems = rawItems.filter(
+        (item) => item != null && dai2.includes(item.departmentId)
+        );
+    } else if (tabValue === 1) {
+        filteredItems = rawItems.filter(
+        (item) => item != null && !dai2.includes(item.departmentId)
+        );
+    } else {
+        filteredItems = rawItems.filter((item) => item != null);
+    }
+
+    const storeMap = filteredItems.map(item => ({
+        date: item.date,
+        storeId: item.storeId,
+        storeName: item.storeName,
+        storeTc: item.storeTc,
+        departmentId: item.departmentId,
+        greenBoxes: item.boxColor === 'green' ? item.boxCount : 0,
+        redBoxes: item.boxColor === 'red' ? item.boxCount : 0,
+        blueBoxes: item.boxColor === 'blue' ? item.boxCount : 0,
+        orangeBoxes: item.boxColor === 'orange' ? item.boxCount : 0, 
+    }));
+
+    aggregateStoreData(storeMap);
+    }, [rawItems, tabValue]);
+
 
     useEffect(() => {//完了状態を監視
         const sub = boxClient.models.ImportWorkStatus.observeQuery({
@@ -116,7 +141,8 @@ export const FinalCheck = () => {
             next: ({ items }) => {
                 const filtered = items.filter(item => item != null);
                 const allDone = filtered.length > 0 && filtered.every(item => item.importProgress === 'DONE');
-                setIsAllDone(allDone);
+                console.log("ボタン用のフラグ",allDone)
+                // setIsAllDone(allDone);
             },
             error: (err) => {
             console.error('ImportWorkStatusデータ取得エラー:', err);
@@ -134,10 +160,29 @@ export const FinalCheck = () => {
 
     const handleDownloadExcel = async() => {
         try{
-        // Downloads file content to memory
-        const { body ,eTag } = await downloadData({
-        path: "excel-files/納品箱数明細票テンプレート.xlsx"
-        }).result;
+            // tabValue に応じたテンプレートパスとファイル名のマッピング
+        const templatePathMap: Record<number, string> = {
+            0: "excel-files/センター　納品箱数明細票テンプレート.xlsx",
+            1: "excel-files/本社　納品箱数明細票テンプレート.xlsx",
+            2: "excel-files/第2工場　納品箱数明細票テンプレート.xlsx",
+        };
+
+        const filenameMap: Record<number, string> = {
+            0: "センター　納品箱数明細票",
+            1: "本社　納品箱数明細票",
+            2: "第2工場　納品箱数明細票",
+        };
+
+        const templatePath = templatePathMap[tabValue];
+        const fileNamePrefix = filenameMap[tabValue] ?? "納品箱数明細票";
+
+        if (!templatePath) {
+        console.warn("未対応の tabValue:", tabValue);
+        return;
+        }
+
+        // テンプレートファイルのダウンロード
+        const { body, eTag } = await downloadData({ path: templatePath }).result;
         console.log('eTag',eTag)
         console.log('body',body)
 
@@ -154,12 +199,13 @@ export const FinalCheck = () => {
         console.log("detailData",detailData)
 
             // テンプレートにデータを書き込む
-        createDetailListFromTemplate(workbook, detailData);
+        createDetailListFromTemplate(workbook, detailData,tabValue);
 
             // ファイル出力
         const buffer = await workbook.xlsx.writeBuffer();
         const newBlob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        saveAs(newBlob, `納品箱数明細票_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        // ファイル保存
+        saveAs(newBlob, `${fileNamePrefix}_${selectedDate?.toISOString().slice(0, 10)}.xlsx`);
 
         } catch (error) {
             console.error('Excel ファイルのダウンロードまたは処理中にエラーが発生しました:', error);
@@ -200,6 +246,28 @@ export const FinalCheck = () => {
     const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
     };
+    //ボタンテキスト
+    const buttonLabel = tabValue === 0
+    ? "センター明細表ダウンロード"
+    : tabValue === 1
+        ? "本社工場明細表ダウンロード"
+        : "第二工場明細表ダウンロード"; // デフォルトや他タブ用
+    //右の合計表タイトル
+    const summaryTitle0 = tabValue === 0
+    ? "センター 全体合計"
+    : tabValue === 1
+        ? "本社工場 全体合計"
+        : "第二工場 全体合計";
+    const summaryTitle1 = tabValue === 0
+    ? "センター 中之島合計"
+    : tabValue === 1
+        ? "本社工場 中之島合計"
+        : "第二工場 中之島合計";
+    const summaryTitle2 = tabValue === 0
+    ? "センター 上越合計"
+    : tabValue === 1
+        ? "本社工場 上越合計"
+        : "第二工場 上越合計";
 
     // 店舗データの集計
     const aggregateStoreData = (storeMap: any) => {
@@ -212,14 +280,14 @@ export const FinalCheck = () => {
                     greenBoxes: 0,
                     redBoxes: 0,
                     blueBoxes: 0,
-                    yellowBoxes: 0
+                    orangeBoxes: 0
                 });
             }
         const aggregated = aggregatedMap.get(item.storeId)!;
             aggregated.greenBoxes += item.greenBoxes;
             aggregated.redBoxes += item.redBoxes;
             aggregated.blueBoxes += item.blueBoxes;
-            aggregated.yellowBoxes += item.yellowBoxes;
+            aggregated.orangeBoxes += item.orangeBoxes;
         });
         const result = Array.from(aggregatedMap.values());
         setStoreData(result)
@@ -232,7 +300,7 @@ export const FinalCheck = () => {
         green: data.reduce((sum: any, s: { greenBoxes: any; }) => sum + s.greenBoxes, 0),
         red: data.reduce((sum: any, s: { redBoxes: any; }) => sum + s.redBoxes, 0),
         blue: data.reduce((sum: any, s: { blueBoxes: any; }) => sum + s.blueBoxes, 0),
-        yellow: data.reduce((sum: any, s: { yellowBoxes: any; }) => sum + s.yellowBoxes, 0),
+        orange: data.reduce((sum: any, s: { orangeBoxes: any; }) => sum + s.orangeBoxes, 0),
     });
 
     const totalNakanoshima = calcTotal(nakanoshimaData); //各TCの合計
@@ -243,7 +311,7 @@ export const FinalCheck = () => {
         green: number;
         red: number;
         blue: number;
-        yellow: number;
+        orange: number;
     };
 
     type SummaryTableProps = {
@@ -271,7 +339,7 @@ export const FinalCheck = () => {
                 <TableCell sx={{ fontWeight: 'bold', bgcolor: 'success.light', boxColor: 'white', }}>Box緑</TableCell>
                 <TableCell sx={{ fontWeight: 'bold', bgcolor: 'error.light', boxColor: 'white', }}>Box赤</TableCell>
                 <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.light', boxColor: 'white', }}>Box青</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'warning.light', boxColor: 'white', }}>Box黄</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', bgcolor: 'warning.light', boxColor: 'white', }}>Box橙</TableCell>
                 <TableCell sx={{ fontWeight: 'bold', bgcolor: 'primary.main', boxColor: 'white', }}>合計</TableCell>
                 </TableRow>
             </TableHead>
@@ -280,9 +348,9 @@ export const FinalCheck = () => {
                 <TableCell align="right" sx={cellStyle('success.light', true)}>{total.green}</TableCell>
                 <TableCell align="right" sx={cellStyle('error.light', true)}>{total.red}</TableCell>
                 <TableCell align="right" sx={cellStyle('primary.light', true)}>{total.blue}</TableCell>
-                <TableCell align="right" sx={cellStyle('warning.light', true)}>{total.yellow}</TableCell>
+                <TableCell align="right" sx={cellStyle('warning.light', true)}>{total.orange}</TableCell>
                 <TableCell align="right" sx={{ fontSize, fontWeight: 'bold' }}>
-                    {total.green + total.red + total.blue + total.yellow}
+                    {total.green + total.red + total.blue + total.orange}
                 </TableCell>
                 </TableRow>
             </TableBody>
@@ -292,6 +360,37 @@ export const FinalCheck = () => {
     
     );
     }
+
+        const getDepartmentName = (departmentId:string) => {
+        switch (departmentId) {
+            case '1souzai':
+                return '惣菜1';
+            case '2souzai':
+                return '惣菜2';
+            case '3souzai':
+                return '惣菜3';
+            case 'kakou1':
+            case 'kakou2':
+                return '加工';
+            case 'seiniku':
+                return '精肉';
+            case 'namashitsu1':
+            case 'namashitsu2':
+                return '生室';
+            case 'honsyabuturyu':
+                return '本社物流';
+            case 'seika':
+                return '青果';
+            case 'kurosawa':
+                return '黒澤(テスト用)';
+            case 'furukawa':
+                return '古川(テスト用)';
+            case 'sakurai':
+                return '櫻井(テスト用)';
+            default:
+            return departmentId;
+        }
+        };
 
     // 箱詳細情報を取得する関数
     const fetchBoxDetails = async (storeId:string, date:string) => {
@@ -309,6 +408,7 @@ export const FinalCheck = () => {
     }
     };
 
+
     const handleStoreClick = async(store:StoreBoxSummary) => {//モーダル開閉用関数
         setSelectedStoreId(store.storeId);
         setOpen(true);
@@ -320,6 +420,64 @@ export const FinalCheck = () => {
         setOpen(false);
         setSelectedStoreId('');
     };
+
+    const fetchOrderDetails = async (departmentId: string,date:string) => {
+    let latestRecord=null
+    try{
+        const { data }= await boxClient.models.ImportWorkStatus.list({
+            filter: {
+            date: {
+                eq:date
+            },
+            departmentId:{
+                eq:departmentId
+            },
+            importProgress:{
+                eq:'DONE'
+            },
+            }
+        });
+        if (!data || data.length === 0) {
+        console.log('該当データがありません。');
+        } else {
+        // importId が文字列で最大のもの（最新）を取得
+        latestRecord = data.reduce((max, current) => {
+            return current.importId > max.importId ? current : max;
+        })};
+    }catch(error){
+        console.error('importId情報の取得エラー:', error);
+    }
+    try {
+        const response = await boxClient.models.Order.listOrdersByDeptAndImport({
+        date: date,
+            departmentIdImportId: {
+                eq: {
+                departmentId: departmentId,
+                importId: latestRecord?.importId  ?? ""
+                }
+            }
+        });
+        
+        console.log('取得したOrder情報:', response.data);
+        setOrderDetails(response.data || []);
+    } catch (error) {
+        console.error('Order情報の取得エラー:', error);
+        setOrderDetails([]);
+    }
+    };
+
+    const handleDepartmentClick = async(box:StoreData) => {//モーダル開閉用関数
+        const departmentName = getDepartmentName(box.departmentId);
+        setSelectedDepartmentName(departmentName);
+        setOpenSecond(true);
+        await fetchOrderDetails(box.departmentId, selectedDate?.toISOString().split('T')[0].replace(/-/g, '')||'');
+    };
+
+    const handleClose2 = () => {
+        setOpenSecond(false);
+        setSelectedDepartmentName('');
+    };
+
 
     return (
     <Box sx={{ //表部分の親Box
@@ -346,7 +504,7 @@ export const FinalCheck = () => {
     </Tabs>
 
     
-    <TableContainer component={Paper} sx={{ width: '100%',maxHeight: '600px',  overflowY: 'auto', mt: 2 }}>
+    <TableContainer component={Paper} sx={{ width: '100%',maxHeight: '600px',  overflowY: 'auto'}}>
         <Table stickyHeader aria-label="店舗データテーブル" >
             <TableHead>
             <TableRow> 
@@ -356,23 +514,31 @@ export const FinalCheck = () => {
                 <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'success.light', boxColor: 'white' }}>トートーbox緑</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'error.light', boxColor: 'white' }}>トートーbox赤</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'primary.light', boxColor: 'white' }}>トートーbox青</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'warning.light', boxColor: 'white' }}>トートーbox黄</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'warning.light', boxColor: 'white' }}>トートーbox橙</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 'bold', bgcolor: 'primary.main', boxColor: 'white',width: '15%' }}>合計</TableCell>
             </TableRow>
             </TableHead>
             <TableBody >
-            {[
-                // 1. 中之島のデータ（昇順）
-                ...storeData
-                    .filter((s) => s.storeTc === '中之島')
-                    .sort((a, b) => Number(a.storeId) - Number(b.storeId)),
+            {(() => {
+                const nakanoshimaFiltered = storeData
+                .filter(s => s.storeTc === '中之島' && s.storeId !== '089' && s.storeId !== '057')
+                .sort((a, b) => Number(a.storeId) - Number(b.storeId));
 
-                // 2. 上越のデータ（昇順）
-                ...storeData
-                    .filter((s) => s.storeTc !== '中之島')
-                    .sort((a, b) => Number(a.storeId) - Number(b.storeId))
-                
-            ].map((store) => (
+                const store89 = storeData.filter(s => s.storeTc === '中之島' && s.storeId === '089');
+                const store057 = storeData.filter(s => s.storeTc === '中之島' && s.storeId === '057');
+
+                const others = storeData
+                .filter(s => s.storeTc !== '中之島')
+                .sort((a, b) => Number(a.storeId) - Number(b.storeId));
+
+                const reordered = [
+                ...nakanoshimaFiltered,
+                ...store89,
+                ...store057,
+                ...others
+                ];
+
+                return reordered.map((store) => (
                 <TableRow key={store.storeId} hover>
                 <TableCell>{store.storeTc}</TableCell>
                 <TableCell 
@@ -412,16 +578,17 @@ export const FinalCheck = () => {
                     align="right" 
                     sx={{ fontSize: '1.5rem' , bgcolor: 'warning.light', fontWeight: 'bold' }}
                 >
-                    {store.yellowBoxes}
+                    {store.orangeBoxes}
                 </TableCell>
                 <TableCell //店舗IDごとの全ての合計
                     align="right"
                     sx={{ fontSize: '1.5rem' , fontWeight: 'bold' }}
                 >
-                    {store.greenBoxes + store.redBoxes + store.blueBoxes + store.yellowBoxes}
+                    {store.greenBoxes + store.redBoxes + store.blueBoxes + store.orangeBoxes}
                 </TableCell>
                 </TableRow>
-            ))}
+                ));
+            })()}
             </TableBody>
         </Table>
     </TableContainer>
@@ -512,7 +679,10 @@ export const FinalCheck = () => {
                     
                     {boxDetails.map((box, index) => (
                     <React.Fragment key={`${box.storeId}-${index}`}>
-                        <ListItem sx={{ 
+                        <ListItemButton
+                            onClick={() => {
+                            handleDepartmentClick(box)
+                            }} sx={{ 
                         py: 2,
                         '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.04)' }
                         }}>
@@ -525,20 +695,7 @@ export const FinalCheck = () => {
                                 fontWeight: 500
                                 }}
                             >
-                                {box.departmentId === '1souzai' ? '惣菜1' :
-                                box.departmentId === '2souzai' ? '惣菜2' :
-                                box.departmentId === '3souzai' ? '惣菜3' :
-                                box.departmentId === 'kakou1' ? '加工' :
-                                box.departmentId === 'kakou2' ? '加工' :
-                                box.departmentId === 'seiniku' ? '精肉' :
-                                box.departmentId === 'namashitsu1' ? '生室' :
-                                box.departmentId === 'namashitsu2' ? '生室' :
-                                box.departmentId === 'honsyabuturyu' ? '本社物流' :
-                                box.departmentId === 'seika' ? '青果' :
-                                box.departmentId === 'kurosawa' ? '黒澤(テスト用)' :
-                                box.departmentId === 'furukawa' ? '古川(テスト用)' :
-                                box.departmentId === 'sakurai' ? '櫻井(テスト用)' :
-                                box.departmentId}
+                            {getDepartmentName(box.departmentId)}
                             </Typography>
                             } 
                             sx={{ flex: 2 }}
@@ -556,7 +713,7 @@ export const FinalCheck = () => {
                                 {box.boxColor === 'red' ? '赤色' : 
                                 box.boxColor === 'blue' ? '青色' : 
                                 box.boxColor === 'green' ? '緑色' : 
-                                box.boxColor === 'yellow' ? '黄色' :
+                                box.boxColor === 'orange' ? '橙色' :
                                 `${box.boxColor}色`}
                             </Typography>
                             } 
@@ -577,11 +734,214 @@ export const FinalCheck = () => {
                             } 
                             sx={{ flex: 1 }}
                         />
-                        </ListItem>
+                        </ListItemButton>
                         {index < boxDetails.length - 1 && <Divider />}
                     </React.Fragment>
                     ))}
                 </List>
+                ) : (
+                <Box sx={{ p: 3, textAlign: 'center' }}>
+                    <Typography variant="body1" color="text.secondary">
+                    データがありません
+                    </Typography>
+                </Box>
+                )}
+            </DialogContent>
+        </Dialog>
+        {/*モーダル2*/}
+        <Dialog open={openSecond} onClose={handleClose2} maxWidth="sm"fullWidth>
+        <DialogTitle sx={{ 
+            bgcolor: theme.palette.primary.main, 
+            color: 'white',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            py: 2,
+            px: 3
+        }}>
+            <Typography variant="h6" component="div" sx={{ 
+            fontWeight: 'bold',
+            fontSize:  '1.5rem'
+            }}>
+            担当部門:{selectedDepartmentName} - 注文詳細
+            </Typography>
+            <IconButton
+            edge="end"
+            color="inherit"
+            onClick={handleClose2}
+            aria-label="close"
+            >
+            <CloseIcon />
+            </IconButton>
+        </DialogTitle>
+        <DialogContent dividers sx={{ p: 0 }}>
+                {boxDetails.length > 0 ? (
+                <List sx={{ width: '100%', bgcolor: 'background.paper', p: 0 }}>
+                    <ListItem sx={{ 
+                    bgcolor: '#f5f5f5', 
+                    py: 1.5,
+                    borderBottom: '1px solid #e0e0e0'
+                    }}>
+                    <ListItemText 
+                        primary={
+                        <Typography 
+                            variant="subtitle1" 
+                            sx={{ 
+                            fontWeight: 'bold',
+                            fontSize: '1.3rem' 
+                            }}
+                        >
+                            TC
+                        </Typography>
+                        } 
+                        sx={{ flex: 2 }}
+                    />
+                    <ListItemText 
+                        primary={
+                        <Typography 
+                            variant="subtitle1" 
+                            align="right"
+                            sx={{ 
+                            fontWeight: 'bold',
+                            fontSize:'1.3rem'
+                            }}
+                        >
+                            店舗番号
+                        </Typography>
+                        } 
+                        sx={{ flex: 1 }}
+                    />
+                    <ListItemText 
+                        primary={
+                        <Typography 
+                            variant="subtitle1" 
+                            align="right"
+                            sx={{ 
+                            fontWeight: 'bold',
+                            fontSize:'1.3rem'
+                            }}
+                        >
+                            店舗名
+                        </Typography>
+                        } 
+                        sx={{ flex: 1 }}
+                    />
+                    <ListItemText 
+                        primary={
+                        <Typography 
+                            variant="subtitle1" 
+                            align="right"
+                            sx={{ 
+                            fontWeight: 'bold',
+                            fontSize:'1.3rem'
+                            }}
+                        >
+                            商品名・規格
+                        </Typography>
+                        } 
+                        sx={{ flex: 1 }}
+                    />
+                    <ListItemText 
+                        primary={
+                        <Typography 
+                            variant="subtitle1" 
+                            align="right"
+                            sx={{ 
+                            fontWeight: 'bold',
+                            fontSize:'1.3rem'
+                            }}
+                        >
+                            注文数
+                        </Typography>
+                        } 
+                        sx={{ flex: 1 }}
+                    />
+                    </ListItem>
+                    {orderDetails.map((order, index) => (
+                    <React.Fragment key={`${order.storeId}-${index}`}>
+                        <ListItem sx={{ 
+                        py: 2,
+                        '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.04)' }
+                        }}>
+                        <ListItemText 
+                            primary={
+                            <Typography 
+                                variant="body1"
+                                sx={{ 
+                                fontSize: '1.2rem',
+                                fontWeight: 500
+                                }}
+                            >
+                            {order.storeTc}
+                            </Typography>
+                            } 
+                            sx={{ flex: 2 }}
+                        />
+                        <ListItemText 
+                            primary={
+                            <Typography 
+                                variant="body1" 
+                                align="right"
+                                sx={{ 
+                                fontSize: '1.2rem',
+                                fontWeight: 'bold'
+                                }}
+                            >
+                                {order.storeId}
+                            </Typography>
+                            } 
+                            sx={{ flex: 1 }}
+                        />
+                        <ListItemText 
+                            primary={
+                            <Typography 
+                                variant="body1" 
+                                align="right"
+                                sx={{ 
+                                fontSize: '1.2rem',
+                                fontWeight: 'bold'
+                                }}
+                            >
+                                {order.storeName}
+                            </Typography>
+                            } 
+                            sx={{ flex: 1 }}
+                        />
+                        <ListItemText 
+                            primary={
+                            <Typography 
+                                variant="body1" 
+                                align="right"
+                                sx={{ 
+                                fontSize: '1.2rem',
+                                fontWeight: 'bold'
+                                }}
+                            >
+                                {order.itemFormalName}
+                            </Typography>
+                            } 
+                            sx={{ flex: 1 }}
+                        />
+                        <ListItemText 
+                            primary={
+                            <Typography 
+                                variant="body1" 
+                                align="right"
+                                sx={{ 
+                                fontSize: '1.2rem',
+                                fontWeight: 'bold'
+                                }}
+                            >
+                                {order.itemCount}個
+                            </Typography>
+                            } 
+                            sx={{ flex: 1 }}
+                        />
+                        </ListItem>
+                        {index < boxDetails.length - 1 && <Divider />}
+                    </React.Fragment>
+                    ))}
+                    </List>
                 ) : (
                 <Box sx={{ p: 3, textAlign: 'center' }}>
                     <Typography variant="body1" color="text.secondary">
@@ -604,10 +964,10 @@ export const FinalCheck = () => {
     pr: 8,
     gap: 2,
     }}
->
-    <SummaryTable title="全体 合計" total={totalAll} />
-    <SummaryTable title="中之島物流センター 合計" total={totalNakanoshima} />
-    <SummaryTable title="上越物流センター 合計" total={totalJyoetsu} />
+    >
+    <SummaryTable title={summaryTitle0} total={totalAll} />
+    <SummaryTable title={summaryTitle1} total={totalNakanoshima} />
+    <SummaryTable title={summaryTitle2} total={totalJyoetsu} />
     <Tooltip title="仕分け作業が完了していません">
     <span>
         <Button
@@ -626,7 +986,7 @@ export const FinalCheck = () => {
         onClick={handleDownloadExcel}
         disabled={!true}
         >
-        明細表をダウンロード
+        {buttonLabel}
         </Button>
     </span>
     </Tooltip>

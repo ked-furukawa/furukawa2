@@ -21,7 +21,8 @@ import type { Schema } from "../../amplify/data/resource";
 
 const boxClient = generateClient<Schema>();
 
-import { fetchUserAttributes } from 'aws-amplify/auth';
+// import { fetchUserAttributes } from 'aws-amplify/auth';
+import { useParams } from 'react-router-dom';
 
 interface StoreDoubleCheckListProps {
 stores: Store[];
@@ -31,7 +32,7 @@ loading?: boolean;
 error?: string | null;
 boxCounts?: Record<string, Record<string, number>>;
 }
-type BoxColor = 'green' | 'red' | 'blue' | 'yellow';
+type BoxColor = 'green' | 'red' | 'blue' | 'orange';
 
 export const StoreDoubleCheckList: React.FC<StoreDoubleCheckListProps> = ({
 stores,
@@ -58,8 +59,11 @@ if (stores.length === 0) {
     const [inputValue, setInputValue] = useState<string>('');
     const [selectedColor, setSelectedColor] = useState<BoxColor>('green');
     const [selectedStoreId, setSelectedStoreId] = useState<string>('0');
+const { departmentId } = useParams<{ departmentId?: string }>();
 
-
+if (!departmentId) {
+    return <div>部門IDが必要です</div>;
+}
 
 // 各店舗の合計箱数を計算
 const getStoreBoxCount = (storeId: string): number => {
@@ -73,7 +77,6 @@ const handleInputChange = (value: string) => {
   // 箱数更新処理
 const handleQuantityUpdate  = async () => {
     try {
-        const attrs = await fetchUserAttributes();
         const result = await boxClient.models.Box.update({ //DBの書き換え部分、今回はBoxテーブル
             date: '20250609', //実際は画面内のどこかに保持している変数などを使って必要情報を埋めていく
             storeId: selectedStoreId, //必要情報=定義したテーブルの中身
@@ -81,7 +84,7 @@ const handleQuantityUpdate  = async () => {
             boxColor: 'green',
             boxCount: Number(inputValue),
 
-            departmentId: attrs['custom:departmentId'] as string
+            departmentId: departmentId
         });
         console.log('result',result);
         } catch (error) {

@@ -8,75 +8,119 @@ interface DetailData {
     greenBoxes: number;
     redBoxes: number;
     blueBoxes: number;
-    yellowBoxes: number;
+    orangeBoxes: number;
 }
 
-export function createDetailListFromTemplate(workbook:ExcelJS.Workbook, detailData:DetailData[]) {
+export function createDetailListFromTemplate(workbook:ExcelJS.Workbook, detailData:DetailData[], tabValue:number) {
     console.log(workbook.worksheets)
+    // suffix を tabValue でマッピング
+    const suffixMap: Record<number, string> = {
+        0: "センター",
+        1: "",
+        2: "第2",
+    };
+
+    const suffix = suffixMap[tabValue];
+    if (!suffix) {
+        throw new Error(`未対応の tabValue: ${tabValue}`);
+    }
+
+    // 各シート名を構築
+    const sheetNames = {
+        A: `中之島①${suffix}`,
+        B: `上越①${suffix}`,
+        E: tabValue === 0
+        ? "上越訓練センター（手で数入力して下さい）"
+        : "上越訓練センター",
+    };
     
-    // 取引先によって書き込むシートを切り替え（例: 'A社'なら1枚目、'B社'なら2枚目）
-    const sheetA = workbook.getWorksheet("中之島①センター");
+    const sheetA = workbook.getWorksheet(sheetNames.A);
     if (!sheetA) {
-        throw new Error('中之島用のシートが見つかりません');
+        throw new Error(`シートが見つかりません: ${sheetNames.A}`);
     }
-    const sheetB = workbook.getWorksheet("上越①センター");
+
+    const sheetB = workbook.getWorksheet(sheetNames.B);
     if (!sheetB) {
-        throw new Error('上越用のシートが見つかりません');
+        throw new Error(`シートが見つかりません: ${sheetNames.B}`);
     }
-    const sheetC = workbook.getWorksheet("中之島青果①センター")
-    if (!sheetC) {
-        throw new Error('中之島青果用のシートが見つかりません');
-    }
-    const sheetD = workbook.getWorksheet("上越青果①センター")
-    if (!sheetD) {
-        throw new Error('上越青果用のシートが見つかりません');
-    }
-    const sheetE = workbook.getWorksheet("上越訓練センター（手で数入力して下さい）")
+    const sheetE = workbook.getWorksheet(sheetNames.E);
     if (!sheetE) {
-        throw new Error('上越訓練センター用のシートが見つかりません');
+        throw new Error(`シートが見つかりません: ${sheetNames.E}`);
     }
 
     // シートごとにデータを分割
-    const dataA = detailData.filter(item => item.storeTc === '中之島');
-    const dataB = detailData.filter(item => item.storeTc === '上越');
+    // 中之島のデータを並び替え
+    const nakanoshimaMain = detailData
+    .filter(item => item.storeTc === '中之島' && item.storeId !== '089' && item.storeId !== '057')
+    .sort((a, b) => Number(a.storeId) - Number(b.storeId));
+
+    const nakanoshima89 = detailData
+    .filter(item => item.storeTc === '中之島' && item.storeId === '089');
+
+    const nakanoshima057 = detailData
+    .filter(item => item.storeTc === '中之島' && item.storeId === '057');
+
+    const dataA = [...nakanoshimaMain, ...nakanoshima89, ...nakanoshima057];
+
+    // 上越のデータはそのまま昇順ソート
+    const dataB = detailData
+    .filter(item => item.storeTc === '上越')
+    .sort((a, b) => Number(a.storeId) - Number(b.storeId));
 
     const startRow = 14;//開始行
+    const maxRow = 41;
+    const maxPerColumn = maxRow - startRow + 1; // 28件ずつで折り返し
+
+    // 折り返し用の列定義（列番号）
+    const columnBlocks = [
+        { storeId: 'A', storeName: 'B', green: 'D', red: 'F', blue: 'H', orange: 'J' },
+        { storeId: 'M', storeName: 'N', green: 'P', red: 'R', blue: 'T', orange: 'V' },
+        { storeId: 'Y', storeName: 'Z', green: 'AB', red: 'AD', blue: 'AF', orange: 'AH' },
+        // 必要に応じて追加
+    ];
+    //折り返し用の関数
+    function colLetterToNumber(letter: string): number {
+    let num = 0;
+    for (let i = 0; i < letter.length; i++) {
+        num *= 26;
+        num += letter.charCodeAt(i) - 64;
+    }
+    return num;
+    }
 
     // シートAに書き込み
-    dataA.forEach((item, i) => {
-        const row = sheetA.getRow(startRow + i);
-        row.getCell('A').value = item.storeId;
-        row.getCell('B').value = item.storeName;
-        row.getCell('D').value = item.greenBoxes;
-        row.getCell('F').value = item.redBoxes;
-        row.getCell('H').value = item.blueBoxes;
-        row.getCell('J').value = item.yellowBoxes;
-        row.commit();
-        const row2 = sheetC.getRow(startRow + i);
-        row2.getCell('A').value = item.storeId;
-        row2.getCell('B').value = item.storeName;
-        row2.getCell('E').value = 0;
-        row2.commit();
+dataA.forEach((item, index) => {
+    const columnBlockIndex = Math.floor(index / maxPerColumn);
+    const rowInBlock = index % maxPerColumn;
+    const currentCols = columnBlocks[columnBlockIndex];
+
+    const row = sheetA.getRow(startRow + rowInBlock);
+    row.getCell(colLetterToNumber(currentCols.storeId)).value = item.storeId;
+    row.getCell(colLetterToNumber(currentCols.storeName)).value = item.storeName;
+    row.getCell(colLetterToNumber(currentCols.green)).value = item.greenBoxes;
+    row.getCell(colLetterToNumber(currentCols.red)).value = item.redBoxes;
+    row.getCell(colLetterToNumber(currentCols.blue)).value = item.blueBoxes;
+    row.getCell(colLetterToNumber(currentCols.orange)).value = item.orangeBoxes;
+    row.commit();
     });
 
     // シートBに書き込み
-    dataB.forEach((item, i) => {
-        const row = sheetB.getRow(startRow + i);
-        row.getCell('A').value = item.storeId;
-        row.getCell('B').value = item.storeName;
-        row.getCell('D').value = item.greenBoxes;
-        row.getCell('F').value = item.redBoxes;
-        row.getCell('H').value = item.blueBoxes;
-        row.getCell('J').value = item.yellowBoxes;
+    dataB.forEach((item, index) => {
+        const columnBlockIndex = Math.floor(index / maxPerColumn);
+        const rowInBlock = index % maxPerColumn;
+        const currentCols = columnBlocks[columnBlockIndex];
+
+        const row = sheetB.getRow(startRow + rowInBlock);
+        row.getCell(colLetterToNumber(currentCols.storeId)).value = item.storeId;
+        row.getCell(colLetterToNumber(currentCols.storeName)).value = item.storeName;
+        row.getCell(colLetterToNumber(currentCols.green)).value = item.greenBoxes;
+        row.getCell(colLetterToNumber(currentCols.red)).value = item.redBoxes;
+        row.getCell(colLetterToNumber(currentCols.blue)).value = item.blueBoxes;
+        row.getCell(colLetterToNumber(currentCols.orange)).value = item.orangeBoxes;
         row.commit();
-        const row2 = sheetD.getRow(startRow + i);
-        row2.getCell('A').value = item.storeId;
-        row2.getCell('B').value = item.storeName;
-        row2.getCell('E').value = 0;
-        row2.commit();
-        const row3 = sheetD.getRow(startRow + i);
-        row3.getCell('A').value = item.storeId;
-        row3.getCell('B').value = item.storeName;
+        const row3 = sheetE.getRow(startRow + rowInBlock);
+        row3.getCell(colLetterToNumber(currentCols.storeId)).value = item.storeId;
+        row3.getCell(colLetterToNumber(currentCols.storeName)).value = item.storeName;
         row3.commit();
     });
 }
