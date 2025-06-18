@@ -14,6 +14,7 @@ import { StoreDoubleCheckList as StoreDoubleCheckListComponent } from '../compon
 import { Store } from '../types';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
+import { useParams } from 'react-router-dom';
 
 // Amplify クライアントの生成
 const client = generateClient<Schema>();
@@ -28,21 +29,23 @@ const [boxCounts, setBoxCounts] = useState<Record<string, Record<string, number>
 const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
 const [snackbarMessage, setSnackbarMessage] = useState<string>('');
 const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+const departmentId = useParams().departmentId!;
 
 // データを取得
 useEffect(() => {
     // テストデータの日付を指定 (20250609)
     const targetDate = "20250609";
-    
-    // DynamoDBからのデータ取得をサブスクライブ
-    const subscription = client.models.Box.observeQuery({
-    filter: {
-        date: {
-        eq: targetDate
-        }
-    }
-    }).subscribe({
-    next: ({ items }) => {
+
+    const fetchAllData = async () => {
+    try {
+        const { data } = await client.models.Box.listBoxesByDateAndDept({
+            date: targetDate,
+            departmentId: {
+                eq: departmentId
+            }
+            });
+
+        const items=data
         if (items.length === 0) {
         setError(`${targetDate}の箱データが見つかりませんでした`);
         setLoading(false);
@@ -80,21 +83,16 @@ useEffect(() => {
         
         setStores(storesArray);
         setBoxCounts(boxCountsData);
-        setError(null);
-        setLoading(false);
-    },
-    error: (err) => {
-        console.error('データの取得に失敗しました', err);
-        setError('データの取得に失敗しました');
-        setSnackbarMessage('データの取得に失敗しました');
-        setSnackbarSeverity('error');
-        setSnackbarOpen(true);
+        } catch (err) {
+        console.error('データの読み込みに失敗しました:', err);
+        setError('データの読み込みに失敗しました: ' + (err instanceof Error ? err.message : String(err)));
+        } finally {
         setLoading(false);
     }
-    });
-
-    return () => subscription.unsubscribe();
-}, []);
+    };
+    
+    fetchAllData();
+}, [departmentId]);
 
 // 店舗選択ハンドラー
 const handleStoreSelect = (storeId: string) => {
