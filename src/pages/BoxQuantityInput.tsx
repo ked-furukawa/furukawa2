@@ -156,26 +156,37 @@ const filteredStores = useMemo(() => {
 }, [allStores, currentRegion]);
 
 // 初期データの一括取得
+// 初期データの一括取得
 useEffect(() => {
   // 部門IDが設定されるまで待機
   if (!departmentId) return;
  
-const fetchAllData = async () => {
-  try {
-    setLoading(true);
-   
-    // 固定の日付を使用（6月9日のテストデータ）
-    const today = '20250609';
-    setCurrentDate(today);
-   
-    // resolveImportId を使用して最新の importId を取得
+  const fetchAllData = async () => {
+    try {
+      setLoading(true);
+     
+      // 固定の日付を使用（6月9日のテストデータ）
+      const today = '20250609';
+      setCurrentDate(today);
+     
+      // resolveImportId を使用して最新の importId を取得
       const importResult = await resolveImportId(today, departmentId);
       if (!importResult) {
         setError('有効な importId が見つかりませんでした');
         return;
       }
+      
       // importId を状態として保存
       setImportId(importResult.importId);
+      
+      // sortingPhase に基づいて currentRegion を設定
+      if (importResult.sortingPhase === 'COMPLETED_NAKANOSHIMA') {
+        // 中之島エリアが完了している場合は上越に切り替え
+        setCurrentRegion('上越');
+      } else {
+        // それ以外の場合は中之島をデフォルトに
+        setCurrentRegion('中之島');
+      }
    
     // 同じ日付の全てのImportWorkStatusを取得して複数回注文の有無を確認
     const importStatusResponse = await dataClient.models.ImportWorkStatus.list({
@@ -349,7 +360,7 @@ const fetchAllData = async () => {
     setCompletedStores(completed);
   }
 
-// グループ化された注文データから店舗リストを抽出（物流センターごとにグループ化して店舗IDで昇順ソート）
+// グループ化された注文データから店舗リストを抽出
 function extractStoresFromGroupedOrders(
   groupedOrders: { [storeTc: string]: { [storeId: string]: OrderData[] } }
 ): Store[] {
@@ -390,7 +401,7 @@ function extractStoresFromGroupedOrders(
   });
   
   return stores;
-  }
+}
 
   // 次の店舗を取得する関数
   function getNextStore(currentStoreId: string, storeList = allStores): Store | null {
@@ -608,59 +619,134 @@ function extractStoresFromGroupedOrders(
         .map(cs => cs.storeId);
       const newlyCompleted = [...new Set([...completedNakanoshima, selectedStoreId])];
       
-      // 中之島エリア完了チェック部分（Order更新は次の段階で修正）
+// 中之島エリア完了チェック部分
 if (newlyCompleted.length === nakanoshimaStores.length) {
-  // 全中之島店舗が完了
-  console.log('中之島エリアの作業が完了しました');
- 
-  // 中之島エリアの全注文ステータスを更新（次の段階で修正）
-  const nakanoshimaStoreIds = nakanoshimaStores.map(s => s.storeId);
-  const nakanoshimaOrders = orders.filter(order =>
-    nakanoshimaStoreIds.includes(order.storeId)
-  );
- 
-  // 注文ステータスを一括更新（次の段階で修正）
-  const updatePromises = nakanoshimaOrders.map(order =>
-    dataClient.models.Order.update({
-      importId: order.importId,
-      date: order.date,
-      storeId: order.storeId,
-      itemId: order.itemId,
-      status: StatusTemplate.DONE
-    })
-  );
- 
-  await Promise.all(updatePromises);
- 
-  // 画面遷移
-  navigateTo('SortingCheckScreen');
+  try {
+    // ImportWorkStatus の sortingPhase を COMPLETED_NAKANOSHIMA に更新
+    await dataClient.models.ImportWorkStatus.update({
+      date: currentDate,
+      departmentId: departmentId,
+      importId: importId,
+      sortingPhase: 'COMPLETED_NAKANOSHIMA'
+    });
+    
+    // 中之島エリアの全注文ステータスを更新
+    const nakanoshimaStoreIds = nakanoshimaStores.map(s => s.storeId);
+    
+    // 最新の注文データを再取得
+    const latestOrdersResponse = await dataClient.models.Order.listOrdersByDeptAndImport({
+      date: currentDate,
+      departmentIdImportId: {
+        eq: {
+          departmentId: departmentId,
+          importId: importId
+        }
+      }
+    });
+    
+    const latestOrders = latestOrdersResponse.data;
+    
+    // 中之島の店舗の注文をフィルタリング
+    const nakanoshimaOrders = latestOrders.filter(order =>
+      nakanoshimaStoreIds.includes(order.storeId)
+    );
+    
+    // 更新対象の識別子と更新内容を明確に分ける
+    const updatePromises = nakanoshimaOrders.map(async order => {
+      try {
+        const result = await dataClient.models.Order.update({
+          importId: order.importId,
+          date: order.date,
+          storeId: order.storeId,
+          itemId: order.itemId,
+          departmentId: order.departmentId,
+          status: 'DONE'
+        });
+        
+        if (result.errors && result.errors.length > 0) {
+          throw new Error(`更新エラー: ${result.errors[0].message}`);
+        }
+        
+        return result;
+      } catch (error) {
+        throw error;
+      }
+    });
+    
+    await Promise.all(updatePromises);
+
+    // 画面遷移
+    navigateTo('SortingCheckScreen');
+  } catch (error) {
+    console.error('中之島エリア完了処理中にエラーが発生しました:', error);
+    setError('中之島エリア完了処理中にエラーが発生しました');
+  }
   return;
 }
 
-// 最後の店舗チェック部分（Order更新は次の段階で修正）
+// 上越エリア完了時（最後の店舗チェック部分）
 if (!nextStore) {
-  // 上越エリアの全注文ステータスを更新
-  const joetsuStores = allStores.filter(s => s.storeTc === '上越');
-  const joetsuStoreIds = joetsuStores.map(s => s.storeId);
-  const joetsuOrders = orders.filter(order =>
-    joetsuStoreIds.includes(order.storeId)
-  );
- 
-  // 注文ステータスを一括更新（次の段階で修正）
-  const updatePromises = joetsuOrders.map(order =>
-    dataClient.models.Order.update({
-      importId: order.importId,
-      date: order.date,
-      storeId: order.storeId,
-      itemId: order.itemId,
-      status: StatusTemplate.DONE
-    })
-  );
- 
-  await Promise.all(updatePromises);
- 
-  // 画面遷移
-  navigateTo('StoreDoubleCheckList');
+  try {
+    // ImportWorkStatus の sortingPhase を COMPLETED_JYOETSU に更新
+    await dataClient.models.ImportWorkStatus.update({
+      date: currentDate,
+      departmentId: departmentId,
+      importId: importId,
+      sortingPhase: 'COMPLETED_JYOETSU'
+    });
+    
+    // 上越エリアの全注文ステータスを更新
+    const joetsuStores = allStores.filter(s => s.storeTc === '上越');
+    const joetsuStoreIds = joetsuStores.map(s => s.storeId);
+    
+    // 最新の注文データを再取得
+    const latestOrdersResponse = await dataClient.models.Order.listOrdersByDeptAndImport({
+      date: currentDate,
+      departmentIdImportId: {
+        eq: {
+          departmentId: departmentId,
+          importId: importId
+        }
+      }
+    });
+    
+    const latestOrders = latestOrdersResponse.data;
+    
+    // 上越の店舗の注文をフィルタリング
+    const joetsuOrders = latestOrders.filter(order =>
+      joetsuStoreIds.includes(order.storeId)
+    );
+    
+    // 更新対象の識別子と更新内容を明確に分ける
+    const updatePromises = joetsuOrders.map(async order => {
+      try {
+        const result = await dataClient.models.Order.update({
+          importId: order.importId,
+          date: order.date,
+          storeId: order.storeId,
+          itemId: order.itemId,
+          departmentId: order.departmentId,
+          status: 'DONE'
+        });
+        
+        if (result.errors && result.errors.length > 0) {
+          throw new Error(`更新エラー: ${result.errors[0].message}`);
+        }
+        
+        return result;
+      } catch (error) {
+        throw error;
+      }
+    });
+    
+    await Promise.all(updatePromises);
+    
+    // 画面遷移
+    navigateTo('StoreDoubleCheckList');
+  } catch (error) {
+    console.error('上越エリア完了処理中にエラーが発生しました:', error);
+    setError('上越エリア完了処理中にエラーが発生しました');
+  }
   return;
 }
      
