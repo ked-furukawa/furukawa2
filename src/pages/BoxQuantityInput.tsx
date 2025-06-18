@@ -22,6 +22,7 @@ import { formatDateToJST } from '../components/utils/formatDateToJST';
 import { groupOrdersByTcAndStore } from '../components/utils/groupOrdersByTcAndStore';
 import { resolveImportId } from '../components/utils/resolveImportId';
 import { useParams } from 'react-router-dom';
+import { checkPendingImportId } from '../components/utils/checkPendingImportId';
 
 // 型定義
 type BoxColor = 'green' | 'red' | 'blue' | 'orange';
@@ -84,6 +85,9 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
 
   const {departmentId} = useParams();
 
+  // 状態を追加
+  const [hasPendingImportId, setHasPendingImportId] = useState<boolean>(false);
+
   // 確定ボタンを有効にするための条件をチェックする関数
   const isConfirmButtonEnabled = useMemo(() => {
     // 条件1: 全ての商品が選択されている
@@ -131,12 +135,25 @@ useEffect(() => {
       const today = '20250609';
       setCurrentDate(today);
      
-      // resolveImportId を使用して最新の importId を取得
+      // resolveImportId を使用して作業用の importId を取得
       const importResult = await resolveImportId(today, departmentId);
+      console.log('resolveImportId result:', importResult);
+      
       if (!importResult) {
-        setError('有効な importId が見つかりませんでした');
+        setError('仕分け作業は完了しています');
+        setLoading(false);
         return;
       }
+      
+      // 既存の状態をクリア
+      setOrders([]);
+      setBoxDataCache([]);
+      setCompletedStores([]);
+      setStoreData(null);
+      setNextStore(null);
+      setSelectedStoreId(null);
+      setSelectedProductIds([]);
+      setInputValue('');
       
       // importId を状態として保存
       setImportId(importResult.importId);
@@ -150,120 +167,147 @@ useEffect(() => {
         setCurrentRegion('中之島');
       }
    
-    // 最新の importId に基づく注文データを取得 (GSI_OrderDateDeptImport を使用)
-    const ordersResponse = await dataClient.models.Order.listOrdersByDeptAndImport({
-      date: today,
-      departmentIdImportId: {
-        eq: {
-          departmentId: departmentId,
-          importId: importResult.importId
+      // 取得した importId に基づく注文データを取得
+      const ordersResponse = await dataClient.models.Order.list({
+        filter: {
+          date: { eq: today },
+          departmentId: { eq: departmentId },
+          importId: { eq: importResult.importId }
         }
-      }
-    });
+      });
 
-    console.log(`最新の注文データ (${ordersResponse.data.length}件) を取得しました`);
+      console.log('注文データ取得結果:', {
+        importId: importResult.importId,
+        departmentId: departmentId,
+        date: today,
+        totalOrders: ordersResponse.data.length,
+        firstOrder: ordersResponse.data[0]
+      });
    
-    // 同じ date×storeId×itemId で status=DONE の注文を検索
-    // 修正: 正しいGSIクエリを使用
-    const doneOrdersResponse = await dataClient.models.Order.listOrdersByStoreAndItem({
-      date: today,
-      // すべての店舗・商品の組み合わせを取得してからフィルタリング
-    });
+      // 同じ date×storeId×itemId で status=DONE の注文を検索
+      const doneOrdersResponse = await dataClient.models.Order.listOrdersByStoreAndItem({
+        date: today,
+      });
    
-    console.log(`全注文データ (${doneOrdersResponse.data.length}件) を取得しました`);
+      console.log('処理済み注文データ取得結果:', {
+        totalDoneOrders: doneOrdersResponse.data.length,
+        firstDoneOrder: doneOrdersResponse.data[0]
+      });
    
-    // JavaScript側でDONEステータスの注文をフィルタリング
-    const doneOrders = doneOrdersResponse.data.filter(order =>
-      order.status === StatusTemplate.DONE
-    );
+      // JavaScript側でDONEステータスの注文をフィルタリング
+      const doneOrders = doneOrdersResponse.data.filter(order =>
+        order.status === StatusTemplate.DONE && order.importId === importResult.importId
+      );
    
-    console.log(`処理済み注文 (${doneOrders.length}件) を抽出しました`);
+      console.log('フィルタリング後の処理済み注文:', {
+        count: doneOrders.length,
+        firstDoneOrder: doneOrders[0]
+      });
    
-    // 処理済み注文のマップを作成（高速検索用）
-    const doneOrdersMap = new Map();
-    doneOrders.forEach(order => {
-      const key = `${order.date}_${order.storeId}_${order.itemId}`;
-      doneOrdersMap.set(key, order);
-    });
+      // 処理済み注文のマップを作成（高速検索用）
+      const doneOrdersMap = new Map();
+      doneOrders.forEach(order => {
+        const key = `${order.date}_${order.storeId}_${order.itemId}`;
+        doneOrdersMap.set(key, order);
+      });
    
-    // 最新の注文から処理済みのものを除外
-    const filteredOrders = ordersResponse.data.filter(order => {
-      const key = `${order.date}_${order.storeId}_${order.itemId}`;
-      return !doneOrdersMap.has(key);
-    });
+      // 最新の注文から処理済みのものを除外
+      const filteredOrders = ordersResponse.data.filter(order => {
+        const key = `${order.date}_${order.storeId}_${order.itemId}`;
+        const isDone = doneOrdersMap.has(key);
+        if (isDone) {
+          console.log('除外された注文:', {
+            key,
+            order,
+            doneOrder: doneOrdersMap.get(key)
+          });
+        }
+        return !isDone;
+      });
    
-    console.log(`フィルタリング後の注文データ: ${filteredOrders.length}件`);
-   
-    // 型変換を行ってからステートに保存
-    const typedOrders: OrderData[] = filteredOrders.map(order => ({
-      importId: order.importId,
-      date: order.date,
-      storeId: order.storeId,
-      storeName: order.storeName || '',  // null の場合は空文字列に変換
-      storeTc: order.storeTc || '',      // null の場合は空文字列に変換
-      itemId: order.itemId,
-      itemName: order.itemName || '',    // null の場合は空文字列に変換
-      itemFormalName: order.itemFormalName || undefined,
-      itemCount: order.itemCount,
-      departmentId: order.departmentId,
-      departmentName: order.departmentName || undefined,
-      status: order.status as OrderStatus || 'PENDING'
-    }));
-   
-    // フィルタリングされた注文データを状態として保存
-    setOrders(typedOrders);
-   
-    // 箱データを取得 (修正: 正しいGSIクエリを使用)
-    const boxResponse = await dataClient.models.Box.listBoxesByDate({
-      date: today,
-      departmentId: {
-        eq: departmentId
+      console.log('最終的なフィルタリング結果:', {
+        totalOrders: ordersResponse.data.length,
+        doneOrdersCount: doneOrders.length,
+        filteredOrdersCount: filteredOrders.length,
+        firstFilteredOrder: filteredOrders[0]
+      });
+      
+      if (filteredOrders.length === 0) {
+        setError('このImportIdには処理可能なデータがありません');
+        setLoading(false);
+        return;
       }
-    });
    
-    // BoxData の型と実際のデータ構造の違いを解消するためにマッピング
-    const mappedBoxData = boxResponse.data.map(box => ({
-      date: box.date,
-      storeId: box.storeId,
-      storeName: box.storeName ?? undefined,
-      storeTc: box.storeTc ?? undefined,
-      color: box.boxColor || 'green',
-      boxCount: box.boxCount,
-      boxCreatedBy: box.departmentId ?? undefined,
-      isChecked: box.status === StatusTemplate.CONFIRMED || box.status === StatusTemplate.DOUBLE_CHECKED
-    }));
-    setBoxDataCache(mappedBoxData);
+      // 型変換を行ってからステートに保存
+      const typedOrders: OrderData[] = filteredOrders.map(order => ({
+        importId: order.importId,
+        date: order.date,
+        storeId: order.storeId,
+        storeName: order.storeName || '',
+        storeTc: order.storeTc || '',
+        itemId: order.itemId,
+        itemName: order.itemName || '',
+        itemFormalName: order.itemFormalName || undefined,
+        itemCount: order.itemCount,
+        departmentId: order.departmentId,
+        departmentName: order.departmentName || undefined,
+        status: order.status as OrderStatus || 'PENDING'
+      }));
    
-    // 完了済み店舗の処理
-    processCompletedStores(mappedBoxData);
+      // フィルタリングされた注文データを状態として保存
+      setOrders(typedOrders);
    
-    // 店舗リストの作成
-    const groupedOrders = groupOrdersByTcAndStore(typedOrders);
-    console.log('グループ化された注文データ:', groupedOrders);
+      // 箱データを取得
+      const boxResponse = await dataClient.models.Box.listBoxesByDate({
+        date: today,
+        departmentId: {
+          eq: departmentId
+        }
+      });
    
-    const stores = extractStoresFromGroupedOrders(groupedOrders);
-    console.log('抽出された店舗リスト:', stores);
+      // BoxData の型と実際のデータ構造の違いを解消するためにマッピング
+      const mappedBoxData = boxResponse.data.map(box => ({
+        date: box.date,
+        storeId: box.storeId,
+        storeName: box.storeName ?? undefined,
+        storeTc: box.storeTc ?? undefined,
+        color: box.boxColor || 'green',
+        boxCount: box.boxCount,
+        boxCreatedBy: box.departmentId ?? undefined,
+        isChecked: box.status === StatusTemplate.CONFIRMED || box.status === StatusTemplate.DOUBLE_CHECKED
+      }));
+      setBoxDataCache(mappedBoxData);
    
-    setAllStores(stores);
+      // 完了済み店舗の処理
+      processCompletedStores(mappedBoxData);
    
-    // 最初の店舗を選択
-    if (stores.length > 0) {
-      const firstStoreId = stores[0].storeId;
-      handleStoreSelectInternal(firstStoreId, typedOrders, mappedBoxData);
-      setNextStore(getNextStore(firstStoreId, stores));
-    } else {
-      setError('この部門に割り当てられた店舗がありません');
+      // 店舗リストの作成
+      const groupedOrders = groupOrdersByTcAndStore(typedOrders);
+      console.log('グループ化された注文データ:', groupedOrders);
+   
+      const stores = extractStoresFromGroupedOrders(groupedOrders);
+      console.log('抽出された店舗リスト:', stores);
+   
+      setAllStores(stores);
+   
+      // 最初の店舗を選択
+      if (stores.length > 0) {
+        const firstStoreId = stores[0].storeId;
+        handleStoreSelectInternal(firstStoreId, typedOrders, mappedBoxData);
+        setNextStore(getNextStore(firstStoreId, stores));
+      } else {
+        setError('この部門に割り当てられた店舗がありません');
+      }
+    } catch (err) {
+      console.error('データの読み込みに失敗しました:', err);
+      setError('データの読み込みに失敗しました: ' + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    console.error('データの読み込みに失敗しました:', err);
-    setError('データの読み込みに失敗しました: ' + (err instanceof Error ? err.message : String(err)));
-  } finally {
-    setLoading(false);
-  }
-};
+  };
    
-    fetchAllData();
-  }, [departmentId]);
+  fetchAllData();
+}, [departmentId]);
 
   // 完了済み店舗の処理を分離
   function processCompletedStores(boxData: BoxData[]) {
@@ -415,7 +459,7 @@ function extractStoresFromGroupedOrders(
     handleStoreSelectInternal(storeId, orders, boxDataCache);
   }
 
-  function handleQuantityUpdate() {
+  async function handleQuantityUpdate() {
     const quantity = parseInt(inputValue, 10);
     if (isNaN(quantity)) {
       setError('有効な数値を入力してください');
@@ -433,6 +477,18 @@ function extractStoresFromGroupedOrders(
    
     // エラーをクリア
     setError(null);
+
+    // 最後の店舗の場合、PENDING状態のImportIdをチェック
+    if (!nextStore) {
+      try {
+        const pendingCheck = await checkPendingImportId(currentDate, departmentId as string);
+        setHasPendingImportId(pendingCheck);
+      } catch (error) {
+        console.error('PENDING状態のチェック中にエラーが発生しました:', error);
+        setError('状態の確認中にエラーが発生しました');
+        return;
+      }
+    }
    
     // 確認ダイアログを表示
     setShowConfirmDialog(true);
@@ -622,7 +678,7 @@ if (!nextStore) {
       departmentId: departmentId as string,
       importId: importId,
       sortingPhase: 'COMPLETED_JYOETSU',
-      importProgress: 'DONE' // importProgressをDONEに更新
+      importProgress: 'DONE'
     });
     
     // 上越エリアの全注文ステータスを更新
@@ -671,8 +727,16 @@ if (!nextStore) {
     
     await Promise.all(updatePromises);
     
+    // PENDING状態のImportIdの有無をチェック
+    const pendingCheck = await checkPendingImportId(currentDate, departmentId as string);
+    setHasPendingImportId(pendingCheck);
+    
     // 画面遷移
-    navigateTo('StoreDoubleCheckList');
+    if (pendingCheck) {
+      navigateTo('SortingCheckScreen');
+    } else {
+      navigateTo('StoreDoubleCheckList');
+    }
   } catch (error) {
     console.error('上越エリア完了処理中にエラーが発生しました:', error);
     setError('上越エリア完了処理中にエラーが発生しました');
@@ -798,7 +862,9 @@ if (!nextStore) {
             {`${storeData?.storeName || '現在の店舗'}の処理を完了します。`}
             {
               !nextStore
-                ? '最後の店舗です。'
+                ? hasPendingImportId
+                  ? '追加の商品があります。商品数確認画面に進みます。'
+                  : '全ての商品の処理が完了しました。ダブルチェック画面に進みます。'
                 : storeData?.storeTc === '中之島' && nextStore.storeTc !== '中之島'
                 ? '中之島の作業が完了しました。商品数確認画面に進みます。'
                 : `${nextStore.storeName}に進みます。`
