@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { Box, Button, TextField, Paper, Typography, Menu, MenuItem, Tooltip } from '@mui/material';
 
 // 色の定義
-type BoxColor = 'green' | 'red' | 'blue' | 'yellow';
+type BoxColor = 'green' | 'red' | 'blue' | 'orange';
 
 // 色の表示名マッピング
 const colorNames: Record<BoxColor, string> = {
   green: '緑',
   red: '赤',
   blue: '青',
-  yellow: '黄'
+  orange: '橙'
 };
 
 // 色のスタイルマッピング
@@ -17,7 +17,7 @@ const colorStyles: Record<BoxColor, { bg: string, text: string }> = {
   green: { bg: '#4caf50', text: 'white' },
   red: { bg: '#f44336', text: 'white' },
   blue: { bg: '#2196f3', text: 'white' },
-  yellow: { bg: '#ffeb3b', text: 'black' }
+  orange: { bg: '#F28C28', text: 'black' }
 };
 
 // 数字ボタン用の共通スタイル - 文字色と枠線を黒に設定

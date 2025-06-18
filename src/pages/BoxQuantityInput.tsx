@@ -1,7 +1,7 @@
 // src/pages/BoxQuantityInput.tsx
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { fetchUserAttributes } from 'aws-amplify/auth';
+// import { fetchUserAttributes } from 'aws-amplify/auth';
 import {
   Box,
   Container,
@@ -22,9 +22,10 @@ import { OrderData, BoxData, StatusTemplate, OrderStatus } from '../types';
 // import { formatDateToJST } from '../components/utils/formatDateToJST';
 import { groupOrdersByTcAndStore } from '../components/utils/groupOrdersByTcAndStore';
 import { resolveImportId } from '../components/utils/resolveImportId';
+import { useParams } from 'react-router-dom';
 
 // 型定義
-type BoxColor = 'green' | 'red' | 'blue' | 'yellow';
+type BoxColor = 'green' | 'red' | 'blue' | 'orange';
 
 // Amplify クライアントの生成
 const dataClient = generateClient<Schema>();
@@ -77,39 +78,40 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
   const [currentDate, setCurrentDate] = useState<string>('');
   const [importId, setImportId] = useState<string | null>(null);
   // const [allImportIds, setAllImportIds] = useState<string[]>([]);
-  const [departmentId, setDepartmentId] = useState<string>(''); // 初期値を空文字列に変更
+  // const [departmentId, setDepartmentId] = useState<string>(''); // 初期値を空文字列に変更
   const [currentRegion, setCurrentRegion] = useState<string>('中之島'); // 初期値は中之島
 
   // データキャッシュ
   const [orders, setOrders] = useState<OrderData[]>([]);
   const [boxDataCache, setBoxDataCache] = useState<BoxData[]>([]);
 
+  const {departmentId} = useParams();
   // 認証情報から部門IDを取得する部分
-useEffect(() => {
-  const fetchUserInfo = async () => {
-    try {    
-      // ユーザー属性を取得
-      const attributes = await fetchUserAttributes();
-      console.log('ユーザー属性:', attributes);
+// useEffect(() => {
+//   const fetchUserInfo = async () => {
+//     try {    
+//       // ユーザー属性を取得
+//       const attributes = await fetchUserAttributes();
+//       console.log('ユーザー属性:', attributes);
      
-      // カスタム属性から部門IDを取得
-      const userDepartmentId = attributes['custom:departmentId'];
+//       // カスタム属性から部門IDを取得
+//       const userDepartmentId = attributes['custom:departmentId'];
      
-      if (userDepartmentId) {
-        console.log('部門ID:', userDepartmentId);
-        setDepartmentId(userDepartmentId);
-      } else {
-        // 取得できない場合はエラーを設定
-        setError('ユーザーに部門IDが設定されていません');
-      }
-    } catch (error) {
-      console.error('ユーザー情報の取得に失敗しました:', error);
-      setError('ユーザー情報の取得に失敗しました');
-    }
-  };
+//       if (userDepartmentId) {
+//         console.log('部門ID:', userDepartmentId);
+//         setDepartmentId(userDepartmentId);
+//       } else {
+//         // 取得できない場合はエラーを設定
+//         setError('ユーザーに部門IDが設定されていません');
+//       }
+//     } catch (error) {
+//       console.error('ユーザー情報の取得に失敗しました:', error);
+//       setError('ユーザー情報の取得に失敗しました');
+//     }
+//   };
  
-  fetchUserInfo();
-}, []);
+//   fetchUserInfo();
+// }, []);
 
   // 確定ボタンを有効にするための条件をチェックする関数
   const isConfirmButtonEnabled = useMemo(() => {
@@ -538,7 +540,7 @@ function extractStoresFromGroupedOrders(
         storeTc: storeData.storeTc,
         boxColor: selectedColor,
         boxCount: parseInt(inputValue, 10),
-        departmentId: departmentId,
+        departmentId: departmentId as string,
         status: StatusTemplate.PENDING
       };
      
@@ -556,7 +558,7 @@ function extractStoresFromGroupedOrders(
           date: currentDate,
           storeId: selectedStoreId,
           boxColor: selectedColor,
-          departmentId: departmentId,
+          departmentId: departmentId as string,
           boxCount: parseInt(inputValue, 10),
           status: StatusTemplate.CONFIRMED
         });
@@ -615,7 +617,7 @@ if (newlyCompleted.length === nakanoshimaStores.length) {
     // ImportWorkStatus の sortingPhase を COMPLETED_NAKANOSHIMA に更新
     await dataClient.models.ImportWorkStatus.update({
       date: currentDate,
-      departmentId: departmentId,
+      departmentId: departmentId as string,
       importId: importId,
       sortingPhase: 'COMPLETED_NAKANOSHIMA'
     });
@@ -628,7 +630,7 @@ if (newlyCompleted.length === nakanoshimaStores.length) {
       date: currentDate,
       departmentIdImportId: {
         eq: {
-          departmentId: departmentId,
+          departmentId: departmentId as string,
           importId: importId
         }
       }
@@ -680,7 +682,7 @@ if (!nextStore) {
     // ImportWorkStatus の sortingPhase を COMPLETED_JYOETSU に更新
     await dataClient.models.ImportWorkStatus.update({
       date: currentDate,
-      departmentId: departmentId,
+      departmentId: departmentId as string,
       importId: importId,
       sortingPhase: 'COMPLETED_JYOETSU'
     });
@@ -694,7 +696,7 @@ if (!nextStore) {
       date: currentDate,
       departmentIdImportId: {
         eq: {
-          departmentId: departmentId,
+          departmentId: departmentId as string,
           importId: importId
         }
       }
