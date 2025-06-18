@@ -82,6 +82,22 @@ const groupedStores = filtered.reduce<GroupedStoreSummary>((acc, order) => {
     return acc;
 }, {});
 
+// 各物流センター内で店舗を店舗番号の昇順にソート
+Object.keys(groupedStores).forEach(tcName => {
+  groupedStores[tcName].sort((a, b) => {
+    // 数値として比較（先頭の0を無視）
+    const numA = parseInt(a.storeId, 10);
+    const numB = parseInt(b.storeId, 10);
+    
+    // 数値変換できない場合は文字列として比較
+    if (isNaN(numA) || isNaN(numB)) {
+      return a.storeId.localeCompare(b.storeId);
+    }
+    
+    return numA - numB;
+  });
+});
+
 // 物流センターごとの合計注文数を計算
 const tcTotals = Object.entries(groupedStores).reduce<{[tcName: string]: number}>((acc, [tcName, stores]) => {
     acc[tcName] = stores.reduce((sum, store) => sum + store.itemCount, 0);
