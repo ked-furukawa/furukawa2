@@ -14,6 +14,7 @@ import { StoreDoubleCheckList as StoreDoubleCheckListComponent } from '../compon
 import { Store } from '../types';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
+import { useParams } from 'react-router-dom';
 
 // Amplify クライアントの生成
 const client = generateClient<Schema>();
@@ -28,6 +29,14 @@ const [boxCounts, setBoxCounts] = useState<Record<string, Record<string, number>
 const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
 const [snackbarMessage, setSnackbarMessage] = useState<string>('');
 const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+
+const { departmentId } = useParams<{ departmentId?: string }>();
+if (!departmentId) {
+    setError('部門IDが必要です');
+    setLoading(false);
+    return <div>部門IDが必要です</div>;
+}
+const safeDepartmentId = departmentId as string;
 
 // データを取得
 // useEffect内のデータ取得部分を修正
@@ -140,7 +149,7 @@ const handleConfirmSelected = async () => {
                     date: { eq: targetDate },
                     storeId: { eq: storeId },
                     boxColor: { eq: 'green' },
-                    departmentId: { eq: 'souzai' }
+                    departmentId: { eq: safeDepartmentId }
                 }
             });
             if (representative && representative.length > 0) {
@@ -171,7 +180,7 @@ const handleConfirmSelected = async () => {
                             date: { eq: targetDate },
                             storeId: { eq: storeId },
                             boxColor: { eq: boxColor },
-                            departmentId: { eq: 'souzai' }
+                            departmentId: { eq: safeDepartmentId }
                         }
                     });
                     if (existingBoxes.data && existingBoxes.data.length > 0) {
@@ -183,7 +192,7 @@ const handleConfirmSelected = async () => {
                             date: targetDate,
                             storeId: storeId,
                             boxColor: boxColor,
-                            departmentId: 'souzai',
+                            departmentId: safeDepartmentId,
                             boxCount: existingBox.boxCount,
                             storeName: storeInfo.storeName,
                             storeTc: storeInfo.storeTc,
@@ -195,7 +204,7 @@ const handleConfirmSelected = async () => {
                             date: targetDate,
                             storeId: storeId,
                             boxColor: boxColor,
-                            departmentId: 'souzai',
+                            departmentId: safeDepartmentId,
                             boxCount: boxCount,
                             storeName: storeInfo.storeName,
                             storeTc: storeInfo.storeTc,
