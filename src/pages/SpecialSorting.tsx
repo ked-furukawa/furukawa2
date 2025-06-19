@@ -153,7 +153,6 @@ useEffect(() => {
                 }
             }
         });
-        console.log('currentRegion',currentRegion)
 
         if (data.length > 0) {
         // 計算を実行
@@ -292,16 +291,16 @@ const navigateToNextStore = async () => {
         if (currentRegion === "中之島") {
             navigateTo('SortingCheckScreen');
             } else {
-                if (hasPending) {
-                navigateTo('SortingCheckScreen')
-                } else {
-                setPhase("EVEN");
-                }
+            setPhase("EVEN");
             };
     }else if (phase === 'EVEN') {
         setPhase('ODD');
     } else {
-        setPhase('DONE');
+        if(hasPending){
+            navigateTo("SortingCheckScreen")
+        }else{
+            setPhase('DONE');
+        }
     }
     console.log("phase",phase)
     } catch (err) {
@@ -399,6 +398,15 @@ return (
     )}
 
     {/* メインコンテンツ - テーブル */}
+    {phase === "DONE" ? (
+  <Typography
+    variant="h6"
+    sx={{ textAlign: 'center', mt: 4, mb: 4, fontWeight: 'bold' }}
+  >
+    本日の作業は完了しました
+  </Typography>
+) : (
+    <>
     <TableContainer component={Paper} sx={{ mb: 4 }}>
     <Table>
         <TableHead>
@@ -449,8 +457,6 @@ return (
         </TableBody>
     </Table>
     </TableContainer>
-
-    {/* フッター */}
     <Box sx={{ 
         display: 'flex', 
         justifyContent: 'space-between', 
@@ -487,13 +493,13 @@ return (
             {
                 currentRegion==="中之島" && phase==="UNDONE"
                 ? '中之島の作業が完了しました。商品数確認画面に進みます。'
-                :currentRegion!=="中之島" && phase==="UNDONE" && hasPending
-                ? `未仕分けの注文が追加されています。商品数確認画面に進みます。`
-                : currentRegion !== "中之島" && phase === "UNDONE" && !hasPending
-                ? "未仕分けの注文がありません。箱数のダブルチェックへ進みます"
+                :currentRegion!=="中之島" && phase==="UNDONE" 
+                ? `上越の作業が完了しました。箱数のダブルチェックに進みます。`
                 :phase==="EVEN"
                 ? "全体箱数のダブルチェックが完了しました。10枚箱の店舗リストに進みます"
-                :"全作業が完了しました。"
+                :phase==="ODD" && hasPending
+                ?"未仕分けの注文が追加されています。商品数確認画面に戻ります。"
+                :"未仕分けの注文が存在しません。本日の作業を完了します。"
             }
           </Typography>
         </DialogContent>
@@ -512,6 +518,8 @@ return (
         </DialogActions>
       </Dialog>
     </Box>
+    </>
+    )}
     </Container>
 );
 };
