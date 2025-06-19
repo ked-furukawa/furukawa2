@@ -132,28 +132,59 @@ const handleConfirmSelected = async () => {
         // テストデータの日付を指定 (20250609)
         const targetDate = "20250609";
         
-        // 選択された店舗の箱データを取得して更新
+       // 選択された店舗の箱データを処理
         for (const storeId of selectedStoreIds) {
-            // 店舗の全ての箱データを取得
-            const boxesResponse = await client.models.Box.list({
-                filter: {
-                    date: { eq: targetDate },
-                    storeId: { eq: storeId }
+            // 店舗情報を取得（最初の箱データから）
+            const storeInfo = stores.find(store => store.id === storeId);
+            if (!storeInfo) continue;
+            
+            // この店舗の集計済み箱データを取得
+            const storeBoxCounts = boxCounts[storeId] || {};
+            
+            // 各箱色について処理
+            for (const [boxColor, boxCount] of Object.entries(storeBoxCounts)) {
+                try {
+                    // 既存の集計レコードを確認
+                    const existingBoxes = await client.models.Box.list({
+                        filter: {
+                            date: { eq: targetDate },
+                            storeId: { eq: storeId },
+                            boxColor: { eq: boxColor },
+                            // 部門IDはどこから取得するか検討が必要
+                            // 現在のコードでは部門IDの取得方法が不明確
+                            departmentId: { eq: 'souzai' } // 仮の部門ID
+                        }
+                    });
+                    
+                    if (existingBoxes.data && existingBoxes.data.length > 0) {
+                        // 既存レコードがある場合は更新
+                        await client.models.Box.update({
+                            date: targetDate,
+                            storeId: storeId,
+                            boxColor: boxColor,
+                            departmentId: 'souzai', // 仮の部門ID
+                            boxCount: boxCount,
+                            storeName: storeInfo.storeName,
+                            storeTc: storeInfo.storeTc,
+                            status: 'DOUBLE_CHECKED'
+                        });
+                    } else {
+                        // 新規レコードを作成
+                        await client.models.Box.create({
+                            date: targetDate,
+                            storeId: storeId,
+                            boxColor: boxColor,
+                            departmentId: 'souzai', // 仮の部門ID
+                            boxCount: boxCount,
+                            storeName: storeInfo.storeName,
+                            storeTc: storeInfo.storeTc,
+                            status: 'DOUBLE_CHECKED'
+                        });
+                    }
+                } catch (err) {
+                    console.error(`${storeId}の${boxColor}箱の更新に失敗:`, err);
+                    throw err;
                 }
-            });
-
-            // 各箱データに対して更新
-            for (const box of boxesResponse.data) {
-                await client.models.Box.update({
-                    date: box.date,
-                    storeId: box.storeId,
-                    boxColor: box.boxColor,
-                    boxCount: box.boxCount,
-                    storeName: box.storeName,
-                    storeTc: box.storeTc,
-                    departmentId: box.departmentId,
-                    status: 'DOUBLE_CHECKED'  // ステータスを更新
-                });
             }
         }
         
