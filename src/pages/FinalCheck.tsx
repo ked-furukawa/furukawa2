@@ -114,63 +114,18 @@ export const FinalCheck = () => {
         filteredItems = rawItems.filter((item) => item != null);
     }
 
-    // 店舗ごとの箱数を集計するためのマップを作成
-    const storeBoxMap = new Map<string, {
-        date: string;
-        storeId: string;
-        storeName: string | null;
-        storeTc: string | null;
-        departmentId: string;
-        greenBoxes: number;
-        redBoxes: number;
-        blueBoxes: number;
-        orangeBoxes: number;
-    }>();
+    const storeMap = filteredItems.map(item => ({
+        date: item.date,
+        storeId: item.storeId,
+        storeName: item.storeName,
+        storeTc: item.storeTc,
+        departmentId: item.departmentId,
+        greenBoxes: item.boxColor === 'green' ? item.boxCount : 0,
+        redBoxes: item.boxColor === 'red' ? item.boxCount : 0,
+        blueBoxes: item.boxColor === 'blue' ? item.boxCount : 0,
+        orangeBoxes: item.boxColor === 'orange' ? item.boxCount : 0, 
+    }));
 
-    // 各箱データを処理して集計
-    filteredItems.forEach(item => {
-        // storeIdから実際の店舗IDを抽出（importIdを除去）
-        const actualStoreId = item.storeId.split('_')[0];
-        
-        // 店舗がまだマップにない場合は初期化
-        if (!storeBoxMap.has(actualStoreId)) {
-            storeBoxMap.set(actualStoreId, {
-                date: item.date,
-                storeId: actualStoreId,
-                storeName: item.storeName ?? null,
-                storeTc: item.storeTc ?? null,
-                departmentId: item.departmentId,
-                greenBoxes: 0,
-                redBoxes: 0,
-                blueBoxes: 0,
-                orangeBoxes: 0
-            });
-        }
-
-        // 該当する店舗のデータを取得
-        const storeData = storeBoxMap.get(actualStoreId)!;
-        
-        // 箱の色に応じてカウントを加算
-        switch (item.boxColor) {
-            case 'green':
-                storeData.greenBoxes += item.boxCount;
-                break;
-            case 'red':
-                storeData.redBoxes += item.boxCount;
-                break;
-            case 'blue':
-                storeData.blueBoxes += item.boxCount;
-                break;
-            case 'orange':
-                storeData.orangeBoxes += item.boxCount;
-                break;
-        }
-    });
-
-    // マップから配列に変換
-    const storeMap = Array.from(storeBoxMap.values());
-
-    // 集計データを設定
     aggregateStoreData(storeMap);
     }, [rawItems, tabValue]);
 
@@ -328,14 +283,14 @@ export const FinalCheck = () => {
                     orangeBoxes: 0
                 });
             }
-            const aggregated = aggregatedMap.get(item.storeId)!;
+        const aggregated = aggregatedMap.get(item.storeId)!;
             aggregated.greenBoxes += item.greenBoxes;
             aggregated.redBoxes += item.redBoxes;
             aggregated.blueBoxes += item.blueBoxes;
             aggregated.orangeBoxes += item.orangeBoxes;
         });
         const result = Array.from(aggregatedMap.values());
-        setStoreData(result);
+        setStoreData(result)
     };
 
     const nakanoshimaData = storeData.filter((s) => s.storeTc === '中之島');

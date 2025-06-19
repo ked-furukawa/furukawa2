@@ -132,7 +132,7 @@ const handleConfirmSelected = async () => {
         // テストデータの日付を指定 (20250609)
         const targetDate = "20250609";
         
-       // 選択された店舗の箱データを処理
+        // 選択された店舗の箱データを処理
         for (const storeId of selectedStoreIds) {
             // 店舗情報を取得（最初の箱データから）
             const storeInfo = stores.find(store => store.id === storeId);
