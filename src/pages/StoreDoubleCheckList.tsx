@@ -16,7 +16,6 @@ import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
 import { useParams } from 'react-router-dom';
 import { formatDateToJST } from '../components/utils/formatDateToJST';
-import { useParams } from 'react-router-dom';
 
 // Amplify クライアントの生成
 const client = generateClient<Schema>();
@@ -31,6 +30,7 @@ const [boxCounts, setBoxCounts] = useState<Record<string, Record<string, number>
 const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
 const [snackbarMessage, setSnackbarMessage] = useState<string>('');
 const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+  const date = formatDateToJST(new Date);
 
 const { departmentId } = useParams<{ departmentId?: string }>();
 if (!departmentId) {
@@ -43,13 +43,11 @@ const safeDepartmentId = departmentId as string;
 // データを取得
 // useEffect内のデータ取得部分を修正
 useEffect(() => {
-    // テストデータの日付を指定 (20250609)
-    const targetDate = "20250609";
     // DynamoDBからのデータ取得をサブスクライブ
     const subscription = client.models.Box.observeQuery({
         filter: {
             date: {
-                eq: targetDate
+                eq: date
             },
             departmentId: { eq: safeDepartmentId }
         }
@@ -141,7 +139,6 @@ const handleConfirmSelected = async () => {
     }
     try {
         setLoading(true);
-        const targetDate = "20250609";
         let updatedStoreCount = 0;
         for (const storeId of selectedStoreIds) {
             const storeInfo = stores.find(store => store.id === storeId);
@@ -149,7 +146,7 @@ const handleConfirmSelected = async () => {
             // 代表レコードが存在するか確認
             const { data: representative } = await client.models.Box.list({
                 filter: {
-                    date: { eq: targetDate },
+                    date: { eq: date },
                     storeId: { eq: storeId },
                     boxColor: { eq: 'green' },
                     departmentId: { eq: safeDepartmentId }
@@ -180,7 +177,7 @@ const handleConfirmSelected = async () => {
                 try {
                     const existingBoxes = await client.models.Box.list({
                         filter: {
-                            date: { eq: targetDate },
+                            date: { eq: date },
                             storeId: { eq: storeId },
                             boxColor: { eq: boxColor },
                             departmentId: { eq: safeDepartmentId }
@@ -192,7 +189,7 @@ const handleConfirmSelected = async () => {
                             continue;
                         }
                         await client.models.Box.update({
-                            date: targetDate,
+                            date: date,
                             storeId: storeId,
                             boxColor: boxColor,
                             departmentId: safeDepartmentId,
@@ -204,7 +201,7 @@ const handleConfirmSelected = async () => {
                         storeUpdated = true;
                     } else {
                         await client.models.Box.create({
-                            date: targetDate,
+                            date: date,
                             storeId: storeId,
                             boxColor: boxColor,
                             departmentId: safeDepartmentId,

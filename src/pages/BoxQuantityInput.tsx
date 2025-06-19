@@ -79,6 +79,7 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
   const [importId, setImportId] = useState<string | null>(null);
   const [currentRegion, setCurrentRegion] = useState<string>('中之島'); // 初期値は中之島
 
+    const date = formatDateToJST(new Date);
   // データキャッシュ
   const [orders, setOrders] = useState<OrderData[]>([]);
   const [boxDataCache, setBoxDataCache] = useState<BoxData[]>([]);
@@ -136,7 +137,7 @@ useEffect(() => {
       setCurrentDate(date);
      
       // resolveImportId を使用して作業用の importId を取得
-      const importResult = await resolveImportId(today, departmentId);
+      const importResult = await resolveImportId(date, departmentId);
       console.log('resolveImportId result:', importResult);
       
       if (!importResult) {
@@ -170,7 +171,7 @@ useEffect(() => {
       // 取得した importId に基づく注文データを取得
       const ordersResponse = await dataClient.models.Order.list({
         filter: {
-          date: { eq: today },
+          date: { eq: date },
           departmentId: { eq: departmentId },
           importId: { eq: importResult.importId }
         }
@@ -179,14 +180,14 @@ useEffect(() => {
       console.log('注文データ取得結果:', {
         importId: importResult.importId,
         departmentId: departmentId,
-        date: today,
+        date: date,
         totalOrders: ordersResponse.data.length,
         firstOrder: ordersResponse.data[0]
       });
    
       // 同じ date×storeId×itemId で status=DONE の注文を検索
       const doneOrdersResponse = await dataClient.models.Order.listOrdersByStoreAndItem({
-        date: today,
+        date: date,
       });
    
       console.log('処理済み注文データ取得結果:', {
@@ -258,8 +259,8 @@ useEffect(() => {
       setOrders(typedOrders);
    
       // 箱データを取得
-      const boxResponse = await dataClient.models.Box.listBoxesByDate({
-        date: today,
+      const boxResponse = await dataClient.models.Box.listBoxesByDateAndDept({
+        date: date,
         departmentId: {
           eq: departmentId
         }

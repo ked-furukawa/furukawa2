@@ -83,7 +83,7 @@ const handleQuantityUpdate  = async () => {
         // 代表レコードが存在するか確認
         const { data: existing } = await boxClient.models.Box.list({
             filter: {
-                date: { eq: '20250609' },
+                date: { eq: date },
                 storeId: { eq: selectedStoreId },
                 boxColor: { eq: 'green' },
                 departmentId: { eq: departmentId }
@@ -96,7 +96,7 @@ const handleQuantityUpdate  = async () => {
         if (existing && existing.length > 0) {
             // update
             await boxClient.models.Box.update({
-                date: '20250609',
+                date: date,
                 storeId: selectedStoreId,
                 boxColor: 'green',
                 departmentId: departmentId,
@@ -108,7 +108,7 @@ const handleQuantityUpdate  = async () => {
         } else {
             // create
             await boxClient.models.Box.create({
-                date: '20250609',
+                date: date,
                 storeId: selectedStoreId,
                 boxColor: 'green',
                 departmentId: departmentId,
