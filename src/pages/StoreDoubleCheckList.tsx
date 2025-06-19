@@ -48,7 +48,8 @@ useEffect(() => {
         filter: {
             date: {
                 eq: targetDate
-            }
+            },
+            departmentId: { eq: safeDepartmentId }
         }
     }).subscribe({
         next: ({ items, isSynced }) => {
