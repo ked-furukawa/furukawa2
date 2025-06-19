@@ -15,6 +15,7 @@ import { Store } from '../types';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
 import { useParams } from 'react-router-dom';
+import { formatDateToJST } from '../components/utils/formatDateToJST';
 
 // Amplify クライアントの生成
 const client = generateClient<Schema>();
@@ -30,16 +31,17 @@ const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
 const [snackbarMessage, setSnackbarMessage] = useState<string>('');
 const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
 const departmentId = useParams().departmentId!;
+const date = formatDateToJST(new Date);
 
 // データを取得
 useEffect(() => {
     // テストデータの日付を指定 (20250609)
-    const targetDate = "20250609";
+    // const targetDate = "20250609";
 
     const fetchAllData = async () => {
     try {
         const { data } = await client.models.Box.listBoxesByDateAndDept({
-            date: targetDate,
+            date: date,
             departmentId: {
                 eq: departmentId
             }
@@ -47,12 +49,12 @@ useEffect(() => {
 
         const items=data
         if (items.length === 0) {
-        setError(`${targetDate}の箱データが見つかりませんでした`);
+        setError(`${date}の箱データが見つかりませんでした`);
         setLoading(false);
         return;
         }
         
-        console.log(`${targetDate}のデータを${items.length}件取得しました`);
+        console.log(`${date}のデータを${items.length}件取得しました`);
         
         const storeMap = new Map<string, Store>();
         const boxCountsData: Record<string, Record<string, number>> = {};
@@ -116,14 +118,14 @@ const handleConfirmSelected = async () => {
     setLoading(true);
     
     // テストデータの日付を指定 (20250609)
-    const targetDate = "20250609";
+    // const targetDate = "20250609";
     
     // 選択された店舗の箱データを取得して更新
     for (const storeId of selectedStoreIds) {
         // 店舗の全ての箱データを取得
         const boxesResponse = await client.models.Box.list({
         filter: {
-            date: { eq: targetDate },
+            date: { eq: date },
             storeId: { eq: storeId }
         }
         });

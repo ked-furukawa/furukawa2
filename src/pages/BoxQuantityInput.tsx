@@ -23,6 +23,7 @@ import { OrderData, BoxData, StatusTemplate, OrderStatus } from '../types';
 import { groupOrdersByTcAndStore } from '../components/utils/groupOrdersByTcAndStore';
 import { resolveImportId } from '../components/utils/resolveImportId';
 import { useParams } from 'react-router-dom';
+import { formatDateToJST } from '../components/utils/formatDateToJST';
 
 // 型定義
 type BoxColor = 'green' | 'red' | 'blue' | 'orange';
@@ -86,6 +87,7 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
   const [boxDataCache, setBoxDataCache] = useState<BoxData[]>([]);
 
   const {departmentId} = useParams();
+  const date = formatDateToJST(new Date);
   // 認証情報から部門IDを取得する部分
 // useEffect(() => {
 //   const fetchUserInfo = async () => {
@@ -158,11 +160,11 @@ useEffect(() => {
       setLoading(true);
      
       // 固定の日付を使用（6月9日のテストデータ）
-      const today = '20250609';
-      setCurrentDate(today);
+      // const today = '20250609';
+      setCurrentDate(date);
      
       // resolveImportId を使用して最新の importId を取得
-      const importResult = await resolveImportId(today, departmentId);
+      const importResult = await resolveImportId(date, departmentId);
       if (!importResult) {
         setError('有効な importId が見つかりませんでした');
         return;
@@ -193,7 +195,7 @@ useEffect(() => {
    
     // 最新の importId に基づく注文データを取得 (GSI_OrderDateDeptImport を使用)
     const ordersResponse = await dataClient.models.Order.listOrdersByDeptAndImport({
-      date: today,
+      date: date,
       departmentIdImportId: {
         eq: {
           departmentId: departmentId,
@@ -207,7 +209,7 @@ useEffect(() => {
     // 同じ date×storeId×itemId で status=DONE の注文を検索
     // 修正: 正しいGSIクエリを使用
     const doneOrdersResponse = await dataClient.models.Order.listOrdersByStoreAndItem({
-      date: today,
+      date: date,
       // すべての店舗・商品の組み合わせを取得してからフィルタリング
     });
    
@@ -256,7 +258,7 @@ useEffect(() => {
    
     // 箱データを取得 (修正: 正しいGSIクエリを使用)
     const boxResponse = await dataClient.models.Box.listBoxesByDateAndDept({
-      date: today,
+      date: date,
       departmentId: {
         eq: departmentId
       }
