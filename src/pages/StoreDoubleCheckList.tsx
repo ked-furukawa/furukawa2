@@ -34,7 +34,6 @@ const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('s
 useEffect(() => {
     // テストデータの日付を指定 (20250609)
     const targetDate = "20250609";
-    
     // DynamoDBからのデータ取得をサブスクライブ
     const subscription = client.models.Box.observeQuery({
         filter: {
@@ -44,84 +43,56 @@ useEffect(() => {
         }
     }).subscribe({
         next: ({ items, isSynced }) => {
-            // 重要: 完全に同期が完了したときだけ処理する
             if (!isSynced) {
                 console.log("データ同期中...");
-                return; // 同期が完了していない場合は処理をスキップ
-            }
-            
-            if (items.length === 0) {
-                setError(`${targetDate}の箱データが見つかりませんでした`);
-                setLoading(false);
                 return;
             }
-            
-            console.log(`${targetDate}のデータを${items.length}件取得しました`);
-            
+            console.log('全Boxレコード:', items);
             const storeMap = new Map<string, Store>();
             const boxCountsData: Record<string, Record<string, number>> = {};
-            
-            // 処理済みの箱データを追跡（重複防止用）
-            const processedBoxIds = new Set<string>();
-            
-            // 確定済み店舗を追跡
             const confirmedStores = new Set<string>();
-            
-            // 全ての箱データを処理
-            items.forEach(box => {
-                // 仕分け時間ごとのBoxレコードのみ合計対象（storeIdに「_」が含まれているもの）
-                if (!box.storeId.includes('_')) {
-                    // 代表レコードはスキップ
-                    return;
-                }
-                // 重複処理防止のためのユニークID
-                const boxUniqueId = `${box.date}_${box.storeId}_${box.boxColor}_${box.departmentId}`;
-                if (processedBoxIds.has(boxUniqueId)) {
-                    return;
-                }
-                processedBoxIds.add(boxUniqueId);
-                // storeIdから実際の店舗IDを抽出（importIdを除去）
+            // 代表レコードと仕分け時間ごとのBoxレコードを分離
+            const representativeBoxes = items.filter(box => !box.storeId.includes('_'));
+            const roundBoxes = items.filter(box => box.storeId.includes('_'));
+            console.log('代表レコード:', representativeBoxes);
+            console.log('仕分け時間ごとのBoxレコード:', roundBoxes);
+            // 1. まず全店舗分のstoreMapとboxCountsDataを「仕分け時間ごとのBoxレコード」で構築
+            roundBoxes.forEach(box => {
                 const actualStoreId = box.storeId.split('_')[0];
-                // 店舗情報を抽出
                 if (!storeMap.has(actualStoreId)) {
                     storeMap.set(actualStoreId, {
                         id: actualStoreId,
                         storeName: box.storeName || '',
-                        storeNumber: actualStoreId,  // 実際の店舗番号のみを表示
+                        storeNumber: actualStoreId,
                         storeTc: box.storeTc || '',
                         isChecked: false
                     });
                 }
-                // 箱数情報を抽出（累積加算）
                 if (!boxCountsData[actualStoreId]) {
                     boxCountsData[actualStoreId] = {};
                 }
                 if (!boxCountsData[actualStoreId][box.boxColor]) {
                     boxCountsData[actualStoreId][box.boxColor] = 0;
                 }
-                // 箱数を加算
                 boxCountsData[actualStoreId][box.boxColor] += box.boxCount;
-                // 確定済みの店舗を記録
                 if (box.status === 'DOUBLE_CHECKED') {
                     confirmedStores.add(actualStoreId);
                 }
             });
-            
-            // 確定済み店舗のisCheckedをtrueに設定
-            confirmedStores.forEach(storeId => {
-                if (storeMap.has(storeId)) {
-                    const store = storeMap.get(storeId)!;
-                    store.isChecked = true;
-                    storeMap.set(storeId, store);
+            // 2. 代表レコードがあればboxCountsDataだけ上書き（storeMapは上書きしない）
+            representativeBoxes.forEach(box => {
+                const actualStoreId = box.storeId;
+                if (!boxCountsData[actualStoreId]) {
+                    boxCountsData[actualStoreId] = {};
+                }
+                boxCountsData[actualStoreId]['green'] = box.boxCount;
+                if (box.status === 'DOUBLE_CHECKED') {
+                    confirmedStores.add(actualStoreId);
                 }
             });
-            
-            console.log('集計結果:', boxCountsData);
-            
-            // 店舗情報を配列に変換
+            console.log('boxCountsData:', boxCountsData);
             const storesArray = Array.from(storeMap.values());
-            console.log(`${storesArray.length}件の店舗データを処理しました`);
-            
+            console.log('storesArray:', storesArray);
             setStores(storesArray);
             setBoxCounts(boxCountsData);
             setError(null);
@@ -136,7 +107,6 @@ useEffect(() => {
             setLoading(false);
         }
     });
-
     return () => subscription.unsubscribe();
 }, []);
 
@@ -157,95 +127,97 @@ const handleConfirmSelected = async () => {
         setSnackbarOpen(true);
         return;
     }
-
     try {
         setLoading(true);
-        
-        // テストデータの日付を指定 (20250609)
         const targetDate = "20250609";
         let updatedStoreCount = 0;
-        
-        // 選択された店舗の箱データを処理
         for (const storeId of selectedStoreIds) {
-            // 店舗情報を取得
             const storeInfo = stores.find(store => store.id === storeId);
             if (!storeInfo) continue;
-            
-            // この店舗の集計済み箱データを取得
+            // 代表レコードが存在するか確認
+            const { data: representative } = await client.models.Box.list({
+                filter: {
+                    date: { eq: targetDate },
+                    storeId: { eq: storeId },
+                    boxColor: { eq: 'green' },
+                    departmentId: { eq: 'souzai' }
+                }
+            });
+            if (representative && representative.length > 0) {
+                // 代表レコードのみを確定処理
+                const rep = representative[0];
+                if (rep.status !== 'DOUBLE_CHECKED') {
+                    await client.models.Box.update({
+                        date: rep.date,
+                        storeId: rep.storeId,
+                        boxColor: rep.boxColor,
+                        departmentId: rep.departmentId,
+                        boxCount: rep.boxCount,
+                        storeName: rep.storeName,
+                        storeTc: rep.storeTc,
+                        status: 'DOUBLE_CHECKED'
+                    });
+                    updatedStoreCount++;
+                }
+                continue; // 仕分け時間ごとのBoxレコードはスキップ
+            }
+            // 代表レコードがなければ従来通り仕分け時間ごとのBoxレコードを処理
             const storeBoxCounts = boxCounts[storeId] || {};
             let storeUpdated = false;
-            
-            // 各箱色について処理
             for (const [boxColor, boxCount] of Object.entries(storeBoxCounts)) {
                 try {
-                    // 既存の集計レコードを確認
                     const existingBoxes = await client.models.Box.list({
                         filter: {
                             date: { eq: targetDate },
                             storeId: { eq: storeId },
                             boxColor: { eq: boxColor },
-                            departmentId: { eq: 'souzai' } // 仮の部門ID
+                            departmentId: { eq: 'souzai' }
                         }
                     });
-                    
                     if (existingBoxes.data && existingBoxes.data.length > 0) {
                         const existingBox = existingBoxes.data[0];
-                        
-                        // 重要: すでにDOUBLE_CHECKEDのレコードは更新しない
                         if (existingBox.status === 'DOUBLE_CHECKED') {
-                            console.log(`${storeId}の${boxColor}箱は既に確定済みです。スキップします。`);
                             continue;
                         }
-                        
-                        // boxCountは加算せず、statusのみ更新
                         await client.models.Box.update({
                             date: targetDate,
                             storeId: storeId,
                             boxColor: boxColor,
-                            departmentId: 'souzai', // 仮の部門ID
-                            boxCount: existingBox.boxCount, // 既存値をそのまま
+                            departmentId: 'souzai',
+                            boxCount: existingBox.boxCount,
                             storeName: storeInfo.storeName,
                             storeTc: storeInfo.storeTc,
                             status: 'DOUBLE_CHECKED'
                         });
                         storeUpdated = true;
                     } else {
-                        // 新規レコードを作成
                         await client.models.Box.create({
                             date: targetDate,
                             storeId: storeId,
                             boxColor: boxColor,
-                            departmentId: 'souzai', // 仮の部門ID
+                            departmentId: 'souzai',
                             boxCount: boxCount,
                             storeName: storeInfo.storeName,
                             storeTc: storeInfo.storeTc,
                             status: 'DOUBLE_CHECKED'
                         });
                         storeUpdated = true;
-                        console.log(`${storeId}の${boxColor}箱を新規作成: ${boxCount}箱`);
                     }
                 } catch (err) {
-                    console.error(`${storeId}の${boxColor}箱の更新に失敗:`, err);
                     throw err;
                 }
             }
-            
-            // この店舗で何かしらの更新があった場合のみカウント
             if (storeUpdated) {
                 updatedStoreCount++;
             }
         }
-        
-        // 店舗リストを更新（UI上でのみisCheckedを管理）
-        setStores(prevStores => 
-            prevStores.map(store => 
-                selectedStoreIds.includes(store.id) 
-                    ? { ...store, isChecked: true } 
+        setStores(prevStores =>
+            prevStores.map(store =>
+                selectedStoreIds.includes(store.id)
+                    ? { ...store, isChecked: true }
                     : store
             )
         );
-        
-        // 更新された店舗数に基づいてメッセージを表示
         if (updatedStoreCount > 0) {
             setSnackbarMessage(`${updatedStoreCount}件の店舗を確定済みにしました`);
         } else {
@@ -255,7 +227,6 @@ const handleConfirmSelected = async () => {
         setSnackbarOpen(true);
         setSelectedStoreIds([]);
     } catch (err) {
-        console.error('店舗の確定に失敗しました', err);
         setSnackbarMessage('店舗の確定に失敗しました');
         setSnackbarSeverity('error');
         setSnackbarOpen(true);

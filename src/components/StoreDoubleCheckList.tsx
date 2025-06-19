@@ -76,15 +76,46 @@ const handleInputChange = (value: string) => {
 };
   // 箱数更新処理
 const handleQuantityUpdate  = async () => {
+    console.log('handleQuantityUpdate呼び出し', inputValue, selectedStoreId);
     try {
-        // 代表レコード（importIdなしstoreId）をupdate or create
-        await boxClient.models.Box.update({
-            date: '20250609',
-            storeId: selectedStoreId, // importIdなし
-            boxColor: 'green', // 色は仮でgreen
-            departmentId: departmentId,
-            boxCount: Number(inputValue)
+        // 代表レコードが存在するか確認
+        const { data: existing } = await boxClient.models.Box.list({
+            filter: {
+                date: { eq: '20250609' },
+                storeId: { eq: selectedStoreId },
+                boxColor: { eq: 'green' },
+                departmentId: { eq: departmentId }
+            }
         });
+        // store情報を取得
+        const storeInfo = stores.find(store => store.id === selectedStoreId);
+        const storeName = storeInfo?.storeName || '';
+        const storeTc = storeInfo?.storeTc || '';
+        if (existing && existing.length > 0) {
+            // update
+            await boxClient.models.Box.update({
+                date: '20250609',
+                storeId: selectedStoreId,
+                boxColor: 'green',
+                departmentId: departmentId,
+                boxCount: Number(inputValue),
+                storeName,
+                storeTc
+            });
+            console.log('update完了');
+        } else {
+            // create
+            await boxClient.models.Box.create({
+                date: '20250609',
+                storeId: selectedStoreId,
+                boxColor: 'green',
+                departmentId: departmentId,
+                boxCount: Number(inputValue),
+                storeName,
+                storeTc
+            });
+            console.log('create完了');
+        }
     } catch (error) {
         console.error('DB登録エラー:', error);
     }
@@ -168,13 +199,12 @@ return (
                 <TableCell>{store.storeName}</TableCell>
                 <TableCell align="center">{store.storeNumber}</TableCell>
                 <TableCell align="center"  onClick={() => {
-                    console.log(selectedStoreId)
                     const currentValue = getStoreBoxCount(store.id);
+                    console.log('テンキー開く: store.id=', store.id, 'currentValue=', currentValue, 'boxCounts[store.id]=', boxCounts[store.id]);
                     setSelectedStoreId(store.id);
                     setInputValue(String(currentValue)); // ← 文字列として Keypad に渡す
                     setIsModalOpen(true);
                 }}
-
                     sx={{ cursor: 'pointer', textDecoration: 'underline' }}>{getStoreBoxCount(store.id)}</TableCell>
                 <TableCell align="center">
                     <Checkbox 
