@@ -180,6 +180,74 @@
 
         "date": "20250609",
 
+        "storeId": "039",
+        "storeName": "新井中川店",
+        "storeTc": "上越",
+
+        "itemId": "310999",
+        "itemName": "A",
+        "itemFormalName": "からあげ定食キット",
+        "itemCount": 3,
+
+        "departmentId":  "sakurai",
+        "departmentName": "櫻井"
+    },
+    {
+        "importId": "20250609_103000",
+
+        "date": "20250609",
+
+        "storeId": "039",
+        "storeName": "新井中川店",
+        "storeTc": "上越",
+
+        "itemId": "410999",
+        "itemName": "B",
+        "itemFormalName": "からあげ定食キット",
+        "itemCount": 3,
+
+        "departmentId":  "sakurai",
+        "departmentName": "櫻井"
+    },
+    {
+        "importId": "20250609_103000",
+
+        "date": "20250609",
+
+        "storeId": "039",
+        "storeName": "新井中川店",
+        "storeTc": "上越",
+
+        "itemId": "510999",
+        "itemName": "C",
+        "itemFormalName": "からあげ定食キット",
+        "itemCount": 3,
+
+        "departmentId":  "sakurai",
+        "departmentName": "櫻井"
+    },
+    {
+        "importId": "20250609_103000",
+
+        "date": "20250609",
+
+        "storeId": "039",
+        "storeName": "新井中川店",
+        "storeTc": "上越",
+
+        "itemId": "610999",
+        "itemName": "D",
+        "itemFormalName": "からあげ定食キット",
+        "itemCount": 3,
+
+        "departmentId":  "sakurai",
+        "departmentName": "櫻井"
+    },
+    {
+        "importId": "20250609_103000",
+
+        "date": "20250609",
+
         "storeId": "025",
         "storeName": "春日山店",
         "storeTc": "上越",

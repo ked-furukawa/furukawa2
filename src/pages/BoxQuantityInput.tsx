@@ -414,6 +414,9 @@ function extractStoresFromGroupedOrders(
       box.boxCreatedBy === departmentId &&
       box.importId === importId  // importIdでフィルタリング
     );
+
+    // 選択した店舗が完了済みかどうかをチェック
+    const isCompletedStore = completedStores.some(store => store.storeId === storeId);
    
     const productList = filtered.map(order => {
       return {
@@ -433,8 +436,15 @@ function extractStoresFromGroupedOrders(
     // 入力値をクリア
     setInputValue('');
    
-    // 選択をクリア
-    setSelectedProductIds([]);
+        // 完了済み店舗または箱データがある場合、すべての商品を選択状態にする
+    const shouldSelectAll = isCompletedStore || storeBoxData.length > 0;
+    if (shouldSelectAll) {
+      const allProductIds = productList.map(p => p.id);
+      setSelectedProductIds(allProductIds);
+    } else {
+      // 選択をクリア
+      setSelectedProductIds([]);
+    }
    
     // 次の店舗を設定
     if (allStores.length > 0) {
