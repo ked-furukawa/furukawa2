@@ -331,18 +331,41 @@ const navigateToCompletedScreen = async () => {
     const grouped: { [key: string]: any } = {};
 
     allBoxes.forEach(box => {
-      const prefix = box.storeId.slice(0, 3);
-      if (!grouped[prefix]) {
-        grouped[prefix] = { ...box, storeId: prefix, boxCount: 0 };
-      }
-      grouped[prefix].boxCount += box.boxCount;
+    const prefix = box.storeId.slice(0, 3);
+    if (!grouped[prefix]) {
+        grouped[prefix] = { 
+        date: box.date,
+        storeId: prefix,
+        storeName: box.storeName,
+        storeTc: box.storeTc,
+        boxColor: box.boxColor,  // 最初に見つかったboxColorを使用
+        boxCount: 0,
+        departmentId: box.departmentId,
+        status: "DOUBLE_CHECKED"
+        };
+    }
+    grouped[prefix].boxCount += box.boxCount;
     });
 
     // 3. 各prefixごとに新規レコードを作成
-    const createPromises = Object.values(grouped).map((box) =>
-      client.models.Box.create(box)
-    );
-    await Promise.all(createPromises);
+    const createPromises = Object.values(grouped).map(async (box) => {
+        try {
+            console.log('Creating box:', box); // デバッグ用
+            const result = await client.models.Box.create(box);
+            console.log('Created successfully:', result); // デバッグ用
+            return result;
+        } catch (error) {
+            console.error('Failed to create box:', box, error);
+            throw error;
+        }
+        });
+    try {
+        const results = await Promise.all(createPromises);
+        console.log('All boxes created:', results);
+        } catch (error) {
+        console.error('Promise.all failed:', error);
+        throw error;
+        }
 
     // 4. phase を DONE に変更
     setPhase("DONE");
