@@ -4,6 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { StatusTemplate } from "../types";
 
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../../amplify/data/resource";
@@ -86,6 +87,9 @@ export const FinalCheck = () => {
             filter: {
             date: {
                 eq: selectedDate?.toISOString().split('T')[0].replace(/-/g, '') || ''
+            },
+            status: {
+                eq: StatusTemplate.DOUBLE_CHECKED
             }
             }
         });
@@ -400,8 +404,10 @@ export const FinalCheck = () => {
         storeId: { eq: storeId }
         });
         
-        console.log('取得した箱情報:', response.data);
-        setBoxDetails(response.data || []);
+        // "status" が "DOUBLE_CHECKED" のものだけ抽出
+        const doubleCheckedBoxes = response.data.filter(box => box.status === "DOUBLE_CHECKED");
+        console.log('取得した箱情報:', doubleCheckedBoxes);
+        setBoxDetails(doubleCheckedBoxes || []);
     } catch (error) {
         console.error('箱情報の取得エラー:', error);
         setBoxDetails([]);

@@ -24,7 +24,7 @@ DialogActions
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
 import { useParams } from 'react-router-dom';
-import { formatDateToJST } from '../components/utils/formatDateToJST';
+// import { formatDateToJST } from '../components/utils/formatDateToJST';
 import { resolveImportId } from '../components/utils/resolveImportId';
 
 const client = generateClient<Schema>();
@@ -59,6 +59,7 @@ status: string;
 interface StoreCalculation {
 storeId: string;
 storeName: string|null;
+storeTc: string|null,
 itemCount: number;
 boxCount: number;
 checked: boolean;
@@ -67,6 +68,8 @@ isOdd: boolean;
 interface SpecialSortingProps {
     navigateTo: (key: string) => void;
 }
+
+type Phase = 'UNDONE' | 'ODD' | 'EVEN' | 'DONE';
 
 
 const SpecialSorting: React.FC<SpecialSortingProps> = ({navigateTo}) => {
@@ -81,6 +84,10 @@ const [importId, setImportId] = useState<string>('');
 const [currentRegion, setCurrentRegion] = useState<string>('中之島'); // 初期値は中之島
 const [savingData, setSavingData] = useState<boolean>(false);
 const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
+
+const [phase, setPhase] = useState<Phase>('UNDONE');
+const [hasPending, setHasPending] = useState(false);
+
 
 const departmentId = useParams().departmentId!;
 
@@ -135,6 +142,7 @@ useEffect(() => {
 useEffect(() => {
     const fetchOrders = async () => {
         console.log(departmentId)
+        setCheckedCount(0)
     try {
         const { data } = await client.models.Order.listOrdersByDeptAndImport({
             date: date,
@@ -146,34 +154,47 @@ useEffect(() => {
             }
         });
         console.log('currentRegion',currentRegion)
-        // storeTc === currentRegion の注文だけ残す
-        const filteredOrders = (data || []).filter(order => order.storeTc === currentRegion);
 
-        if (filteredOrders.length > 0) {
-        setOrders(filteredOrders);
-        
+        if (data.length > 0) {
         // 計算を実行
-        const calcs = filteredOrders.map(order => {
+        const calcs = data.map(order => {
             const { boxCount, isOdd } = calculateBoxes(order.itemCount);
             return {
             storeId: order.storeId,
             storeName: order.storeName,
+            storeTc: order.storeTc,
             itemCount: order.itemCount,
             boxCount,
             checked: false,
             isOdd
             };
         }).sort((a, b) => {
-            // isOddがtrueのものを先に
-            if (a.isOdd && !b.isOdd) return -1;
-            if (!a.isOdd && b.isOdd) return 1;
+            // isOddがtrueのものを後に
+            if (!a.isOdd && b.isOdd) return -1;
+            if (a.isOdd && !b.isOdd) return 1;
             return 0;
         });
+        let filteredCalcs = calcs
+        if(phase==="UNDONE"){
+            filteredCalcs = calcs.filter(order => order.storeTc === currentRegion)
+            const filteredOrders =data.filter(order => order.storeTc === currentRegion)
+            setOrders(filteredOrders);
+            console.log("filteredCalcs",filteredCalcs)
+        }else if(phase==="ODD"){
+            filteredCalcs = calcs.filter(order =>order.isOdd === true)
+            console.log("filteredCalcs",filteredCalcs)
+        }else if(phase==="EVEN"){
+            filteredCalcs = calcs
+            console.log("filteredCalcs",filteredCalcs)
+        }else{
+            filteredCalcs = []
+            console.log("filteredCalcs",filteredCalcs)
+        }
         
-        setCalculations(calcs);
+        setCalculations(filteredCalcs);
         
         // 合計箱数を計算
-        const total = calcs.reduce((sum, item) => sum + item.boxCount, 0);
+        const total = filteredCalcs.reduce((sum, item) => sum + item.boxCount, 0);
         setTotalBoxes(total);
         }
     } catch (err) {
@@ -185,7 +206,7 @@ useEffect(() => {
     };
     
     fetchOrders();
-}, [importId]);
+}, [importId,phase]);
 
 // チェックボックスの状態変更
 const handleCheckboxChange = (storeId: string) => {
@@ -210,12 +231,13 @@ const navigateToNextStore = async () => {
     try {
     setLoading(true);
     setSavingData(true);
-    
+
+    if(phase==="UNDONE"){//一回目だけ保存処理
     // 各店舗の箱数をBoxテーブルに保存
     const savePromises = calculations.map(calc => {
         const boxData: BoxData = {
         date: date,
-        storeId: calc.storeId,
+        storeId: calc.storeId+importId,
         storeName: calc.storeName || "",
         storeTc: orders.find(o => o.storeId === calc.storeId)?.storeTc || "",
         boxColor: "green",
@@ -241,13 +263,13 @@ const navigateToNextStore = async () => {
         });
         
         if (result.errors && result.errors.length > 0) {
-          throw new Error(`更新エラー: ${result.errors[0].message}`);
+            throw new Error(`更新エラー: ${result.errors[0].message}`);
         }
         
         return result;
-      } catch (error) {
+        } catch (error) {
         throw error;
-      }
+        }
     });
     
     await Promise.all(updatePromises);
@@ -261,14 +283,27 @@ const navigateToNextStore = async () => {
         date: date,
         departmentId: departmentId as string,
         importId: importId,
-        sortingPhase: sortingPahse
+        sortingPhase: sortingPahse,
+        ...(sortingPahse==='COMPLETED_JYOETSU' && { importProgress: "DONE" })
     });
-
-    if(currentRegion==="中之島"){
-        navigateTo('SortingCheckScreen');
-    }else{
-        navigateTo('StoreDoubleCheckList');
     }
+
+    if(phase==='UNDONE'){
+        if (currentRegion === "中之島") {
+            navigateTo('SortingCheckScreen');
+            } else {
+                if (hasPending) {
+                navigateTo('SortingCheckScreen')
+                } else {
+                setPhase("EVEN");
+                }
+            };
+    }else if (phase === 'EVEN') {
+        setPhase('ODD');
+    } else {
+        setPhase('DONE');
+    }
+    console.log("phase",phase)
     } catch (err) {
     console.error("箱数の確定に失敗しました:", err);
     setError("箱数の確定に失敗しました");
@@ -278,15 +313,63 @@ const navigateToNextStore = async () => {
     setShowConfirmDialog(false);
     }
     };
-    function handleDialogOpen() {
-        // 確認ダイアログを表示
-        setShowConfirmDialog(true);
+    async function handleDialogOpen() {
+        const checkPendingStatus = async () => {
+            const response = await client.models.ImportWorkStatus.list({
+                filter: {
+                    date: { eq: date },
+                    departmentId: { eq: departmentId }
+                }
+            });
+
+            const foundPending = response.data.some(status => status.importProgress === "PENDING");
+            setHasPending(foundPending);
+            return foundPending; // 結果を返す
+        };
+
+        const result = await checkPendingStatus(); // 結果を受け取る
+        setHasPending(result); // 念のためもう一度セット（任意）
+        setShowConfirmDialog(true); // 状態が確定してからダイアログを開く
     }
 
     // 確認ダイアログをキャンセルする関数
     function handleDialogCancel() {
         setShowConfirmDialog(false);
     }
+
+    const getPhaseLabel = () => {//フェーズ表示テキスト
+    if (phase === 'UNDONE') {
+        return `${currentRegion} `;
+    } else if (phase === 'ODD') {
+        return `10枚入り箱の店舗リスト`;
+    } else if (phase === 'EVEN') {
+        return `全体箱数のダブルチェック`;
+    } else if (phase === 'DONE') {
+        return `本日の作業完了`;
+    } else {
+        return '';
+    }
+    };
+
+    const itemCountLabel = (() => {//注文数位置のテキスト
+    switch (phase) {
+        case 'ODD':
+        case 'EVEN':
+        return '20枚箱数';
+        default:
+        return '注文数';
+    }
+    })();
+
+    const boxCountLabel = (() => {//箱数位置のテキスト
+    switch (phase) {
+        case 'ODD':
+        case 'EVEN':
+        return '10枚箱数';
+        default:
+        return '箱数';
+    }
+    })();
 
 if (loading && orders.length === 0) {
     return (
@@ -306,7 +389,7 @@ return (
         </Typography>
     </Box>
     <Typography variant="h6" color="text.secondary" sx={{ mb: 2, fontWeight: 'bold', fontSize: '1.3rem', color: 'text.primary' }}>
-        <strong>{currentRegion}</strong>
+        {getPhaseLabel()}
         </Typography>
 
     {error && (
@@ -320,10 +403,11 @@ return (
     <Table>
         <TableHead>
         <TableRow sx={{ bgcolor: 'primary.main' }}>
+            <TableCell sx={{ color: 'primary.contrastText', fontSize: '1.1rem', fontWeight: 'bold' }}>TC</TableCell>
             <TableCell sx={{ color: 'primary.contrastText', fontSize: '1.1rem', fontWeight: 'bold' }}>店舗番号</TableCell>
             <TableCell sx={{ color: 'primary.contrastText', fontSize: '1.1rem', fontWeight: 'bold' }}>店舗名</TableCell>
-            <TableCell align="right" sx={{ color: 'primary.contrastText', fontSize: '1.1rem', fontWeight: 'bold' }}>注文数</TableCell>
-            <TableCell align="right" sx={{ color: 'primary.contrastText', fontSize: '1.1rem', fontWeight: 'bold' }}>箱数</TableCell>
+            <TableCell align="right" sx={{ color: 'primary.contrastText', fontSize: '1.1rem', fontWeight: 'bold' }}>{itemCountLabel}</TableCell>
+            <TableCell align="right" sx={{ color: 'primary.contrastText', fontSize: '1.1rem', fontWeight: 'bold' }}>{boxCountLabel}</TableCell>
             <TableCell align="center" sx={{ color: 'primary.contrastText', fontSize: '1.1rem', fontWeight: 'bold' }}>確認</TableCell>
         </TableRow>
         </TableHead>
@@ -336,10 +420,23 @@ return (
                 '&:hover': { bgcolor: calc.isOdd ? 'rgba(255, 235, 205, 0.7)' : 'rgba(0, 0, 0, 0.04)' }
             }}
             >
+            <TableCell sx={{ fontSize: '1rem' }}>{calc.storeTc}</TableCell>
             <TableCell sx={{ fontSize: '1rem' }}>{calc.storeId}</TableCell>
             <TableCell sx={{ fontSize: '1rem' }}>{calc.storeName}</TableCell>
-            <TableCell align="right" sx={{ fontSize: '1rem' }}>{calc.itemCount}</TableCell>
-            <TableCell align="right" sx={{ fontSize: '1rem' }}>{calc.boxCount}</TableCell>
+            <TableCell align="right" sx={{ fontSize: '1rem' }}>
+                {phase === "ODD"
+                ? calc.boxCount-1
+                : phase === "EVEN"
+                ? calc.boxCount // 例：EVEN用の別プロパティを表示
+                : calc.itemCount}
+                </TableCell>
+            <TableCell align="right" sx={{ fontSize: '1rem' }}>
+                {phase === "ODD"
+                ? 1
+                : phase === "EVEN"
+                ? 0 // 例：EVEN用の別プロパティを表示
+                : calc.boxCount}
+                </TableCell>
             <TableCell align="center">
                 <Checkbox 
                 checked={calc.checked} 
@@ -384,14 +481,19 @@ return (
         open={showConfirmDialog}
         onClose={handleDialogCancel}
       >
-        <DialogTitle>次の店舗に進みますか？</DialogTitle>
+        <DialogTitle>次の作業に進みますか？</DialogTitle>
         <DialogContent>
           <Typography variant="body1">
-            {`${currentRegion}の処理を完了します。`}
             {
-                currentRegion==="中之島"
+                currentRegion==="中之島" && phase==="UNDONE"
                 ? '中之島の作業が完了しました。商品数確認画面に進みます。'
-                : `上越の作業が完了しました。箱数ダブルチェック画面に進みます。`
+                :currentRegion!=="中之島" && phase==="UNDONE" && hasPending
+                ? `未仕分けの注文が追加されています。商品数確認画面に進みます。`
+                : currentRegion !== "中之島" && phase === "UNDONE" && !hasPending
+                ? "未仕分けの注文がありません。箱数のダブルチェックへ進みます"
+                :phase==="EVEN"
+                ? "全体箱数のダブルチェックが完了しました。10枚箱の店舗リストに進みます"
+                :"全作業が完了しました。"
             }
           </Typography>
         </DialogContent>
