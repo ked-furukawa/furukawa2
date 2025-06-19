@@ -30,71 +30,95 @@ const [boxCounts, setBoxCounts] = useState<Record<string, Record<string, number>
 const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
 const [snackbarMessage, setSnackbarMessage] = useState<string>('');
 const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
-const departmentId = useParams().departmentId!;
-const date = formatDateToJST(new Date);
+  const date = formatDateToJST(new Date);
+
+const { departmentId } = useParams<{ departmentId?: string }>();
+if (!departmentId) {
+    setError('部門IDが必要です');
+    setLoading(false);
+    return <div>部門IDが必要です</div>;
+}
+const safeDepartmentId = departmentId as string;
 
 // データを取得
+// useEffect内のデータ取得部分を修正
 useEffect(() => {
-    // テストデータの日付を指定 (20250609)
-    // const targetDate = "20250609";
-
-    const fetchAllData = async () => {
-    try {
-        const { data } = await client.models.Box.listBoxesByDateAndDept({
-            date: date,
-            departmentId: {
-                eq: departmentId
+    // DynamoDBからのデータ取得をサブスクライブ
+    const subscription = client.models.Box.observeQuery({
+        filter: {
+            date: {
+                eq: date
+            },
+            departmentId: { eq: safeDepartmentId }
+        }
+    }).subscribe({
+        next: ({ items, isSynced }) => {
+            if (!isSynced) {
+                console.log("データ同期中...");
+                return;
             }
+            console.log('全Boxレコード:', items);
+            const storeMap = new Map<string, Store>();
+            const boxCountsData: Record<string, Record<string, number>> = {};
+            const confirmedStores = new Set<string>();
+            // 代表レコードと仕分け時間ごとのBoxレコードを分離
+            const representativeBoxes = items.filter(box => !box.storeId.includes('_'));
+            const roundBoxes = items.filter(box => box.storeId.includes('_'));
+            console.log('代表レコード:', representativeBoxes);
+            console.log('仕分け時間ごとのBoxレコード:', roundBoxes);
+            // 1. まず全店舗分のstoreMapとboxCountsDataを「仕分け時間ごとのBoxレコード」で構築
+            roundBoxes.forEach(box => {
+                const actualStoreId = box.storeId.split('_')[0];
+                if (!storeMap.has(actualStoreId)) {
+                    storeMap.set(actualStoreId, {
+                        id: actualStoreId,
+                        storeName: box.storeName || '',
+                        storeNumber: actualStoreId,
+                        storeTc: box.storeTc || '',
+                        isChecked: false
+                    });
+                }
+                if (!boxCountsData[actualStoreId]) {
+                    boxCountsData[actualStoreId] = {};
+                }
+                if (!boxCountsData[actualStoreId][box.boxColor]) {
+                    boxCountsData[actualStoreId][box.boxColor] = 0;
+                }
+                boxCountsData[actualStoreId][box.boxColor] += box.boxCount;
+                if (box.status === 'DOUBLE_CHECKED') {
+                    confirmedStores.add(actualStoreId);
+                }
             });
-
-        const items=data
-        if (items.length === 0) {
-        setError(`${date}の箱データが見つかりませんでした`);
-        setLoading(false);
-        return;
-        }
-        
-        console.log(`${date}のデータを${items.length}件取得しました`);
-        
-        const storeMap = new Map<string, Store>();
-        const boxCountsData: Record<string, Record<string, number>> = {};
-        
-
-        items.forEach(box => {
-        // 店舗情報を抽出
-        if (!storeMap.has(box.storeId)) {
-            storeMap.set(box.storeId, {
-            id: box.storeId,
-            storeName: box.storeName || '',
-            storeNumber: box.storeId,
-            storeTc: box.storeTc || '',
-            isChecked: false // デフォルト値を設定
+            // 2. 代表レコードがあればboxCountsDataだけ上書き（storeMapは上書きしない）
+            representativeBoxes.forEach(box => {
+                const actualStoreId = box.storeId;
+                if (!boxCountsData[actualStoreId]) {
+                    boxCountsData[actualStoreId] = {};
+                }
+                boxCountsData[actualStoreId]['green'] = box.boxCount;
+                if (box.status === 'DOUBLE_CHECKED') {
+                    confirmedStores.add(actualStoreId);
+                }
             });
+            console.log('boxCountsData:', boxCountsData);
+            const storesArray = Array.from(storeMap.values());
+            console.log('storesArray:', storesArray);
+            setStores(storesArray);
+            setBoxCounts(boxCountsData);
+            setError(null);
+            setLoading(false);
+        },
+        error: (err) => {
+            console.error('データの取得に失敗しました', err);
+            setError('データの取得に失敗しました');
+            setSnackbarMessage('データの取得に失敗しました');
+            setSnackbarSeverity('error');
+            setSnackbarOpen(true);
+            setLoading(false);
         }
-        
-        // 箱数情報を抽出
-        if (!boxCountsData[box.storeId]) {
-            boxCountsData[box.storeId] = {};
-        }
-        boxCountsData[box.storeId][box.boxColor] = box.boxCount;
-        });
-        
-        // 店舗情報を配列に変換
-        const storesArray = Array.from(storeMap.values());
-        console.log(`${storesArray.length}件の店舗データを処理しました`);
-        
-        setStores(storesArray);
-        setBoxCounts(boxCountsData);
-        } catch (err) {
-        console.error('データの読み込みに失敗しました:', err);
-        setError('データの読み込みに失敗しました: ' + (err instanceof Error ? err.message : String(err)));
-        } finally {
-        setLoading(false);
-    }
-    };
-    
-    fetchAllData();
-}, [departmentId]);
+    });
+    return () => subscription.unsubscribe();
+}, []);
 
 // 店舗選択ハンドラー
 const handleStoreSelect = (storeId: string) => {
@@ -108,62 +132,115 @@ const handleStoreSelect = (storeId: string) => {
 // 選択した店舗を確定済みにする
 const handleConfirmSelected = async () => {
     if (selectedStoreIds.length === 0) {
-    setSnackbarMessage('店舗が選択されていません');
-    setSnackbarSeverity('error');
-    setSnackbarOpen(true);
-    return;
+        setSnackbarMessage('店舗が選択されていません');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+        return;
     }
-
     try {
-    setLoading(true);
-    
-    // テストデータの日付を指定 (20250609)
-    // const targetDate = "20250609";
-    
-    // 選択された店舗の箱データを取得して更新
-    for (const storeId of selectedStoreIds) {
-        // 店舗の全ての箱データを取得
-        const boxesResponse = await client.models.Box.list({
-        filter: {
-            date: { eq: date },
-            storeId: { eq: storeId }
+        setLoading(true);
+        let updatedStoreCount = 0;
+        for (const storeId of selectedStoreIds) {
+            const storeInfo = stores.find(store => store.id === storeId);
+            if (!storeInfo) continue;
+            // 代表レコードが存在するか確認
+            const { data: representative } = await client.models.Box.list({
+                filter: {
+                    date: { eq: date },
+                    storeId: { eq: storeId },
+                    boxColor: { eq: 'green' },
+                    departmentId: { eq: safeDepartmentId }
+                }
+            });
+            if (representative && representative.length > 0) {
+                // 代表レコードのみを確定処理
+                const rep = representative[0];
+                if (rep.status !== 'DOUBLE_CHECKED') {
+                    await client.models.Box.update({
+                        date: rep.date,
+                        storeId: rep.storeId,
+                        boxColor: rep.boxColor,
+                        departmentId: rep.departmentId,
+                        boxCount: rep.boxCount,
+                        storeName: rep.storeName,
+                        storeTc: rep.storeTc,
+                        status: 'DOUBLE_CHECKED'
+                    });
+                    updatedStoreCount++;
+                }
+                continue; // 仕分け時間ごとのBoxレコードはスキップ
+            }
+            // 代表レコードがなければ従来通り仕分け時間ごとのBoxレコードを処理
+            const storeBoxCounts = boxCounts[storeId] || {};
+            let storeUpdated = false;
+            for (const [boxColor, boxCount] of Object.entries(storeBoxCounts)) {
+                try {
+                    const existingBoxes = await client.models.Box.list({
+                        filter: {
+                            date: { eq: date },
+                            storeId: { eq: storeId },
+                            boxColor: { eq: boxColor },
+                            departmentId: { eq: safeDepartmentId }
+                        }
+                    });
+                    if (existingBoxes.data && existingBoxes.data.length > 0) {
+                        const existingBox = existingBoxes.data[0];
+                        if (existingBox.status === 'DOUBLE_CHECKED') {
+                            continue;
+                        }
+                        await client.models.Box.update({
+                            date: date,
+                            storeId: storeId,
+                            boxColor: boxColor,
+                            departmentId: safeDepartmentId,
+                            boxCount: existingBox.boxCount,
+                            storeName: storeInfo.storeName,
+                            storeTc: storeInfo.storeTc,
+                            status: 'DOUBLE_CHECKED'
+                        });
+                        storeUpdated = true;
+                    } else {
+                        await client.models.Box.create({
+                            date: date,
+                            storeId: storeId,
+                            boxColor: boxColor,
+                            departmentId: safeDepartmentId,
+                            boxCount: boxCount,
+                            storeName: storeInfo.storeName,
+                            storeTc: storeInfo.storeTc,
+                            status: 'DOUBLE_CHECKED'
+                        });
+                        storeUpdated = true;
+                    }
+                } catch (err) {
+                    throw err;
+                }
+            }
+            if (storeUpdated) {
+                updatedStoreCount++;
+            }
         }
-        });
-
-        // 各箱データに対して更新
-        for (const box of boxesResponse.data) {
-        await client.models.Box.update({
-            date: box.date,
-            storeId: box.storeId,
-            boxColor: box.boxColor,
-            boxCount: box.boxCount,
-            storeName: box.storeName,
-            storeTc: box.storeTc,
-            departmentId: box.departmentId
-        });
+        setStores(prevStores =>
+            prevStores.map(store =>
+                selectedStoreIds.includes(store.id)
+                    ? { ...store, isChecked: true }
+                    : store
+            )
+        );
+        if (updatedStoreCount > 0) {
+            setSnackbarMessage(`${updatedStoreCount}件の店舗を確定済みにしました`);
+        } else {
+            setSnackbarMessage('すべての店舗はすでに確定済みです');
         }
-    }
-    
-    // 店舗リストを更新（UI上でのみisCheckedを管理）
-    setStores(prevStores => 
-        prevStores.map(store => 
-        selectedStoreIds.includes(store.id) 
-            ? { ...store, isChecked: true } 
-            : store
-        )
-    );
-    
-    setSnackbarMessage(`${selectedStoreIds.length}件の店舗を確定済みにしました`);
-    setSnackbarSeverity('success');
-    setSnackbarOpen(true);
-    setSelectedStoreIds([]);
+        setSnackbarSeverity('success');
+        setSnackbarOpen(true);
+        setSelectedStoreIds([]);
     } catch (err) {
-    console.error('店舗の確定に失敗しました', err);
-    setSnackbarMessage('店舗の確定に失敗しました');
-    setSnackbarSeverity('error');
-    setSnackbarOpen(true);
+        setSnackbarMessage('店舗の確定に失敗しました');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
     } finally {
-    setLoading(false);
+        setLoading(false);
     }
 };
 
