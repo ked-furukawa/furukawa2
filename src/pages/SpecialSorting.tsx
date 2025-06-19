@@ -117,7 +117,6 @@ useEffect(() => {
         setLoading(true);
         const importResult= await resolveImportId(date,departmentId)
         if (!importResult) {
-        setError('有効な importId が見つかりませんでした');
         return;
         }
         setImportId(importResult.importId)
@@ -312,6 +311,61 @@ const navigateToNextStore = async () => {
     setShowConfirmDialog(false);
     }
     };
+
+    // 箱数確定処理
+const navigateToCompletedScreen = async () => {
+    try {
+    setLoading(true);
+    setSavingData(true);
+    // 1. Boxデータ取得
+    const response = await client.models.Box.listBoxesByDateAndDept({
+      date: date,
+      departmentId: {
+        eq: departmentId
+      }
+    });
+
+    const allBoxes = response.data;
+
+    // 2. storeIdの先頭3文字でグループ化＆合算
+    const grouped: { [key: string]: any } = {};
+
+    allBoxes.forEach(box => {
+      const prefix = box.storeId.slice(0, 3);
+      if (!grouped[prefix]) {
+        grouped[prefix] = { ...box, storeId: prefix, boxCount: 0 };
+      }
+      grouped[prefix].boxCount += box.boxCount;
+    });
+
+    // 3. 各prefixごとに新規レコードを作成
+    const createPromises = Object.values(grouped).map((box) =>
+      client.models.Box.create(box)
+    );
+    await Promise.all(createPromises);
+
+    // 4. phase を DONE に変更
+    setPhase("DONE");
+  } catch (err) {
+    console.error("navigateToCompletedScreen error:", err);
+    setError("集計に失敗しました");
+  } finally {
+    setLoading(false);
+    setSavingData(false);
+    setShowConfirmDialog(false);
+    }
+};
+    const handleNextAction = () => {
+    if (!hasPending && phase === "ODD") {
+        // hasPending が false かつ phase が DONE のとき
+        // 別の処理を行う
+        navigateToCompletedScreen(); // ← 任意の関数
+    } else {
+        // 通常処理
+        navigateToNextStore();
+    }
+    };
+
     async function handleDialogOpen() {
         const checkPendingStatus = async () => {
             const response = await client.models.ImportWorkStatus.list({
@@ -432,17 +486,17 @@ return (
             <TableCell sx={{ fontSize: '1rem' }}>{calc.storeId}</TableCell>
             <TableCell sx={{ fontSize: '1rem' }}>{calc.storeName}</TableCell>
             <TableCell align="right" sx={{ fontSize: '1rem' }}>
-                {phase === "ODD"
+                {(phase === "EVEN"||phase==="ODD") && calc.isOdd
                 ? calc.boxCount-1
-                : phase === "EVEN"
-                ? calc.boxCount // 例：EVEN用の別プロパティを表示
+                : (phase === "EVEN"||phase==="ODD") && !calc.isOdd
+                ? calc.boxCount
                 : calc.itemCount}
                 </TableCell>
             <TableCell align="right" sx={{ fontSize: '1rem' }}>
-                {phase === "ODD"
+                {(phase === "EVEN"||phase==="ODD") && calc.isOdd
                 ? 1
-                : phase === "EVEN"
-                ? 0 // 例：EVEN用の別プロパティを表示
+                : (phase === "EVEN"||phase==="ODD") && !calc.isOdd
+                ? 0 
                 : calc.boxCount}
                 </TableCell>
             <TableCell align="center">
@@ -508,7 +562,7 @@ return (
             キャンセル
           </Button>
           <Button 
-            onClick={navigateToNextStore} 
+            onClick={handleNextAction} 
             color="primary" 
             variant="contained"
             disabled={savingData}
