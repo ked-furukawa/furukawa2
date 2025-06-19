@@ -23,6 +23,7 @@ const boxClient = generateClient<Schema>();
 
 // import { fetchUserAttributes } from 'aws-amplify/auth';
 import { useParams } from 'react-router-dom';
+import { formatDateToJST } from './utils/formatDateToJST';
 
 interface StoreDoubleCheckListProps {
 stores: Store[];
@@ -59,11 +60,12 @@ if (stores.length === 0) {
     const [inputValue, setInputValue] = useState<string>('');
     const [selectedColor, setSelectedColor] = useState<BoxColor>('green');
     const [selectedStoreId, setSelectedStoreId] = useState<string>('0');
-const { departmentId } = useParams<{ departmentId?: string }>();
+    const { departmentId } = useParams<{ departmentId?: string }>();
 
-if (!departmentId) {
-    return <div>部門IDが必要です</div>;
-}
+    if (!departmentId) {
+        return <div>部門IDが必要です</div>;
+    }
+    const date = formatDateToJST(new Date);
 
 // 各店舗の合計箱数を計算
 const getStoreBoxCount = (storeId: string): number => {

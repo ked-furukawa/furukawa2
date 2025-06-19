@@ -412,5 +412,75 @@
 
         "departmentId":  "sakurai",
         "departmentName": "櫻井"
-    }
+    },
+    {
+        "importId": "20250609_103000",
+        "date": "20250609",
+        "storeId": "001",
+        "storeName": "中央店",
+        "storeTc": "中之島",
+        "itemId": "210001",
+        "itemName": "ロースかつ",
+        "itemFormalName": "柔らかロースとんかつ",
+        "itemCount": 5, 
+        "departmentId": "kakou2",
+        "departmentName": "加工",
+        "status": "PENDING"
+    },
+    {
+        "importId": "20250609_103000",
+        "date": "20250609",
+        "storeId": "002",
+        "storeName": "東店",
+        "storeTc": "中之島",
+        "itemId": "210001",
+        "itemName": "ロースかつ",
+        "itemFormalName": "柔らかロースとんかつ",
+        "itemCount": 7, 
+        "departmentId": "kakou2",
+        "departmentName": "加工",
+        "status": "PENDING"
+    },
+    {
+        "importId": "20250609_103000",
+        "date": "20250609",
+        "storeId": "003",
+        "storeName": "西店",
+        "storeTc": "上越",
+        "itemId": "210001",
+        "itemName": "ロースかつ",
+        "itemFormalName": "柔らかロースとんかつ",
+        "itemCount": 4, 
+        "departmentId": "sakurai",
+        "departmentName": "櫻井",
+        "status": "PENDING"
+    },
+    {
+        "importId": "20250609_103000",
+        "date": "20250609",
+        "storeId": "004",
+        "storeName": "南店",
+        "storeTc": "上越",
+        "itemId": "210002",
+        "itemName": "棒ヒレ",
+        "itemFormalName": "棒ヒレカツ",
+        "itemCount": 3, 
+        "departmentId": "honsyabuturyu",
+        "departmentName": "本社物流",
+        "status": "PENDING"
+    },
+    {
+        "importId": "20250609_103000",
+        "date": "20250609",
+        "storeId": "005",
+        "storeName": "北店",
+        "storeTc": "中之島",
+        "itemId": "210002",
+        "itemName": "棒ヒレ",
+        "itemFormalName": "棒ヒレカツ",
+        "itemCount": 6, 
+        "departmentId": "honsyabuturyu",
+        "departmentName": "本社物流",
+        "status": "PENDING"
+}
 ]

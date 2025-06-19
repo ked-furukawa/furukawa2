@@ -132,8 +132,8 @@ useEffect(() => {
       setLoading(true);
      
       // 固定の日付を使用（6月9日のテストデータ）
-      const today = '20250609';
-      setCurrentDate(today);
+      // const today = '20250609';
+      setCurrentDate(date);
      
       // resolveImportId を使用して作業用の importId を取得
       const importResult = await resolveImportId(today, departmentId);

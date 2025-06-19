@@ -24,7 +24,7 @@ export const schema = a.schema({
   })
   .identifier(['importId','date', 'storeId', 'itemId']) // PKとSK
   .secondaryIndexes((index) => [ 
-  index("date") //GSI 部門ごとに全部取得したいとき用
+  index("date") //GSI 部門ごとに特定バージョンの全部取得したいとき用
     .sortKeys(["departmentId","importId"])
     .queryField("listOrdersByDeptAndImport") //フロントでこのメソッド名を使えばこのGSIが使える
     .name("GSI_OrderDateDeptImport"),
@@ -32,6 +32,10 @@ export const schema = a.schema({
     .sortKeys(["storeId","itemId"])
     .queryField("listOrdersByStoreAndItem")
     .name("GSI_OrderDateStoreItem"),
+  index("date") //GSI 最終確認画面で全部足し算する用
+    .sortKeys(["departmentId"])
+    .queryField("listOrdersByDept") 
+    .name("GSI_OrderDateDept"),
   ])
   .authorization(allow => [allow.authenticated()]), //認証情報の設定
 
@@ -54,7 +58,7 @@ export const schema = a.schema({
   .secondaryIndexes((index) => [ 
   index("date") //GSI 部門ごとに全部取得したいとき用
     .sortKeys(["departmentId"])
-    .queryField("listBoxesByDate") //フロントでこのメソッド名を使えばこのGSIが使える
+    .queryField("listBoxesByDateAndDept") //フロントでこのメソッド名を使えばこのGSIが使える
     .name("GSI_BoxDateDept"),
   index("date") //GSI 事務所で全部合計する用
     .sortKeys(["storeId"])

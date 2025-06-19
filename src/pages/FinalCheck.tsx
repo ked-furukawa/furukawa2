@@ -4,6 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { StatusTemplate } from "../types";
 
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../../amplify/data/resource";
@@ -86,6 +87,9 @@ export const FinalCheck = () => {
             filter: {
             date: {
                 eq: selectedDate?.toISOString().split('T')[0].replace(/-/g, '') || ''
+            },
+            status: {
+                eq: StatusTemplate.DOUBLE_CHECKED
             }
             }
         });
@@ -400,8 +404,10 @@ export const FinalCheck = () => {
         storeId: { eq: storeId }
         });
         
-        console.log('取得した箱情報:', response.data);
-        setBoxDetails(response.data || []);
+        // "status" が "DOUBLE_CHECKED" のものだけ抽出
+        const doubleCheckedBoxes = response.data.filter(box => box.status === "DOUBLE_CHECKED");
+        console.log('取得した箱情報:', doubleCheckedBoxes);
+        setBoxDetails(doubleCheckedBoxes || []);
     } catch (error) {
         console.error('箱情報の取得エラー:', error);
         setBoxDetails([]);
@@ -422,44 +428,32 @@ export const FinalCheck = () => {
     };
 
     const fetchOrderDetails = async (departmentId: string,date:string) => {
-    let latestRecord=null
-    try{
-        const { data }= await boxClient.models.ImportWorkStatus.list({
-            filter: {
-            date: {
-                eq:date
-            },
-            departmentId:{
-                eq:departmentId
-            },
-            importProgress:{
-                eq:'DONE'
-            },
-            }
-        });
-        if (!data || data.length === 0) {
-        console.log('該当データがありません。');
-        } else {
-        // importId が文字列で最大のもの（最新）を取得
-        latestRecord = data.reduce((max, current) => {
-            return current.importId > max.importId ? current : max;
-        })};
-    }catch(error){
-        console.error('importId情報の取得エラー:', error);
-    }
     try {
-        const response = await boxClient.models.Order.listOrdersByDeptAndImport({
+        const response = await boxClient.models.Order.listOrdersByDept({
         date: date,
-            departmentIdImportId: {
-                eq: {
-                departmentId: departmentId,
-                importId: latestRecord?.importId  ?? ""
-                }
-            }
+        departmentId: {
+            eq: departmentId
+        }
         });
+        const orders: OrderItem[] = response.data;
+
+    const aggregated: Record<string, OrderItem> = {};
+
+    for (const order of orders) {
+        const key = `${order.storeId}_${order.itemId}`;
         
-        console.log('取得したOrder情報:', response.data);
-        setOrderDetails(response.data || []);
+        if (!aggregated[key]) {
+            // 最初の1件をコピー（itemCountは0から加算）
+            aggregated[key] = { ...order, itemCount: 0 };
+        }
+
+        aggregated[key].itemCount += order.itemCount ?? 0;
+    }
+
+    const aggregatedOrders: OrderItem[] = Object.values(aggregated);
+        
+        console.log('取得したOrder情報:', aggregatedOrders);
+        setOrderDetails(aggregatedOrders || []);
     } catch (error) {
         console.error('Order情報の取得エラー:', error);
         setOrderDetails([]);

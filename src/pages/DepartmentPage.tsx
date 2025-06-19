@@ -71,7 +71,7 @@ const pageList: {
         {
         key: 'SpecialSorting',
         label: '特殊注文',
-        component: () => <SpecialSorting />,
+        component: (props) => <SpecialSorting {...props} />,
         },
     ];
 
@@ -84,7 +84,7 @@ const App = () => {
       return 'FinalCheck';
     }
     if (departmentId === 'honsyabuturyu' || departmentId === 'kakou2') {
-      return 'SpecialSorting';
+      return 'SortingCheckScreen';
     }
     return 'SortingCheckScreen';
   }, [departmentId]);
@@ -98,8 +98,8 @@ const App = () => {
       // 特定部門に応じた表示許可マップ
       const departmentAccessMap: Record<string, string[]> = {
         office: ['FinalCheck', 'AdditionalOrderInput'],
-        honsyabuturyu: ['SpecialSorting'],
-        kakou2: ['SpecialSorting'],
+        honsyabuturyu: ['SortingCheckScreen','SpecialSorting'],
+        kakou2: ['SortingCheckScreen','SpecialSorting'],
         seiniku: ['BoxQuantityInput', 'SortingCheckScreen', 'StoreDoubleCheckList'],
         kakou1: ['BoxQuantityInput', 'SortingCheckScreen', 'StoreDoubleCheckList'],
         '1souzai': ['BoxQuantityInput', 'SortingCheckScreen', 'StoreDoubleCheckList'],

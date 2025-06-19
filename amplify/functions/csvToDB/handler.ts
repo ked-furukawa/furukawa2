@@ -41,8 +41,8 @@ const importId = getFormattedTimestamp();
 
 const REGION = process.env.AWS_REGION || 'ap-northeast-1';
 const TABLES = {
-    order: process.env.ORDER_TABLE_NAME || 'Order',
-    importWorkStatus: process.env.IMPORT_WORK_STATUS_TABLE_NAME || 'ImportWorkStatus'
+    order: process.env.AMPLIFY_DATA_ORDER_TABLE_NAME || 'Order',
+    importWorkStatus: process.env.AMPLIFY_DATA_IMPORTWORKSTATUS_TABLE_NAME || 'ImportWorkStatus'
 };
 
 // マッピング変換
@@ -137,7 +137,7 @@ try {
         // JSONへ変換
         let jsonArray;
         try {
-            jsonArray = await csv({ ignoreEmpty: true }).fromString(cleanedCsvText);
+            jsonArray = await csv({ ignoreEmpty: true,checkType: false,trim: true }).fromString(cleanedCsvText);
         } catch (parseErr) {
             console.error('CSV to JSON 変換失敗:', parseErr);
             throw new Error('CSVパース失敗');
@@ -170,8 +170,7 @@ try {
                 };
                 const command = new PutCommand(params);
 
-                const result = await docClient.send(command);
-                console.log(`Put result for item ${index + 1}:`, result);
+                await docClient.send(command);
             }
             for (const departmentId of departmentIdSet) {//ImportWorkStatus登録
             console.log('Processing for importId:', importId);
@@ -191,8 +190,7 @@ try {
                     Item: item
                 }
                 const command = new PutCommand(params);
-                const result = await docClient.send(command);
-                console.log(`Put result for item:`, result);
+                await docClient.send(command);
             
             };
         } catch (err) {
