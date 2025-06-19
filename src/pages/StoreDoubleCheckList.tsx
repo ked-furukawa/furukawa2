@@ -69,20 +69,19 @@ useEffect(() => {
             
             // 全ての箱データを処理
             items.forEach(box => {
+                // 仕分け時間ごとのBoxレコードのみ合計対象（storeIdに「_」が含まれているもの）
+                if (!box.storeId.includes('_')) {
+                    // 代表レコードはスキップ
+                    return;
+                }
                 // 重複処理防止のためのユニークID
                 const boxUniqueId = `${box.date}_${box.storeId}_${box.boxColor}_${box.departmentId}`;
-                
-                // この箱が既に処理済みなら、スキップ
                 if (processedBoxIds.has(boxUniqueId)) {
                     return;
                 }
-                
-                // 処理済みとしてマーク
                 processedBoxIds.add(boxUniqueId);
-                
                 // storeIdから実際の店舗IDを抽出（importIdを除去）
                 const actualStoreId = box.storeId.split('_')[0];
-                
                 // 店舗情報を抽出
                 if (!storeMap.has(actualStoreId)) {
                     storeMap.set(actualStoreId, {
@@ -93,7 +92,6 @@ useEffect(() => {
                         isChecked: false
                     });
                 }
-                
                 // 箱数情報を抽出（累積加算）
                 if (!boxCountsData[actualStoreId]) {
                     boxCountsData[actualStoreId] = {};
@@ -101,12 +99,8 @@ useEffect(() => {
                 if (!boxCountsData[actualStoreId][box.boxColor]) {
                     boxCountsData[actualStoreId][box.boxColor] = 0;
                 }
-                
                 // 箱数を加算
                 boxCountsData[actualStoreId][box.boxColor] += box.boxCount;
-                
-                console.log(`店舗 ${actualStoreId} の ${box.boxColor} 箱: ${box.boxCount} を加算 (合計: ${boxCountsData[actualStoreId][box.boxColor]})`);
-                
                 // 確定済みの店舗を記録
                 if (box.status === 'DOUBLE_CHECKED') {
                     confirmedStores.add(actualStoreId);
@@ -203,16 +197,13 @@ const handleConfirmSelected = async () => {
                             continue;
                         }
                         
-                        // 重要: 既存の箱数に新しい箱数を加算する（再作業分は累積にしたい仕様）
-                        const newBoxCount = existingBox.boxCount + boxCount;
-                        console.log(`${storeId}の${boxColor}箱を更新: ${existingBox.boxCount} + ${boxCount} = ${newBoxCount}箱`);
-                        
+                        // boxCountは加算せず、statusのみ更新
                         await client.models.Box.update({
                             date: targetDate,
                             storeId: storeId,
                             boxColor: boxColor,
                             departmentId: 'souzai', // 仮の部門ID
-                            boxCount: newBoxCount, // 既存の値に加算
+                            boxCount: existingBox.boxCount, // 既存値をそのまま
                             storeName: storeInfo.storeName,
                             storeTc: storeInfo.storeTc,
                             status: 'DOUBLE_CHECKED'

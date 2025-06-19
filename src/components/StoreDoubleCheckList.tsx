@@ -77,21 +77,18 @@ const handleInputChange = (value: string) => {
   // 箱数更新処理
 const handleQuantityUpdate  = async () => {
     try {
-        const result = await boxClient.models.Box.update({ //DBの書き換え部分、今回はBoxテーブル
-            date: '20250609', //実際は画面内のどこかに保持している変数などを使って必要情報を埋めていく
-            storeId: selectedStoreId, //必要情報=定義したテーブルの中身
-
-            boxColor: 'green',
-            boxCount: Number(inputValue),
-
-            departmentId: departmentId
+        // 代表レコード（importIdなしstoreId）をupdate or create
+        await boxClient.models.Box.update({
+            date: '20250609',
+            storeId: selectedStoreId, // importIdなし
+            boxColor: 'green', // 色は仮でgreen
+            departmentId: departmentId,
+            boxCount: Number(inputValue)
         });
-        console.log('result',result);
-        } catch (error) {
+    } catch (error) {
         console.error('DB登録エラー:', error);
-        }
-
-  handleCloseModal(); // 入力後にモーダルを閉じるなど
+    }
+    handleCloseModal();
 };
 
 
