@@ -255,7 +255,7 @@ useEffect(() => {
     setOrders(typedOrders);
    
     // 箱データを取得 (修正: 正しいGSIクエリを使用)
-    const boxResponse = await dataClient.models.Box.listBoxesByDate({
+    const boxResponse = await dataClient.models.Box.listBoxesByDateAndDept({
       date: today,
       departmentId: {
         eq: departmentId

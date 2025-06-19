@@ -37,6 +37,7 @@ interface Product {
 
   itemId: string; //itemId
   itemName: string; // itemName
+  itemFormalName: string;
   itemCounts: number; // itemCountの合計値
   isChecked: boolean; // ローカル状態で管理
 
@@ -115,6 +116,8 @@ const loadProducts = async () => {
     
     const rawOrders = result.data; //加工前の注文データ
 
+    const productMap: { [itemId: string]: Product } = {};
+
     // PENDINGのデータがあるかチェック
   const pendingOrders = rawOrders.filter(o => o.status === "PENDING");
   setHasAnyPending(pendingOrders.length > 0);
@@ -122,21 +125,20 @@ const loadProducts = async () => {
   const hasNakano = pendingOrders.some(o => o.storeTc === "中之島");
   setHasNakanoShimaPending(hasNakano);
 
-
-    const productMap: { [itemId: string]: Product } = {};
-
-    pendingOrders.forEach(order => {
+    result.data.forEach(order => {
+      const count = order.status === 'PENDING' ? (order.itemCount ?? 0) : 0;
       if (!productMap[order.itemId]) {
         productMap[order.itemId] = {
           date:date,
           itemId: order.itemId,
           itemName: order.itemName ?? "",
+          itemFormalName: order.itemFormalName ?? "",
           itemCounts: 0,
           isChecked: false,
           departmentId: order.departmentId ?? "",
         };
       }
-      productMap[order.itemId].itemCounts += order.itemCount;
+      productMap[order.itemId].itemCounts += count;
     });
 
       setRawOrderData(rawOrders) //モーダルに渡す用
@@ -227,6 +229,11 @@ useEffect(() => {
   const cellFontSize = isPortrait ? '1.3rem' : '1rem';
   const rowHeight = isPortrait ? '72px' : '64px';
   const navButtonHeight = isPortrait ? 56 : 50;
+
+  let destination='BoxQuantityInput'
+  if(departmentId==='kakou2' || departmentId==='honsyabuturyu'){
+    destination='SpecialSorting'
+  }
 
 
 
@@ -391,7 +398,7 @@ useEffect(() => {
                     // bgcolor: !product.isChecked ? 'rgba(255, 244, 229, 0.7)' : 'inherit',
                     '&:last-child td, &:last-child th': { border: 0 },
                     height: 
-rowHeight,
+                    rowHeight,
                     '&.Mui-selected': {
                       backgroundColor: 'rgba(25, 118, 210, 0.12)'
                     },
@@ -421,6 +428,19 @@ rowHeight,
                     >
                       {product.itemName}
                     </Box>
+                    <Typography 
+                      variant="caption" 
+                      color="text.secondary"
+                      sx={{ 
+                          display: 'block',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          fontSize: '0.85rem' // キャプションも大きく
+                      }}
+                      >
+                      {product.itemFormalName}
+                      </Typography>
                   </TableCell>
                   <TableCell
                     align="right"
@@ -555,7 +575,7 @@ rowHeight,
                   size="large"
                   onClick={() => {
                     setAlertOpen(false);
-                    navigateTo('BoxQuantityInput'); // 任意の画面キーへ遷移
+                    navigateTo(destination); // 任意の画面キーへ遷移
                   }}
                   sx={{ minWidth: 140, fontSize: '1rem', px: 3, py: 1 }}
                 >
