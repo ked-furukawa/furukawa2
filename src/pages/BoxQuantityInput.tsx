@@ -23,7 +23,7 @@ import { groupOrdersByTcAndStore } from '../components/utils/groupOrdersByTcAndS
 import { resolveImportId } from '../components/utils/resolveImportId';
 import { useParams } from 'react-router-dom';
 import { checkPendingImportId } from '../components/utils/checkPendingImportId';
-import { getCurrentUser } from '@aws-amplify/auth';
+
 // 型定義
 type BoxColor = 'green' | 'red' | 'blue' | 'orange';
 
@@ -125,15 +125,12 @@ const filteredStores = useMemo(() => {
 
 // 初期データの一括取得
 useEffect(() => {
-  
   // 部門IDが設定されるまで待機
   if (!departmentId) return;
  
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      const user = await getCurrentUser();
-      console.log('User info:', user);
      
       // 固定の日付を使用（6月9日のテストデータ）
       // const today = '20250609';
