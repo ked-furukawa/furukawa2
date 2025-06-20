@@ -181,9 +181,13 @@ useEffect(() => {
           eq: {
             departmentId: departmentId,
             importId: importResult.importId
-          }
+          },
         }
-      });
+      },
+      {
+    limit: 1000  // 最大1000件取得
+  }
+);
 
       console.log('オーダーレスポンス',ordersResponse)
 
@@ -617,7 +621,11 @@ if (newlyCompleted.length === nakanoshimaStores.length) {
           importId: importId
         }
       }
-    });
+    },
+    {
+    limit: 1000  // 最大1000件取得
+  }
+);
     
     const latestOrders = latestOrdersResponse.data;
     
@@ -684,7 +692,11 @@ if (!nextStore) {
           importId: importId
         }
       }
-    });
+    },
+    {
+    limit: 1000  // 最大1000件取得
+  }
+);
     
     const latestOrders = latestOrdersResponse.data;
     
