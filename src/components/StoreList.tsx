@@ -87,7 +87,6 @@ const StoreList: React.FC<StoreListProps> = ({
   const listContainerRef = useRef<HTMLDivElement | null>(null);
 
   const date = formatDateToJST(new Date);
-
   // StoreList.tsx の fetchBoxData 関数を修正
     const fetchBoxData = async () => {
       try {
