@@ -81,6 +81,10 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
   // const [departmentId, setDepartmentId] = useState<string>(''); // 初期値を空文字列に変更
   const [currentRegion, setCurrentRegion] = useState<string>('中之島'); // 初期値は中之島
 
+  //TCが一つしかないことを判定するためのstate
+  const [isNakanoshimaMissing, setIsNakanoshimaMissing] = useState<boolean>(false);
+  const [isJoetsuMissing, setIsJoetsuMissing] = useState<boolean>(false);
+
   // データキャッシュ
   const [orders, setOrders] = useState<OrderData[]>([]);
   const [boxDataCache, setBoxDataCache] = useState<BoxData[]>([]);
@@ -171,15 +175,6 @@ useEffect(() => {
       // importId を状態として保存
       setImportId(importResult.importId);
       
-      // sortingPhase に基づいて currentRegion を設定
-      if (importResult.sortingPhase === 'COMPLETED_NAKANOSHIMA') {
-        // 中之島エリアが完了している場合は上越に切り替え
-        setCurrentRegion('上越');
-      } else {
-        // それ以外の場合は中之島をデフォルトに
-        setCurrentRegion('中之島');
-      }
-   
     // 同じ日付の全てのImportWorkStatusを取得して複数回注文の有無を確認
     // const importStatusResponse = await dataClient.models.ImportWorkStatus.list({
     //   filter: {
@@ -253,6 +248,26 @@ useEffect(() => {
    
     // フィルタリングされた注文データを状態として保存
     setOrders(typedOrders);
+
+    const storeTcSet = new Set(
+      typedOrders
+        .map(order => order.storeTc)
+        .filter(tc => tc !== '')
+    );
+    const storeTcArray = [...storeTcSet];
+
+    // 特定文字列が含まれていないかのチェック（含まれていなければ true）
+    setIsNakanoshimaMissing(!storeTcArray.includes('中之島'));
+    setIsJoetsuMissing(!storeTcArray.includes('上越'));
+
+    // sortingPhase または 中之島の有無 に基づいて currentRegion を決定
+      if (importResult.sortingPhase === 'COMPLETED_NAKANOSHIMA' || isNakanoshimaMissing) {
+        setCurrentRegion('上越');
+      } else {
+        setCurrentRegion('中之島');
+      }
+   
+
    
     // 箱データを取得 (修正: 正しいGSIクエリを使用)
     const boxResponse = await dataClient.models.Box.listBoxesByDateAndDept({
@@ -667,8 +682,11 @@ if (newlyCompleted.length === nakanoshimaStores.length) {
     
     await Promise.all(updatePromises);
 
-    // 画面遷移
-    navigateTo('SortingCheckScreen');
+    if (isJoetsuMissing) {
+      navigateTo('StoreDoubleCheckList');
+    } else {
+      navigateTo('SortingCheckScreen');
+    }
   } catch (error) {
     console.error('中之島エリア完了処理中にエラーが発生しました:', error);
     setError('中之島エリア完了処理中にエラーが発生しました');
