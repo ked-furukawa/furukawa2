@@ -7,6 +7,7 @@ export const groupOrdersByTcAndStore = (
   const result: { [storeTc: string]: { [storeId: string]: OrderData[] } } = {};
 
   for (const order of orders) {
+    console.log("TCログ",order.storeTc)
     const { storeTc, storeId } = order;
 
     // storeTcが未登録なら初期化

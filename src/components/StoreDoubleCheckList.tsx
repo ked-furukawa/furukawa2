@@ -23,6 +23,7 @@ const boxClient = generateClient<Schema>();
 
 // import { fetchUserAttributes } from 'aws-amplify/auth';
 import { useParams } from 'react-router-dom';
+import { formatDateToJST } from './utils/formatDateToJST';
 
 interface StoreDoubleCheckListProps {
 stores: Store[];
@@ -59,11 +60,12 @@ if (stores.length === 0) {
     const [inputValue, setInputValue] = useState<string>('');
     const [selectedColor, setSelectedColor] = useState<BoxColor>('green');
     const [selectedStoreId, setSelectedStoreId] = useState<string>('0');
-const { departmentId } = useParams<{ departmentId?: string }>();
+    const { departmentId } = useParams<{ departmentId?: string }>();
 
-if (!departmentId) {
-    return <div>部門IDが必要です</div>;
-}
+    if (!departmentId) {
+        return <div>部門IDが必要です</div>;
+    }
+    const date = formatDateToJST(new Date);
 
 // 各店舗の合計箱数を計算
 const getStoreBoxCount = (storeId: string): number => {
@@ -76,22 +78,50 @@ const handleInputChange = (value: string) => {
 };
   // 箱数更新処理
 const handleQuantityUpdate  = async () => {
+    console.log('handleQuantityUpdate呼び出し', inputValue, selectedStoreId);
     try {
-        const result = await boxClient.models.Box.update({ //DBの書き換え部分、今回はBoxテーブル
-            date: '20250609', //実際は画面内のどこかに保持している変数などを使って必要情報を埋めていく
-            storeId: selectedStoreId, //必要情報=定義したテーブルの中身
-
-            boxColor: 'green',
-            boxCount: Number(inputValue),
-
-            departmentId: departmentId
+        // 代表レコードが存在するか確認
+        const { data: existing } = await boxClient.models.Box.list({
+            filter: {
+                date: { eq: date },
+                storeId: { eq: selectedStoreId },
+                boxColor: { eq: 'green' },
+                departmentId: { eq: departmentId }
+            }
         });
-        console.log('result',result);
-        } catch (error) {
-        console.error('DB登録エラー:', error);
+        // store情報を取得
+        const storeInfo = stores.find(store => store.id === selectedStoreId);
+        const storeName = storeInfo?.storeName || '';
+        const storeTc = storeInfo?.storeTc || '';
+        if (existing && existing.length > 0) {
+            // update
+            await boxClient.models.Box.update({
+                date: date,
+                storeId: selectedStoreId,
+                boxColor: 'green',
+                departmentId: departmentId,
+                boxCount: Number(inputValue),
+                storeName,
+                storeTc
+            });
+            console.log('update完了');
+        } else {
+            // create
+            await boxClient.models.Box.create({
+                date: date,
+                storeId: selectedStoreId,
+                boxColor: 'green',
+                departmentId: departmentId,
+                boxCount: Number(inputValue),
+                storeName,
+                storeTc
+            });
+            console.log('create完了');
         }
-
-  handleCloseModal(); // 入力後にモーダルを閉じるなど
+    } catch (error) {
+        console.error('DB登録エラー:', error);
+    }
+    handleCloseModal();
 };
 
 
@@ -171,13 +201,12 @@ return (
                 <TableCell>{store.storeName}</TableCell>
                 <TableCell align="center">{store.storeNumber}</TableCell>
                 <TableCell align="center"  onClick={() => {
-                    console.log(selectedStoreId)
                     const currentValue = getStoreBoxCount(store.id);
+                    console.log('テンキー開く: store.id=', store.id, 'currentValue=', currentValue, 'boxCounts[store.id]=', boxCounts[store.id]);
                     setSelectedStoreId(store.id);
                     setInputValue(String(currentValue)); // ← 文字列として Keypad に渡す
                     setIsModalOpen(true);
                 }}
-
                     sx={{ cursor: 'pointer', textDecoration: 'underline' }}>{getStoreBoxCount(store.id)}</TableCell>
                 <TableCell align="center">
                     <Checkbox 

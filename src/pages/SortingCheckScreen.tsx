@@ -29,6 +29,7 @@ const client= generateClient<Schema>();
 
 import { resolveImportId } from "../components/utils/resolveImportId";
 import { useParams } from 'react-router-dom';
+import { formatDateToJST } from '../components/utils/formatDateToJST';
 
 
 // 商品データの型定義（Orderモデルベース）
@@ -82,7 +83,8 @@ const SortingCheckScreen: React.FC<SortingCheckScreenProps> = ({
 
   const {departmentId} = useParams();
 
-  const date="20250609" //テスト用固定日付
+  // const date="20250609" //テスト用固定日付
+  const date = formatDateToJST(new Date);
 
 const loadProducts = async () => {
   setLoading(true);

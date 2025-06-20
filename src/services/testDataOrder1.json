@@ -1,9 +1,9 @@
 
 [
     {
-        "importId": "20250609_103000",
+        "importId": "20250620_120000",
 
-        "date": "20250609",
+        "date": "20250620",
 
         "storeId": "019",
         "storeName": "内野店",
@@ -14,14 +14,14 @@
         "itemFormalName": "あさりと生姜の炊き込みご飯",
         "itemCount": 5,
 
-        "departmentId":  "kurosawa",
+        "departmentId":  "2souzai",
         "departmentName": "黒澤"
     },
 
     {
-        "importId": "20250609_103000",
+        "importId": "20250620_120000",
 
-        "date": "20250609",
+        "date": "20250620",
 
         "storeId": "025",
         "storeName": "春日山店",
@@ -32,14 +32,14 @@
         "itemFormalName": "筍とアスパラの炊き込みご飯",
         "itemCount": 5,
 
-        "departmentId":  "kurosawa",
+        "departmentId":  "2souzai",
         "departmentName": "黒澤"
     },
 
     {
-        "importId": "20250609_103000",
+        "importId": "20250620_120000",
 
-        "date": "20250609",
+        "date": "20250620",
 
         "storeId": "019",
         "storeName": "内野店",
@@ -55,9 +55,9 @@
     },
 
     {
-        "importId": "20250609_103000",
+        "importId": "20250620_120000",
 
-        "date": "20250609",
+        "date": "20250620",
 
         "storeId": "025",
         "storeName": "春日山店",
@@ -73,9 +73,9 @@
     },
 
     {
-        "importId": "20250609_103000",
+        "importId": "20250620_120000",
 
-        "date": "20250609",
+        "date": "20250620",
 
         "storeId": "019",
         "storeName": "内野店",
@@ -91,9 +91,9 @@
     },
     
     {
-        "importId": "20250609_103000",
+        "importId": "20250620_120000",
 
-        "date": "20250609",
+        "date": "20250620",
 
         "storeId": "025",
         "storeName": "春日山店",
@@ -108,9 +108,9 @@
         "departmentName": "古川"
     },
     {
-        "importId": "20250609_103000",
+        "importId": "20250620_120000",
 
-        "date": "20250609",
+        "date": "20250620",
 
         "storeId": "028",
         "storeName": "柏崎東店",
@@ -125,9 +125,9 @@
         "departmentName": "櫻井"
     },
     {
-        "importId": "20250609_103000",
+        "importId": "20250620_120000",
 
-        "date": "20250609",
+        "date": "20250620",
 
         "storeId": "032",
         "storeName": "五泉店",
@@ -142,9 +142,9 @@
         "departmentName": "櫻井"
     },
     {
-        "importId": "20250609_103000",
+        "importId": "20250620_120000",
 
-        "date": "20250609",
+        "date": "20250620",
 
         "storeId": "019",
         "storeName": "内野店",
@@ -159,9 +159,9 @@
         "departmentName": "櫻井"
     },
     {
-        "importId": "20250609_103000",
+        "importId": "20250620_120000",
 
-        "date": "20250609",
+        "date": "20250620",
 
         "storeId": "039",
         "storeName": "新井中川店",
@@ -176,9 +176,77 @@
         "departmentName": "櫻井"
     },
     {
-        "importId": "20250609_103000",
+        "importId": "20250620_120000",
 
-        "date": "20250609",
+        "date": "20250620",
+
+        "storeId": "039",
+        "storeName": "新井中川店",
+        "storeTc": "上越",
+
+        "itemId": "310999",
+        "itemName": "A",
+        "itemFormalName": "からあげ定食キット",
+        "itemCount": 3,
+
+        "departmentId":  "sakurai",
+        "departmentName": "櫻井"
+    },
+    {
+        "importId": "20250620_120000",
+
+        "date": "20250620",
+
+        "storeId": "039",
+        "storeName": "新井中川店",
+        "storeTc": "上越",
+
+        "itemId": "410999",
+        "itemName": "B",
+        "itemFormalName": "からあげ定食キット",
+        "itemCount": 3,
+
+        "departmentId":  "sakurai",
+        "departmentName": "櫻井"
+    },
+    {
+        "importId": "20250620_120000",
+
+        "date": "20250620",
+
+        "storeId": "039",
+        "storeName": "新井中川店",
+        "storeTc": "上越",
+
+        "itemId": "510999",
+        "itemName": "C",
+        "itemFormalName": "からあげ定食キット",
+        "itemCount": 3,
+
+        "departmentId":  "sakurai",
+        "departmentName": "櫻井"
+    },
+    {
+        "importId": "20250620_120000",
+
+        "date": "20250620",
+
+        "storeId": "039",
+        "storeName": "新井中川店",
+        "storeTc": "上越",
+
+        "itemId": "610999",
+        "itemName": "D",
+        "itemFormalName": "からあげ定食キット",
+        "itemCount": 3,
+
+        "departmentId":  "sakurai",
+        "departmentName": "櫻井"
+    },
+    {
+        "importId": "20250620_120000",
+
+        "date": "20250620",
 
         "storeId": "025",
         "storeName": "春日山店",
@@ -193,9 +261,9 @@
         "departmentName": "櫻井"
     },
     {
-        "importId": "20250609_103000",
+        "importId": "20250620_120000",
 
-        "date": "20250609",
+        "date": "20250620",
 
         "storeId": "104",
         "storeName": "中野店",
@@ -210,9 +278,9 @@
         "departmentName": "櫻井"
     },
     {
-        "importId": "20250609_103000",
+        "importId": "20250620_120000",
 
-        "date": "20250609",
+        "date": "20250620",
 
         "storeId": "019",
         "storeName": "内野店",
@@ -227,9 +295,9 @@
         "departmentName": "櫻井"
     },
     {
-        "importId": "20250609_103000",
+        "importId": "20250620_120000",
 
-        "date": "20250609",
+        "date": "20250620",
 
         "storeId": "019",
         "storeName": "内野店",
@@ -244,9 +312,9 @@
         "departmentName": "櫻井"
     },
     {
-        "importId": "20250609_103000",
+        "importId": "20250620_120000",
 
-        "date": "20250609",
+        "date": "20250620",
 
         "storeId": "019",
         "storeName": "内野店",
@@ -261,9 +329,9 @@
         "departmentName": "櫻井"
     },
     {
-        "importId": "20250609_103000",
+        "importId": "20250620_120000",
 
-        "date": "20250609",
+        "date": "20250620",
 
         "storeId": "019",
         "storeName": "内野店",
@@ -278,9 +346,9 @@
         "departmentName": "櫻井"
     },
     {
-        "importId": "20250609_103000",
+        "importId": "20250620_120000",
 
-        "date": "20250609",
+        "date": "20250620",
 
         "storeId": "019",
         "storeName": "内野店",
@@ -295,9 +363,9 @@
         "departmentName": "櫻井"
     },
     {
-        "importId": "20250609_103000",
+        "importId": "20250620_120000",
 
-        "date": "20250609",
+        "date": "20250620",
 
         "storeId": "019",
         "storeName": "内野店",
@@ -312,9 +380,9 @@
         "departmentName": "櫻井"
     },
     {
-        "importId": "20250609_103000",
+        "importId": "20250620_120000",
 
-        "date": "20250609",
+        "date": "20250620",
 
         "storeId": "022",
         "storeName": "十日町店",
@@ -329,9 +397,9 @@
         "departmentName": "櫻井"
     },
     {
-        "importId": "20250609_103000",
+        "importId": "20250620_120000",
 
-        "date": "20250609",
+        "date": "20250620",
 
         "storeId": "028",
         "storeName": "柏崎東店",
@@ -346,8 +414,8 @@
         "departmentName": "櫻井"
     },
     {
-        "importId": "20250609_103000",
-        "date": "20250609",
+        "importId": "20250620_120000",
+        "date": "20250620",
         "storeId": "001",
         "storeName": "中央店",
         "storeTc": "中之島",
@@ -360,8 +428,8 @@
         "status": "PENDING"
     },
     {
-        "importId": "20250609_103000",
-        "date": "20250609",
+        "importId": "20250620_120000",
+        "date": "20250620",
         "storeId": "002",
         "storeName": "東店",
         "storeTc": "中之島",
@@ -374,8 +442,8 @@
         "status": "PENDING"
     },
     {
-        "importId": "20250609_103000",
-        "date": "20250609",
+        "importId": "20250620_120000",
+        "date": "20250620",
         "storeId": "003",
         "storeName": "西店",
         "storeTc": "上越",
@@ -388,8 +456,8 @@
         "status": "PENDING"
     },
     {
-        "importId": "20250609_103000",
-        "date": "20250609",
+        "importId": "20250620_120000",
+        "date": "20250620",
         "storeId": "004",
         "storeName": "南店",
         "storeTc": "上越",
@@ -402,8 +470,8 @@
         "status": "PENDING"
     },
     {
-        "importId": "20250609_103000",
-        "date": "20250609",
+        "importId": "20250620_120000",
+        "date": "20250620",
         "storeId": "005",
         "storeName": "北店",
         "storeTc": "中之島",

@@ -39,6 +39,7 @@ import { generateClient } from 'aws-amplify/data';
 // import { fetchUserAttributes } from 'aws-amplify/auth';
 import type { Schema } from "../../amplify/data/resource";
 import { useParams } from 'react-router-dom';
+import { formatDateToJST } from '../components/utils/formatDateToJST';
 
 // Amplify クライアントの初期化
 const client = generateClient<Schema>();
@@ -183,7 +184,7 @@ const AdditionalOrderInput: React.FC = () => {
           productMap.set(order.itemId, {
             productId: order.itemId,
             productName: order.itemName,
-            formalName: order.itemFormalName || undefined,
+            formalName: order.itemFormalName || '',
             departmentId: order.departmentId
           });
         }
@@ -505,7 +506,7 @@ const AdditionalOrderInput: React.FC = () => {
       const selectedDeptObj = departments.find(dept => dept.id === selectedDepartment);
       const departmentName = selectedDeptObj?.name || '追加注文';
 
-      const today = new Date().toISOString().split('T')[0].replace(/-/g, ''); // YYYYMMDD形式
+      const date = formatDateToJST(new Date);
       const timestamp = Date.now();
       const importId = `additional-${timestamp}`; // 追加注文用のユニークID
 
@@ -513,7 +514,7 @@ const AdditionalOrderInput: React.FC = () => {
       const savePromises = orderItems.map(item => 
         client.models.Order.create({
           importId: importId, // タイムスタンプベースのユニークID
-          date: today,
+          date: date,
           storeId: selectedStoreObj.storeId,
           storeName: selectedStoreObj.storeName,
           storeTc: selectedDestination,

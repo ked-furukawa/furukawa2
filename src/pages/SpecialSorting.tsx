@@ -26,6 +26,7 @@ import type { Schema } from '../../amplify/data/resource';
 import { useParams } from 'react-router-dom';
 // import { formatDateToJST } from '../components/utils/formatDateToJST';
 import { resolveImportId } from '../components/utils/resolveImportId';
+import { formatDateToJST } from '../components/utils/formatDateToJST';
 
 const client = generateClient<Schema>();
 
@@ -93,8 +94,8 @@ const departmentId = useParams().departmentId!;
 
 // 日付は現在の日付をYYYYMMDD形式で取得
 // const today = new Date();
-// const date = formatDateToJST(today);
-const date="20250609"
+const date = formatDateToJST(new Date);
+// const date="20250609"
 
 const itemName = departmentId === 'kakou2' ? '柔らかロースとんかつ' : '棒ヒレカツ';
 
