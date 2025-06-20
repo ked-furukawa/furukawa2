@@ -184,7 +184,7 @@ const AdditionalOrderInput: React.FC = () => {
           productMap.set(order.itemId, {
             productId: order.itemId,
             productName: order.itemName,
-            formalName: order.itemFormalName || undefined,
+            formalName: order.itemFormalName || '',
             departmentId: order.departmentId
           });
         }
