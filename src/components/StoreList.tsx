@@ -18,6 +18,7 @@ import ExpandMore from '@mui/icons-material/ExpandMore';
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../../amplify/data/resource";
 import { formatDateToJST } from './utils/formatDateToJST';
+import { useParams } from 'react-router-dom';
 
 // import { groupOrdersByTcAndStore } from './utils/groupOrdersByTcAndStore';
 
@@ -78,6 +79,7 @@ const StoreList: React.FC<StoreListProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [expandedDestinations, setExpandedDestinations] = useState<Record<string, boolean>>({});
   const [boxData, setBoxData] = useState<BoxData[]>([]); // 箱数データの状態を追加
+  const departmentId = useParams().departmentId!;
 
   // 店舗要素への参照を保持するためのオブジェクト
   const storeRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -94,7 +96,7 @@ const StoreList: React.FC<StoreListProps> = ({
         
         // Box テーブルからデータを取得（日付フィルタを追加）
         const { data: boxItems } = await dataClient.models.Box.list({
-          filter: { date: { eq: date} }
+          filter: { date: { eq: date},departmentId: {eq:departmentId} }
         });
 
         const filteredBoxItems = boxItems
@@ -121,7 +123,7 @@ const StoreList: React.FC<StoreListProps> = ({
     // リアルタイム更新のためのサブスクリプション設定
       // const testDate = "20250609";
       const subscription = dataClient.models.Box.observeQuery({
-        filter: { date: { eq: date } }
+        filter: { date: { eq: date },departmentId: {eq:departmentId} }
       }).subscribe({
         next: ({ items }) => {
           const formattedBoxData = items.map(box => ({
