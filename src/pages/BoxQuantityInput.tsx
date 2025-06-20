@@ -253,10 +253,10 @@ useEffect(() => {
         storeTc: order.storeTc || '',
         itemId: order.itemId,
         itemName: order.itemName || '',
-        itemFormalName: order.itemFormalName || '',
+        itemFormalName: order.itemFormalName || undefined,
         itemCount: order.itemCount,
         departmentId: order.departmentId,
-        departmentName: order.departmentName || '',
+        departmentName: order.departmentName || undefined,
         status: order.status as OrderStatus || 'PENDING'
       }));
    
@@ -275,11 +275,11 @@ useEffect(() => {
       const mappedBoxData = boxResponse.data.map(box => ({
         date: box.date,
         storeId: box.storeId,
-        storeName: box.storeName ?? '',
-        storeTc: box.storeTc ?? '',
+        storeName: box.storeName ?? undefined,
+        storeTc: box.storeTc ?? undefined,
         color: box.boxColor || 'green',
         boxCount: box.boxCount,
-        boxCreatedBy: box.departmentId ?? '',
+        boxCreatedBy: box.departmentId ?? undefined,
         isChecked: box.status === StatusTemplate.CONFIRMED || box.status === StatusTemplate.DOUBLE_CHECKED
       }));
       setBoxDataCache(mappedBoxData);
@@ -552,11 +552,11 @@ function extractStoresFromGroupedOrders(
         const mappedNewBox: BoxData = {
           date: newBox.data.date,
           storeId: selectedStoreId, // 元のstoreIdに戻す
-          storeName: newBox.data.storeName ?? '',
-          storeTc: newBox.data.storeTc ?? '',
+          storeName: newBox.data.storeName ?? undefined,
+          storeTc: newBox.data.storeTc ?? undefined,
           color: newBox.data.boxColor || 'green',
           boxCount: newBox.data.boxCount,
-          boxCreatedBy: newBox.data.departmentId ?? '',
+          boxCreatedBy: newBox.data.departmentId ?? undefined,
           isChecked: true,
           importId: importId // importIdを保持
         };
