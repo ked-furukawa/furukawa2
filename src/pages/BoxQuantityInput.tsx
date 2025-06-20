@@ -174,14 +174,15 @@ useEffect(() => {
           departmentId,
           importResult.importId)
    
-      // 取得した importId に基づく注文データを取得
-      const ordersResponse = await dataClient.models.Order.list({
-        filter: {
-          date: { eq: date },
-          departmentId: { eq: departmentId },
-          importId: { eq: importResult.importId }
-        }, 
-  limit: 1000  // 別のオブジェクトとして渡す
+      // GSIを使用して注文データを取得
+      const ordersResponse = await dataClient.models.Order.listOrdersByDeptAndImport({
+        date: date,
+        departmentIdImportId: {
+          eq: {
+            departmentId: departmentId,
+            importId: importResult.importId
+          }
+        }
       });
 
       console.log('オーダーレスポンス',ordersResponse)
