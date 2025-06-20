@@ -94,9 +94,15 @@ const StoreList: React.FC<StoreListProps> = ({
         // const testDate = "20250609";
         
         // Box テーブルからデータを取得（日付フィルタを追加）
-        const { data: boxItems } = await dataClient.models.Box.list({
-          filter: { date: { eq: date},departmentId: {eq:departmentId} }
-        });
+        const { data: boxItems } = await dataClient.models.Box.listBoxesByDateAndDept({
+            date: date,
+            departmentId: {
+              eq: departmentId
+            }
+          },
+          {
+              limit: 1000  // 最大1000件取得
+          });
 
         const filteredBoxItems = boxItems
         

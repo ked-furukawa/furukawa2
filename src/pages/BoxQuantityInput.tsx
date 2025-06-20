@@ -180,6 +180,9 @@ const fetchDoneOrders = async (date: string, deptId: string, impId: string) => {
         departmentId: {
           eq: deptId
         }
+      },
+      {
+        limit: 1000  // 最大1000件取得
       });
       
       return boxResponse.data;

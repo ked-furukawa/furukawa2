@@ -144,17 +144,21 @@ const handleConfirmSelected = async () => {
             const storeInfo = stores.find(store => store.id === storeId);
             if (!storeInfo) continue;
             // 代表レコードが存在するか確認
-            const { data: representative } = await client.models.Box.list({
-                filter: {
-                    date: { eq: date },
-                    storeId: { eq: storeId },
-                    boxColor: { eq: 'green' },
-                    departmentId: { eq: safeDepartmentId }
+            const { data: representative } = await client.models.Box.listBoxesByDateAndDept({
+                date: date,
+                departmentId: {
+                    eq: departmentId
                 }
-            });
-            if (representative && representative.length > 0) {
+                },
+                {
+                    limit: 1000  // 最大1000件取得
+                });
+                const filtered = representative.filter(box =>
+                box.storeId === storeId && box.boxColor === 'green'
+                );
+            if (filtered && filtered.length > 0) {
                 // 代表レコードのみを確定処理
-                const rep = representative[0];
+                const rep = filtered[0];
                 if (rep.status !== 'DOUBLE_CHECKED') {
                     await client.models.Box.update({
                         date: rep.date,
@@ -175,16 +179,21 @@ const handleConfirmSelected = async () => {
             let storeUpdated = false;
             for (const [boxColor, boxCount] of Object.entries(storeBoxCounts)) {
                 try {
-                    const existingBoxes = await client.models.Box.list({
-                        filter: {
-                            date: { eq: date },
-                            storeId: { eq: storeId },
-                            boxColor: { eq: boxColor },
-                            departmentId: { eq: safeDepartmentId }
+                    const existingBoxes = await client.models.Box.listBoxesByDateAndDept({
+                        date: date,
+                        departmentId: {
+                            eq: departmentId
                         }
-                    });
-                    if (existingBoxes.data && existingBoxes.data.length > 0) {
-                        const existingBox = existingBoxes.data[0];
+                        },
+                        {
+                            limit: 1000  // 最大1000件取得
+                        });
+
+                        const filtered = existingBoxes.data.filter(box =>
+                        box.storeId === storeId && box.boxColor === boxColor
+                        );
+                    if (filtered && filtered.length > 0) {
+                        const existingBox = filtered[0];
                         if (existingBox.status === 'DOUBLE_CHECKED') {
                             continue;
                         }
