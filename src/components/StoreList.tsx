@@ -281,23 +281,14 @@ useEffect(() => {
     }));
   };
 
-  const getStoreBoxInfo = (storeId: string): BoxData => {
-  // 最新の completedStores を優先
-    const completedStoreInfo = completedStores.find(item => item.storeId === storeId);
-    if (completedStoreInfo) return completedStoreInfo;
-
-    // それがなければ boxData を検索
-    const boxInfo = boxData.find(item => item.storeId === storeId);
-    if (boxInfo) return boxInfo;
-
-    // 最後の手段：空の BoxData を返す
-    return {
-      storeId,
-      boxCount: 0,
-      color:'green'
-      // 他に必要なプロパティをデフォルト値で埋める
+  const getStoreBoxInfo = (storeId: string): BoxData | undefined => {
+      // まずpropsから渡されたcompletedStoresから検索（最新の情報）
+      const completedStoreInfo = completedStores.find(item => item.storeId === storeId);
+      if (completedStoreInfo) return completedStoreInfo;
+      
+      // なければ自前で取得した箱数データから検索
+      return boxData.find(item => item.storeId === storeId);
     };
-  };
 
   // ローディング表示
   if (loading) {
