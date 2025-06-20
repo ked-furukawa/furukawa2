@@ -170,28 +170,37 @@ useEffect(() => {
         // それ以外の場合は中之島をデフォルトに
         setCurrentRegion('中之島');
       }
+      console.log('データ',date,
+          departmentId,
+          importResult.importId)
    
-      // 取得した importId に基づく注文データを取得
-      const ordersResponse = await dataClient.models.Order.list({
-        filter: {
-          date: { eq: date },
-          departmentId: { eq: departmentId },
-          importId: { eq: importResult.importId }
+      // GSIを使用して注文データを取得
+      const ordersResponse = await dataClient.models.Order.listOrdersByDeptAndImport({
+        date: date,
+        departmentIdImportId: {
+          eq: {
+            departmentId: departmentId,
+            importId: importResult.importId
+          }
         }
       });
 
-      console.log('注文データ取得結果:', {
-        importId: importResult.importId,
-        departmentId: departmentId,
-        date: date,
-        totalOrders: ordersResponse.data.length,
-        firstOrder: ordersResponse.data[0]
-      });
+      console.log('オーダーレスポンス',ordersResponse)
+
+      // console.log('注文データ取得結果:', {
+      //   importId: importResult.importId,
+      //   departmentId: departmentId,
+      //   date: date,
+      //   totalOrders: ordersResponse.data.length,
+      //   firstOrder: ordersResponse.data[0]
+      // });
    
       // 同じ date×storeId×itemId で status=DONE の注文を検索
       const doneOrdersResponse = await dataClient.models.Order.listOrdersByStoreAndItem({
-        date: date,
-      });
+  date: date
+}, {
+  limit: 1000  // 別のオブジェクトとして渡す
+});
    
       console.log('処理済み注文データ取得結果:', {
         totalDoneOrders: doneOrdersResponse.data.length,
@@ -220,15 +229,18 @@ useEffect(() => {
         const key = `${order.date}_${order.storeId}_${order.itemId}`;
         const isDone = doneOrdersMap.has(key);
         if (isDone) {
-          console.log('除外された注文:', {
-            key,
-            order,
-            doneOrder: doneOrdersMap.get(key)
-          });
+          // console.log('除外された注文:', {
+          //   key,
+          //   order,
+          //   doneOrder: doneOrdersMap.get(key)
+          // });
         }
         return !isDone;
       });
    
+
+      console.log(filteredOrders)
+
       console.log('最終的なフィルタリング結果:', {
         totalOrders: ordersResponse.data.length,
         doneOrdersCount: doneOrders.length,
