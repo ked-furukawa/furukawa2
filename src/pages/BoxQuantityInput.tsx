@@ -460,6 +460,7 @@ function extractStoresFromGroupedOrders(
 
   // 店舗選択時の処理（外部向け - キャッシュデータを使用）
   function handleStoreSelect(storeId: string) {
+    console.log("filteredStores",filteredStores)
     handleStoreSelectInternal(storeId, orders, boxDataCache);
   }
 
