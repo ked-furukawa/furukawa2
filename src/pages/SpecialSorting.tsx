@@ -152,7 +152,10 @@ useEffect(() => {
                 importId: importId
                 }
             }
-        });
+        },
+      {
+    limit: 1000  // 最大1000件取得
+  });
 
         if (data.length > 0) {
         // 計算を実行
@@ -259,7 +262,9 @@ const navigateToNextStore = async () => {
             itemId: order.itemId,
             departmentId: order.departmentId,
             status: 'DONE'
-        });
+        },
+        
+    );
         
         if (result.errors && result.errors.length > 0) {
             throw new Error(`更新エラー: ${result.errors[0].message}`);
@@ -269,7 +274,10 @@ const navigateToNextStore = async () => {
         } catch (error) {
         throw error;
         }
-    });
+    },
+  {
+    limit: 1000  // 最大1000件取得
+  });
     
     await Promise.all(updatePromises);
 

@@ -113,8 +113,13 @@ const loadProducts = async () => {
           departmentId,
           importId: resolvedImportId.importId,
         },
+        
       },
-    }); 
+      
+    },
+    {
+    limit: 1000  // 最大1000件取得
+  }); 
     
     const rawOrders = result.data; //加工前の注文データ
 
