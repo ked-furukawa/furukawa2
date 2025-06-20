@@ -27,6 +27,7 @@ export const TestComponent = () => {
     // エラー処理や、リダイレクト処理
     return <div>部門IDが必要です</div>;
     }
+    const date=formatDateToJST(new Date)
 
 
     const fetchProducts = async () => {
@@ -111,8 +112,7 @@ export const TestComponent = () => {
         console.log('create',result);
     }
     const importId=testDataOrder[0].importId;
-    const date='20250609'
-const { data: existingRecords } = await boxClient.models.ImportWorkStatus.list({
+    const { data: existingRecords } = await boxClient.models.ImportWorkStatus.list({
     filter: {
         importId: { eq: importId },
         departmentId: { eq: departmentId },
@@ -193,7 +193,7 @@ const handleDeleteOrder = async () => {
             await Promise.all(
             orders.map((order) =>
                 boxClient.models.Order.delete({
-                    date:'20250609', 
+                    date:order.date, 
                     importId:order.importId,
                     storeId:order.storeId, 
                     itemId:order.itemId

@@ -66,7 +66,7 @@ type OrderItem = {
 export const FinalCheck = () => {
     const [storeData, setStoreData] = useState<StoreBoxSummary[]>([]);  
     const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
-    // const [isAllDone, setIsAllDone] = useState(false);
+    const [isAllDone, setIsAllDone] = useState(false);
 
     const [tabValue, setTabValue] = useState(0);//タブ切り替え用state
 
@@ -146,7 +146,7 @@ export const FinalCheck = () => {
                 const filtered = items.filter(item => item != null);
                 const allDone = filtered.length > 0 && filtered.every(item => item.importProgress === 'DONE');
                 console.log("ボタン用のフラグ",allDone)
-                // setIsAllDone(allDone);
+                setIsAllDone(allDone);
             },
             error: (err) => {
             console.error('ImportWorkStatusデータ取得エラー:', err);
@@ -978,7 +978,7 @@ export const FinalCheck = () => {
             },
         }}
         onClick={handleDownloadExcel}
-        disabled={!true}
+        disabled={!isAllDone}
         >
         {buttonLabel}
         </Button>

@@ -73,7 +73,7 @@ function mapCsvToDynamoItem(csvRow: { [key: string]: string }): Record<string, a
 
     const tcType = csvRow['納品先'];
 
-    if (tcType === '71') {
+    if (tcType === '071') {
         item.storeTc = '中之島'
     } else if (tcType === '271') {
         item.storeTc = '上越';
