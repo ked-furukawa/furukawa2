@@ -22,8 +22,8 @@ const theme = createTheme({
             light: '#ff6666'
         },
         warning:{ //黄系
-            main: '#ffff00',
-            light: '#FFF59D'
+            main: '#F28C28',
+            light: '#F28C28'
 
         }
     },

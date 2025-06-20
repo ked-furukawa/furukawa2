@@ -9,13 +9,14 @@ export interface Store {
 
 export interface BoxData {
   date: string;
+  importId?: string;
   storeId: string;
   storeName?: string;
   storeTc?: string;
   color: string;
   boxCount: number;
   boxCreatedBy?: string;
-  isChecked?: boolean;
+  isChecked: boolean;
 }
 
 

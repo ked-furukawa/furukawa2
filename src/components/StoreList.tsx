@@ -17,6 +17,8 @@ import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../../amplify/data/resource";
+import { formatDateToJST } from './utils/formatDateToJST';
+import { useParams } from 'react-router-dom';
 
 // import { groupOrdersByTcAndStore } from './utils/groupOrdersByTcAndStore';
 
@@ -42,7 +44,7 @@ interface StoresByDestination {
 }
 
 // BoxColor 型の定義
-type BoxColor = 'green' | 'red' | 'blue' | 'yellow';
+type BoxColor = 'green' | 'red' | 'blue' | 'orange';
 
 // BoxData 型の定義を追加
 interface BoxData {
@@ -77,21 +79,24 @@ const StoreList: React.FC<StoreListProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [expandedDestinations, setExpandedDestinations] = useState<Record<string, boolean>>({});
   const [boxData, setBoxData] = useState<BoxData[]>([]); // 箱数データの状態を追加
+  const departmentId = useParams().departmentId!;
 
   // 店舗要素への参照を保持するためのオブジェクト
   const storeRefs = useRef<Record<string, HTMLDivElement | null>>({});
   // リストコンテナへの参照
   const listContainerRef = useRef<HTMLDivElement | null>(null);
 
+  const date = formatDateToJST(new Date);
+
   // StoreList.tsx の fetchBoxData 関数を修正
     const fetchBoxData = async () => {
       try {
         // テスト用固定日付
-        const testDate = "20250609";
+        // const testDate = "20250609";
         
         // Box テーブルからデータを取得（日付フィルタを追加）
         const { data: boxItems } = await dataClient.models.Box.list({
-          filter: { date: { eq: testDate } }
+          filter: { date: { eq: date},departmentId: {eq:departmentId} }
         });
 
         const filteredBoxItems = boxItems
@@ -116,9 +121,9 @@ const StoreList: React.FC<StoreListProps> = ({
     console.log('test');
     
     // リアルタイム更新のためのサブスクリプション設定
-      const testDate = "20250609";
+      // const testDate = "20250609";
       const subscription = dataClient.models.Box.observeQuery({
-        filter: { date: { eq: testDate } }
+        filter: { date: { eq: date },departmentId: {eq:departmentId} }
       }).subscribe({
         next: ({ items }) => {
           const formattedBoxData = items.map(box => ({
@@ -196,8 +201,16 @@ useEffect(() => {
         id: dest.id,
         name: dest.name
       },
-      stores: dest.stores
+      // ここで各送り先の店舗を昇順にソート
+      stores: dest.stores.sort((a, b) => Number(a.id) - Number(b.id))
     }));
+    
+    // 送り先の順序を調整（中之島を先頭に）
+    result.sort((a, b) => {
+      if (a.destination.id === '中之島') return -1;
+      if (b.destination.id === '中之島') return 1;
+      return 0;
+    });
     
     setStoresByDestination(result);
     
@@ -268,14 +281,23 @@ useEffect(() => {
     }));
   };
 
-  const getStoreBoxInfo = (storeId: string): BoxData | undefined => {
-      // まずpropsから渡されたcompletedStoresから検索（最新の情報）
-      const completedStoreInfo = completedStores.find(item => item.storeId === storeId);
-      if (completedStoreInfo) return completedStoreInfo;
-      
-      // なければ自前で取得した箱数データから検索
-      return boxData.find(item => item.storeId === storeId);
+  const getStoreBoxInfo = (storeId: string): BoxData => {
+  // 最新の completedStores を優先
+    const completedStoreInfo = completedStores.find(item => item.storeId === storeId);
+    if (completedStoreInfo) return completedStoreInfo;
+
+    // それがなければ boxData を検索
+    const boxInfo = boxData.find(item => item.storeId === storeId);
+    if (boxInfo) return boxInfo;
+
+    // 最後の手段：空の BoxData を返す
+    return {
+      storeId,
+      boxCount: 0,
+      color:'green'
+      // 他に必要なプロパティをデフォルト値で埋める
     };
+  };
 
   // ローディング表示
   if (loading) {

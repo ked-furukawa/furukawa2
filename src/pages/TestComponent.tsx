@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { TextField, Button, Box, Typography } from '@mui/material';
 import { Schema } from '../../amplify/data/resource';
 import { generateClient } from "aws-amplify/data";
@@ -9,11 +9,11 @@ import testDataBox from '../services/testDataBox.json'
 
 const boxClient = generateClient<Schema>();
 
-import { fetchUserAttributes } from 'aws-amplify/auth';
 
 import {StatusTemplate} from '../types/index.ts';
 
 import { formatDateToJST } from '../components/utils/formatDateToJST.ts';
+import { useParams } from 'react-router-dom';
 // import { groupOrdersByTcAndStore } from '../components/utils/groupOrdersByTcAndStore.tsx';
 
 
@@ -21,16 +21,14 @@ export const TestComponent = () => {
     const [value, setValue] = useState('');
     const [submittedValue, setSubmittedValue] = useState<number | null>(null);
     const [message, setMessage] = useState<string>('');
-    const [departmentId, setDepartmentId] = useState<string>('');
+    const { departmentId } = useParams<{ departmentId: string }>();
 
-    useEffect(()=>{
-        const fetchDepartmentId = async() =>{
-            const attrs = await fetchUserAttributes();
-            setDepartmentId(attrs['custom:departmentId'] as string)
-        }
-    
-        fetchDepartmentId();
-    },[])
+    if (!departmentId) {
+    // エラー処理や、リダイレクト処理
+    return <div>部門IDが必要です</div>;
+    }
+    const date=formatDateToJST(new Date)
+
 
     const fetchProducts = async () => {
     try {
@@ -52,7 +50,7 @@ export const TestComponent = () => {
         const result = await boxClient.models.Order.listOrdersByDeptAndImport({
         date, // GSI の partitionKey
         departmentIdImportId: {
-            eq: {departmentId:departmentId,
+            eq: {departmentId:departmentId as string,
                 importId:'20250606_130000'} // sortKey の条件
         },
     });
@@ -114,8 +112,7 @@ export const TestComponent = () => {
         console.log('create',result);
     }
     const importId=testDataOrder[0].importId;
-    const date='20250609'
-const { data: existingRecords } = await boxClient.models.ImportWorkStatus.list({
+    const { data: existingRecords } = await boxClient.models.ImportWorkStatus.list({
     filter: {
         importId: { eq: importId },
         departmentId: { eq: departmentId },
@@ -196,7 +193,7 @@ const handleDeleteOrder = async () => {
             await Promise.all(
             orders.map((order) =>
                 boxClient.models.Order.delete({
-                    date:'20250609', 
+                    date:order.date, 
                     importId:order.importId,
                     storeId:order.storeId, 
                     itemId:order.itemId
