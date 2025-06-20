@@ -23,7 +23,7 @@ import { groupOrdersByTcAndStore } from '../components/utils/groupOrdersByTcAndS
 import { resolveImportId } from '../components/utils/resolveImportId';
 import { useParams } from 'react-router-dom';
 import { checkPendingImportId } from '../components/utils/checkPendingImportId';
-
+import { getCurrentUser } from '@aws-amplify/auth';
 // 型定義
 type BoxColor = 'green' | 'red' | 'blue' | 'orange';
 
@@ -125,12 +125,15 @@ const filteredStores = useMemo(() => {
 
 // 初期データの一括取得
 useEffect(() => {
+  
   // 部門IDが設定されるまで待機
   if (!departmentId) return;
  
   const fetchAllData = async () => {
     try {
       setLoading(true);
+      const user = await getCurrentUser();
+      console.log('User info:', user);
      
       // 固定の日付を使用（6月9日のテストデータ）
       // const today = '20250609';
@@ -169,15 +172,13 @@ useEffect(() => {
       }
    
       // 取得した importId に基づく注文データを取得
-      const ordersResponse = await dataClient.models.Order.listOrdersByDeptAndImport({
-      date: currentDate,
-      departmentIdImportId: {
-        eq: {
-          departmentId: departmentId as string,
-          importId: importId as string
+      const ordersResponse = await dataClient.models.Order.list({
+        filter: {
+          date: { eq: date },
+          departmentId: { eq: departmentId },
+          importId: { eq: importResult.importId }
         }
-      }
-    });
+      });
 
       console.log('注文データ取得結果:', {
         importId: importResult.importId,
@@ -457,7 +458,6 @@ function extractStoresFromGroupedOrders(
 
   // 店舗選択時の処理（外部向け - キャッシュデータを使用）
   function handleStoreSelect(storeId: string) {
-    console.log("filteredStores",filteredStores)
     handleStoreSelectInternal(storeId, orders, boxDataCache);
   }
 
