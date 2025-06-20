@@ -685,11 +685,17 @@ const fetchDoneOrders = async (date: string, deptId: string, impId: string) => {
           // 注文ステータスを一括更新
           await updateOrderStatus(nakanoshimaOrders, 'DONE');
 
-    if (isJoetsuMissing) {
-      navigateTo('StoreDoubleCheckList');
-    } else {
-      navigateTo('SortingCheckScreen');
-    }
+    // PENDING状態のImportIdの有無をチェック
+          const pendingCheck = await checkPendingImportId(currentDate, departmentId as string);
+          setHasPendingImportId(pendingCheck);
+
+        if (isJoetsuMissing && pendingCheck) {
+            navigateTo('SortingCheckScreen');
+        }else if(isJoetsuMissing && !pendingCheck){
+          navigateTo('StoreDoubleCheckList');
+        } else {
+          navigateTo('SortingCheckScreen');
+        }
   } catch (error) {
     console.error('中之島エリア完了処理中にエラーが発生しました:', error);
     setError('中之島エリア完了処理中にエラーが発生しました');
