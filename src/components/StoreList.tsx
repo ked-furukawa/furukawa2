@@ -17,7 +17,6 @@ import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../../amplify/data/resource";
-import { formatDateToJST } from './utils/formatDateToJST';
 
 // import { groupOrdersByTcAndStore } from './utils/groupOrdersByTcAndStore';
 
@@ -84,17 +83,15 @@ const StoreList: React.FC<StoreListProps> = ({
   // リストコンテナへの参照
   const listContainerRef = useRef<HTMLDivElement | null>(null);
 
-  const date = formatDateToJST(new Date);
-
   // StoreList.tsx の fetchBoxData 関数を修正
     const fetchBoxData = async () => {
       try {
         // テスト用固定日付
-        // const testDate = "20250609";
+        const testDate = "20250609";
         
         // Box テーブルからデータを取得（日付フィルタを追加）
         const { data: boxItems } = await dataClient.models.Box.list({
-          filter: { date: { eq: date} }
+          filter: { date: { eq: testDate } }
         });
 
         const filteredBoxItems = boxItems
@@ -119,9 +116,9 @@ const StoreList: React.FC<StoreListProps> = ({
     console.log('test');
     
     // リアルタイム更新のためのサブスクリプション設定
-      // const testDate = "20250609";
+      const testDate = "20250609";
       const subscription = dataClient.models.Box.observeQuery({
-        filter: { date: { eq: date } }
+        filter: { date: { eq: testDate } }
       }).subscribe({
         next: ({ items }) => {
           const formattedBoxData = items.map(box => ({
