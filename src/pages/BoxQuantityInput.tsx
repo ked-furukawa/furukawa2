@@ -172,13 +172,15 @@ useEffect(() => {
       }
    
       // 取得した importId に基づく注文データを取得
-      const ordersResponse = await dataClient.models.Order.list({
-        filter: {
-          date: { eq: date },
-          departmentId: { eq: departmentId },
-          importId: { eq: importResult.importId }
+      const ordersResponse = await dataClient.models.Order.listOrdersByDeptAndImport({
+      date: currentDate,
+      departmentIdImportId: {
+        eq: {
+          departmentId: departmentId as string,
+          importId: importId as string
         }
-      });
+      }
+    });
 
       console.log('注文データ取得結果:', {
         importId: importResult.importId,
