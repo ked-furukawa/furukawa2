@@ -965,28 +965,45 @@ export const FinalCheck = () => {
     <SummaryTable title={summaryTitle0} total={totalAll} />
     <SummaryTable title={summaryTitle1} total={totalNakanoshima} />
     <SummaryTable title={summaryTitle2} total={totalJyoetsu} />
+    {/* スペーサーとして空Boxを使う */}
+    <Box sx={{ height: '100px' }} />
+    {!isAllDone ? (
     <Tooltip title="仕分け作業が完了していません">
-    <span>
+        <Box component="span" sx={{ display: 'inline-block' }}>
         <Button
-        sx={{
-            mt: "100px",
+            sx={{
             backgroundColor: 'primary.main',
             color: 'white',
             '&:hover': {
-            backgroundColor: 'primary.dark',
+                backgroundColor: 'primary.dark',
             },
             '&.Mui-disabled': {
-            backgroundColor: 'grey.400',
-            color: 'white',
+                backgroundColor: 'grey.400',
+                color: 'white',
             },
+            }}
+            onClick={handleDownloadExcel}
+            disabled
+        >
+            {buttonLabel}
+        </Button>
+        </Box>
+    </Tooltip>
+    ) : (
+    <Button
+        sx={{
+        mt: "100px",
+        backgroundColor: 'primary.main',
+        color: 'white',
+        '&:hover': {
+            backgroundColor: 'primary.dark',
+        },
         }}
         onClick={handleDownloadExcel}
-        disabled={isAllDone}
-        >
+    >
         {buttonLabel}
-        </Button>
-    </span>
-    </Tooltip>
+    </Button>
+    )}
     </Box>
     </Box>
     );
