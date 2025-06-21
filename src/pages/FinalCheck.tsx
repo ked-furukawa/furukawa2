@@ -374,13 +374,15 @@ export const FinalCheck = () => {
             case '3souzai':
                 return '惣菜3';
             case 'kakou1':
+                return '加工'
             case 'kakou2':
-                return '加工';
+                return '加工(ロースとんかつ)';
             case 'seiniku':
                 return '精肉';
             case 'namashitsu1':
+                return '生室(水産部門)'
             case 'namashitsu2':
-                return '生室';
+                return '生室(精肉部門)';
             case 'honsyabuturyu':
                 return '本社物流';
             case 'seika':
