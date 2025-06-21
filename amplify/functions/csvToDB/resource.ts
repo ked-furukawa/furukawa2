@@ -6,7 +6,7 @@ export const csvToDB = defineFunction({
     // optionally specify a path to your handler (defaults to "./handler.ts")
     entry: './handler.ts',
     // 3 minute timeout
-    timeoutSeconds: 180,
+    timeoutSeconds: 60,
   // resourceGroupNameを使用して循環依存を解決
     resourceGroupName: 'storage'
 });
