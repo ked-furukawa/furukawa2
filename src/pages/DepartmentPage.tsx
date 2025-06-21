@@ -93,13 +93,11 @@ const App = () => {
 
 
     const filteredPages = useMemo(() => {
-      // 無条件に表示する共通ページ
-      const alwaysVisible = ['Test'];
       // 特定部門に応じた表示許可マップ
       const departmentAccessMap: Record<string, string[]> = {
         office: ['FinalCheck', 'AdditionalOrderInput'],
-        honsyabuturyu: ['SortingCheckScreen','SpecialSorting'],
-        kakou2: ['SortingCheckScreen','SpecialSorting'],
+        honsyabuturyu: ['SortingCheckScreen', 'SpecialSorting'],
+        kakou2: ['SortingCheckScreen', 'SpecialSorting'],
         seiniku: ['BoxQuantityInput', 'SortingCheckScreen', 'StoreDoubleCheckList'],
         kakou1: ['BoxQuantityInput', 'SortingCheckScreen', 'StoreDoubleCheckList'],
         '1souzai': ['BoxQuantityInput', 'SortingCheckScreen', 'StoreDoubleCheckList'],
@@ -108,17 +106,20 @@ const App = () => {
         namashitsu1: ['BoxQuantityInput', 'SortingCheckScreen', 'StoreDoubleCheckList'],
         namashitsu2: ['BoxQuantityInput', 'SortingCheckScreen', 'StoreDoubleCheckList'],
       };
+
       // フルアクセス部門
       const fullAccessDepartments = ['kurosawa', 'sakurai', 'furukawa'];
 
       // 表示許可されているキーを構築
-      let allowedKeys = [...alwaysVisible];
+      let allowedKeys: string[] = [];
+
       if (departmentId && fullAccessDepartments.includes(departmentId)) {
-        // フルアクセスならすべて
+        // フルアクセスならすべて表示（'Test'含む）
         return pageList;
       }
+
       if (departmentId && departmentAccessMap[departmentId]) {
-        allowedKeys = [...allowedKeys, ...departmentAccessMap[departmentId]];
+        allowedKeys = [...departmentAccessMap[departmentId]];
       }
 
       return pageList.filter(page => allowedKeys.includes(page.key));
