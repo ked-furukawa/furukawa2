@@ -981,7 +981,7 @@ export const FinalCheck = () => {
             },
         }}
         onClick={handleDownloadExcel}
-        disabled={!isAllDone}
+        disabled={isAllDone}
         >
         {buttonLabel}
         </Button>
