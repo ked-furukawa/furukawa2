@@ -81,19 +81,24 @@ const handleQuantityUpdate  = async () => {
     console.log('handleQuantityUpdate呼び出し', inputValue, selectedStoreId);
     try {
         // 代表レコードが存在するか確認
-        const { data: existing } = await boxClient.models.Box.list({
-            filter: {
-                date: { eq: date },
-                storeId: { eq: selectedStoreId },
-                boxColor: { eq: 'green' },
-                departmentId: { eq: departmentId }
-            }
+        const { data: existing } = await boxClient.models.Box.listBoxesByDateAndDept({
+        date: date,
+        departmentId: {
+            eq: departmentId
+        }
+        },
+        {
+            limit: 1000  // 最大1000件取得
         });
+
+        const filtered = existing.filter(box =>
+        box.storeId === selectedStoreId && box.boxColor === 'green'
+        );
         // store情報を取得
         const storeInfo = stores.find(store => store.id === selectedStoreId);
         const storeName = storeInfo?.storeName || '';
         const storeTc = storeInfo?.storeTc || '';
-        if (existing && existing.length > 0) {
+        if (filtered && filtered.length > 0) {
             // update
             await boxClient.models.Box.update({
                 date: date,

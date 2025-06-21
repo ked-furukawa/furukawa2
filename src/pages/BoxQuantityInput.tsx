@@ -79,6 +79,12 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
   const [importId, setImportId] = useState<string | null>(null);
   const [currentRegion, setCurrentRegion] = useState<string>('中之島'); // 初期値は中之島
 
+  //TCが一つしかないことを判定するためのstate
+  const [isNakanoshimaMissing, setIsNakanoshimaMissing] = useState<boolean>(false);
+  const [isJoetsuMissing, setIsJoetsuMissing] = useState<boolean>(false);
+
+  // データキャッシュ
+
     const date = formatDateToJST(new Date);
   // データキャッシュ
   const [orders, setOrders] = useState<OrderData[]>([]);
@@ -276,6 +282,24 @@ useEffect(() => {
    
       // フィルタリングされた注文データを状態として保存
       setOrders(typedOrders);
+
+      const storeTcSet = new Set(
+      typedOrders
+        .map(order => order.storeTc)
+        .filter(tc => tc !== '')
+    );
+    const storeTcArray = [...storeTcSet];
+
+    // 特定文字列が含まれていないかのチェック（含まれていなければ true）
+    setIsNakanoshimaMissing(!storeTcArray.includes('中之島'));
+    setIsJoetsuMissing(!storeTcArray.includes('上越'));
+
+    // sortingPhase または 中之島の有無 に基づいて currentRegion を決定
+      if (importResult.sortingPhase === 'COMPLETED_NAKANOSHIMA' || isNakanoshimaMissing) {
+        setCurrentRegion('上越');
+      } else {
+        setCurrentRegion('中之島');
+      }
    
       // 箱データを取得
       const boxResponse = await dataClient.models.Box.listBoxesByDateAndDept({
@@ -658,8 +682,17 @@ if (newlyCompleted.length === nakanoshimaStores.length) {
     
     await Promise.all(updatePromises);
 
-    // 画面遷移
-    navigateTo('SortingCheckScreen');
+    // PENDING状態のImportIdの有無をチェック
+          const pendingCheck = await checkPendingImportId(currentDate, departmentId as string);
+          setHasPendingImportId(pendingCheck);
+
+        if (isJoetsuMissing && pendingCheck) {
+            navigateTo('SortingCheckScreen');
+        }else if(isJoetsuMissing && !pendingCheck){
+          navigateTo('StoreDoubleCheckList');
+        } else {
+          navigateTo('SortingCheckScreen');
+        }
   } catch (error) {
     console.error('中之島エリア完了処理中にエラーが発生しました:', error);
     setError('中之島エリア完了処理中にエラーが発生しました');

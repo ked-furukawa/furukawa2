@@ -4,7 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { StatusTemplate } from "../types";
+// import { StatusTemplate } from "../types";
 
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../../amplify/data/resource";
@@ -83,17 +83,15 @@ export const FinalCheck = () => {
     useEffect(() => {
     const fetchData = async () => {
         try {
-        const { data } = await boxClient.models.Box.list({
-            filter: {
-            date: {
-                eq: selectedDate?.toISOString().split('T')[0].replace(/-/g, '') || ''
+        const { data } = await boxClient.models.Box.listBoxesByDateAndDept({
+              date: selectedDate?.toISOString().split('T')[0].replace(/-/g, '') || ''
             },
-            status: {
-                eq: StatusTemplate.DOUBLE_CHECKED
-            }
-            }
-        });
-        setRawItems(data); // データを保存
+            {
+            limit: 1000  // 最大1000件取得
+            });
+         // status = 'DOUBLE_CHECKED' でフィルタリング
+        const doubleCheckedBoxes = (data ?? []).filter(box => box.status === 'DOUBLE_CHECKED');
+        setRawItems(doubleCheckedBoxes); // データを保存
         } catch (err) {
         console.error('データ取得エラー:', err);
         }
@@ -179,7 +177,8 @@ export const FinalCheck = () => {
 
         const templatePath = templatePathMap[tabValue];
         const fileNamePrefix = filenameMap[tabValue] ?? "納品箱数明細票";
-
+        console.log("tabValue",tabValue)
+        
         if (!templatePath) {
         console.warn("未対応の tabValue:", tabValue);
         return;
@@ -249,6 +248,7 @@ export const FinalCheck = () => {
     //タブ切り替え用関数
     const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
+    
     };
     //ボタンテキスト
     const buttonLabel = tabValue === 0
