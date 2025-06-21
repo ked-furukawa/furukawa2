@@ -177,7 +177,8 @@ export const FinalCheck = () => {
 
         const templatePath = templatePathMap[tabValue];
         const fileNamePrefix = filenameMap[tabValue] ?? "納品箱数明細票";
-
+        console.log("tabValue",tabValue)
+        
         if (!templatePath) {
         console.warn("未対応の tabValue:", tabValue);
         return;
@@ -247,6 +248,7 @@ export const FinalCheck = () => {
     //タブ切り替え用関数
     const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
+    
     };
     //ボタンテキスト
     const buttonLabel = tabValue === 0
