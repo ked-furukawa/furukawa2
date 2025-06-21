@@ -87,16 +87,18 @@ const StoreList: React.FC<StoreListProps> = ({
   const listContainerRef = useRef<HTMLDivElement | null>(null);
 
   const date = formatDateToJST(new Date);
-
   // StoreList.tsx の fetchBoxData 関数を修正
     const fetchBoxData = async () => {
       try {
         // テスト用固定日付
         // const testDate = "20250609";
         
-        // Box テーブルからデータを取得（日付フィルタを追加）
-        const { data: boxItems } = await dataClient.models.Box.list({
-          filter: { date: { eq: date},departmentId: {eq:departmentId} }
+        // 修正後: GSI_BoxDateDeptを使用
+        const { data: boxItems } = await dataClient.models.Box.listBoxesByDateAndDept({
+          date: date,
+          departmentId: {
+            eq: departmentId
+          }
         });
 
         const filteredBoxItems = boxItems
@@ -281,23 +283,14 @@ useEffect(() => {
     }));
   };
 
-  const getStoreBoxInfo = (storeId: string): BoxData => {
-  // 最新の completedStores を優先
-    const completedStoreInfo = completedStores.find(item => item.storeId === storeId);
-    if (completedStoreInfo) return completedStoreInfo;
-
-    // それがなければ boxData を検索
-    const boxInfo = boxData.find(item => item.storeId === storeId);
-    if (boxInfo) return boxInfo;
-
-    // 最後の手段：空の BoxData を返す
-    return {
-      storeId,
-      boxCount: 0,
-      color:'green'
-      // 他に必要なプロパティをデフォルト値で埋める
+  const getStoreBoxInfo = (storeId: string): BoxData | undefined => {
+      // まずpropsから渡されたcompletedStoresから検索（最新の情報）
+      const completedStoreInfo = completedStores.find(item => item.storeId === storeId);
+      if (completedStoreInfo) return completedStoreInfo;
+      
+      // なければ自前で取得した箱数データから検索
+      return boxData.find(item => item.storeId === storeId);
     };
-  };
 
   // ローディング表示
   if (loading) {

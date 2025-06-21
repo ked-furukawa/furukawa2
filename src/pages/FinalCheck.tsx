@@ -434,7 +434,10 @@ export const FinalCheck = () => {
         departmentId: {
             eq: departmentId
         }
-        });
+        },{
+    limit: 1000  // 最大1000件取得
+}
+);
         const orders: OrderItem[] = response.data;
 
     const aggregated: Record<string, OrderItem> = {};
