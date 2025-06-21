@@ -93,13 +93,16 @@ const StoreList: React.FC<StoreListProps> = ({
         // テスト用固定日付
         // const testDate = "20250609";
         
-        // 修正後: GSI_BoxDateDeptを使用
+        // Box テーブルからデータを取得（日付フィルタを追加）
         const { data: boxItems } = await dataClient.models.Box.listBoxesByDateAndDept({
-          date: date,
-          departmentId: {
-            eq: departmentId
-          }
-        });
+            date: date,
+            departmentId: {
+              eq: departmentId
+            }
+          },
+          {
+              limit: 1000  // 最大1000件取得
+          });
 
         const filteredBoxItems = boxItems
         
