@@ -427,7 +427,7 @@ export const FinalCheck = () => {
         setSelectedStoreId('');
     };
 
-    const fetchOrderDetails = async (departmentId: string,date:string) => {
+    const fetchOrderDetails = async (storeId:string,departmentId: string,date:string) => {
     try {
         const response = await boxClient.models.Order.listOrdersByDept({
         date: date,
@@ -438,7 +438,8 @@ export const FinalCheck = () => {
     limit: 1000  // 最大1000件取得
 }
 );
-        const orders: OrderItem[] = response.data;
+        const filteredOrders = response.data.filter(order => order.storeId === storeId);
+        const orders: OrderItem[] = filteredOrders
 
     const aggregated: Record<string, OrderItem> = {};
 
@@ -467,7 +468,7 @@ export const FinalCheck = () => {
         const departmentName = getDepartmentName(box.departmentId);
         setSelectedDepartmentName(departmentName);
         setOpenSecond(true);
-        await fetchOrderDetails(box.departmentId, selectedDate?.toISOString().split('T')[0].replace(/-/g, '')||'');
+        await fetchOrderDetails(box.storeId,box.departmentId, selectedDate?.toISOString().split('T')[0].replace(/-/g, '')||'');
     };
 
     const handleClose2 = () => {
