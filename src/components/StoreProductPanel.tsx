@@ -1,5 +1,5 @@
 // src/components/StoreProductPanel.tsx
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
 Box,
 Typography,
@@ -53,36 +53,38 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
     }) => {
     // テーブルコンテナへの参照を作成
     const tableContainerRef = useRef<HTMLDivElement>(null);
-     // タッチされた商品IDを記録するための状態
+    // タッチされた商品IDを記録するための状態
     const [touchedProductIds, setTouchedProductIds] = useState<string[]>([]);
 
-        // 商品行タッチ時のハンドラー
+    // storeNumberが変更されたときにスクロール位置をリセットする
+    useEffect(() => {
+        if (tableContainerRef.current) {
+            tableContainerRef.current.scrollTop = 0;
+        }
+        // タッチ状態もリセット
+        setTouchedProductIds([]);
+    }, [storeNumber]); // storeNumberが変わったときだけ実行
+
+    // 商品行タッチ時のハンドラー
     const handleRowTouch = (productId: string) => {
-    // すでにタッチされている場合は何もしない
-    console.log('Row touched:', productId); // デバッグ用
-    if (touchedProductIds.includes(productId)) {
-        return;
-    }
-    
-    // タッチされた商品IDを記録
-    setTouchedProductIds(prev => [...prev, productId]);
+        // 既存のコード
+        if (touchedProductIds.includes(productId)) {
+            return;
+        }
+        
+        setTouchedProductIds(prev => [...prev, productId]);
     };
     
     // 商品選択時に自動スクロールを行う関数
     const handleProductSelect = (productId: string) => {
-        // 元の選択処理を実行
+        // 既存のコード
         onProductSelect(productId);
         
-        // 少し遅延させてスクロール処理を実行（選択状態の更新後に実行するため）
         setTimeout(() => {
             if (tableContainerRef.current) {
-                // 現在のスクロール位置を取得
                 const currentScrollTop = tableContainerRef.current.scrollTop;
+                const scrollAmount = 60;
                 
-                // 少し下にスクロール（約1アイテム分）
-                const scrollAmount = 60; // スクロール量（ピクセル）- 調整可能
-                
-                // スムーズにスクロール
                 tableContainerRef.current.scrollTo({
                     top: currentScrollTop + scrollAmount,
                     behavior: 'smooth'
@@ -90,6 +92,7 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
             }
         }, 100);
     };
+
 
 
         
