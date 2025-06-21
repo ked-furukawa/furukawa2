@@ -471,18 +471,20 @@ const fetchBoxDetails = async (storeId: string, date: string) => {
         setSelectedStoreId('');
     };
 
-    const fetchOrderDetails = async (departmentId: string, date: string) => {
-  try {
-    const response = await boxClient.models.Order.listOrdersByDept({
-      date: date,
-      departmentId: {
-        eq: departmentId
-      }
-    }, {
-      limit: 1000  // 最大1000件取得
-    });
-    
-    const orders: OrderItem[] = response.data;
+    const fetchOrderDetails = async (storeId:string,departmentId: string,date:string) => {
+    try {
+        const response = await boxClient.models.Order.listOrdersByDept({
+        date: date,
+        departmentId: {
+            eq: departmentId
+        }
+        },{
+    limit: 1000  // 最大1000件取得
+}
+);
+        const filteredOrders = response.data.filter(order => order.storeId === storeId);
+        const orders: OrderItem[] = filteredOrders
+
     const aggregated: Record<string, OrderItem> = {};
 
     // 店舗ID + 商品IDの組み合わせでグループ化して集計
@@ -534,7 +536,7 @@ const fetchBoxDetails = async (storeId: string, date: string) => {
         const departmentName = getDepartmentName(box.departmentId);
         setSelectedDepartmentName(departmentName);
         setOpenSecond(true);
-        await fetchOrderDetails(box.departmentId, selectedDate?.toISOString().split('T')[0].replace(/-/g, '')||'');
+        await fetchOrderDetails(box.storeId,box.departmentId, selectedDate?.toISOString().split('T')[0].replace(/-/g, '')||'');
     };
 
     const handleClose2 = () => {
@@ -1032,28 +1034,45 @@ const fetchBoxDetails = async (storeId: string, date: string) => {
     <SummaryTable title={summaryTitle0} total={totalAll} />
     <SummaryTable title={summaryTitle1} total={totalNakanoshima} />
     <SummaryTable title={summaryTitle2} total={totalJyoetsu} />
+    {/* スペーサーとして空Boxを使う */}
+    <Box sx={{ height: '100px' }} />
+    {!isAllDone ? (
     <Tooltip title="仕分け作業が完了していません">
-    <span>
+        <Box component="span" sx={{ display: 'inline-block' }}>
         <Button
-        sx={{
-            mt: "100px",
+            sx={{
             backgroundColor: 'primary.main',
             color: 'white',
             '&:hover': {
-            backgroundColor: 'primary.dark',
+                backgroundColor: 'primary.dark',
             },
             '&.Mui-disabled': {
-            backgroundColor: 'grey.400',
-            color: 'white',
+                backgroundColor: 'grey.400',
+                color: 'white',
             },
+            }}
+            onClick={handleDownloadExcel}
+            disabled
+        >
+            {buttonLabel}
+        </Button>
+        </Box>
+    </Tooltip>
+    ) : (
+    <Button
+        sx={{
+        mt: "100px",
+        backgroundColor: 'primary.main',
+        color: 'white',
+        '&:hover': {
+            backgroundColor: 'primary.dark',
+        },
         }}
         onClick={handleDownloadExcel}
-        disabled={!isAllDone}
-        >
+    >
         {buttonLabel}
-        </Button>
-    </span>
-    </Tooltip>
+    </Button>
+    )}
     </Box>
     </Box>
     );
