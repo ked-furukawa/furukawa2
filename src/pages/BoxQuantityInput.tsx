@@ -1,6 +1,6 @@
 // src/pages/BoxQuantityInput.tsx
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Box,
   Container,
@@ -113,6 +113,10 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
     [completedStores]
   );
  
+  // completedStoresのメモ化
+const memoizedCompletedStores = useMemo(() => {
+  return completedStores;
+}, [completedStores]);
   
 // フィルタリングされた店舗リスト（メモ化）
 const filteredStores = useMemo(() => {
@@ -431,8 +435,9 @@ function extractStoresFromGroupedOrders(
   return stores;
 }
 
-  // 次の店舗を取得する関数
-  function getNextStore(currentStoreId: string, storeList = allStores): Store | null {
+// 次の店舗を取得する関数
+const getNextStore = useCallback(
+  (currentStoreId: string, storeList = allStores): Store | null => {
     if (!storeList.length) return null;
     const currentIndex = storeList.findIndex(s => s.storeId === currentStoreId);
     if (currentIndex === -1) return storeList[0];
@@ -440,14 +445,13 @@ function extractStoresFromGroupedOrders(
       return storeList[currentIndex + 1];
     }
     return null;
-  }
+  },
+  [allStores]
+);
 
-  // 内部用の店舗選択処理（キャッシュデータを使用）
-  function handleStoreSelectInternal(
-    storeId: string,
-    orderData: OrderData[],
-    boxData: BoxData[]
-  ) {
+// 内部用の店舗選択処理（キャッシュデータを使用）
+const handleStoreSelectInternal = useCallback(
+  (storeId: string, orderData: OrderData[], boxData: BoxData[]) => {
     setSelectedStoreId(storeId);
     const filtered = orderData.filter(order => order.storeId === storeId);
     if (filtered.length === 0) {
@@ -491,7 +495,7 @@ function extractStoresFromGroupedOrders(
     // 入力値をクリア
     setInputValue('');
    
-        // 完了済み店舗または箱データがある場合、すべての商品を選択状態にする
+    // 完了済み店舗または箱データがある場合、すべての商品を選択状態にする
     const shouldSelectAll = isCompletedStore || storeBoxData.length > 0;
     if (shouldSelectAll) {
       const allProductIds = productList.map(p => p.id);
@@ -505,12 +509,17 @@ function extractStoresFromGroupedOrders(
     if (allStores.length > 0) {
       setNextStore(getNextStore(storeId));
     }
-  }
+  },
+  [completedStores, departmentId, importId, allStores, setSelectedStoreId, setStoreData, setProducts, setInputValue, setSelectedProductIds, setNextStore, getNextStore]
+);
 
-  // 店舗選択時の処理（外部向け - キャッシュデータを使用）
-  function handleStoreSelect(storeId: string) {
+// 店舗選択時の処理（外部向け - キャッシュデータを使用）
+const handleStoreSelect = useCallback(
+  (storeId: string) => {
     handleStoreSelectInternal(storeId, orders, boxDataCache);
-  }
+  },
+  [handleStoreSelectInternal, orders, boxDataCache]
+);
 
   async function handleQuantityUpdate() {
     const quantity = parseInt(inputValue, 10);
@@ -827,9 +836,10 @@ if (!nextStore) {
             {/* 左側：店舗リスト */}
             <Box sx={{pr:0.2, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
               <StoreList
+              key={refreshKey} // refreshKeyは箱データ保存時など、強制的に再レンダリングが必要な場合のみ使用
               selectedStoreId={selectedStoreId}
               onSelectStore={handleStoreSelect}
-              completedStores={completedStores}
+              completedStores={memoizedCompletedStores}
               stores={storeProps}  // 事前に計算した値を使用
             />
             </Box>
