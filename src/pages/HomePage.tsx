@@ -16,19 +16,10 @@ const HomePage: React.FC = () => {
       navigate(`/${department}`);
     }
   };
-  
-    // アカウント作成時にdepartmentIdを決める
-  const formFields = {
-    signUp: {
-      "custom:departmentId": {
-        label: "部門ID",
-        order: 1,
-      },
-    },
-  };
+
 
   return (
-        <Authenticator hideSignUp={false} formFields={formFields}>
+        <Authenticator hideSignUp={false}>
           {({ signOut }) => (
   <Container maxWidth="sm">
       <Box mt={5} p={4} boxShadow={3} borderRadius={2}>

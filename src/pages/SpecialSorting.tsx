@@ -303,7 +303,7 @@ const navigateToNextStore = async () => {
         departmentId: departmentId as string,
         importId: importId,
         sortingPhase: sortingPahse,
-        ...(sortingPahse==='COMPLETED_JYOETSU' && { importProgress: "DONE" })
+        ...(sortingPahse === 'COMPLETED_JYOETSU' || isJoetsuMissing ? { importProgress: "DONE" } : {})
     });
     }
 
