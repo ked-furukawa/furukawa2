@@ -113,6 +113,7 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
     [completedStores]
   );
  
+  
 // フィルタリングされた店舗リスト（メモ化）
 const filteredStores = useMemo(() => {
   const filtered = allStores.filter(store => store.storeTc === currentRegion);
@@ -128,6 +129,16 @@ const filteredStores = useMemo(() => {
   
   return filtered;
 }, [allStores, currentRegion]);
+
+// filteredStoresから店舗プロップスを生成（再レンダリング最適化）
+const storeProps = useMemo(() => {
+  return filteredStores.map(store => ({
+    id: store.storeId,
+    storeNumber: store.storeId,
+    storeName: store.storeName,
+    storeTc: store.storeTc
+  }));
+}, [filteredStores]); // filteredStoresが変わった時だけ再計算
 
 // 初期データの一括取得
 useEffect(() => {
@@ -816,16 +827,10 @@ if (!nextStore) {
             {/* 左側：店舗リスト */}
             <Box sx={{pr:0.2, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
               <StoreList
-              key={refreshKey}
               selectedStoreId={selectedStoreId}
               onSelectStore={handleStoreSelect}
               completedStores={completedStores}
-              stores={filteredStores.map(store => ({
-                id: store.storeId,
-                storeNumber: store.storeId,
-                storeName: store.storeName,
-                storeTc: store.storeTc
-              }))}
+              stores={storeProps}  // 事前に計算した値を使用
             />
             </Box>
             {/* 中央：統合された店舗情報と商品リスト */}
