@@ -20,6 +20,7 @@ interface Product {
 date: string;
 itemId: string; //itemId
 itemName: string; // itemName
+itemFormalName: string;
 itemCounts: number; // itemCountの合計値
 isChecked: boolean; // ローカル状態で管理
 departmentId: string; //担当部門ID
@@ -155,7 +156,8 @@ return (
         fontWeight: 'bold',
         fontSize: isPortrait ? '1.5rem' : '1.3rem'
         }}>
-        {product?.itemName} - 注文店舗一覧
+        {/* 社内呼称がない場合は正式名称を表示、どちらもない場合は商品IDを表示 */}
+        {product?.itemName || product?.itemFormalName || `商品ID: ${product?.itemId}` || '不明な商品'} - 注文店舗一覧
         </Typography>
         <IconButton
         edge="end"
