@@ -132,7 +132,7 @@ const handleStoreSelect = (storeId: string) => {
 // 選択した店舗を確定済みにする
 const handleConfirmSelected = async () => {
     if (selectedStoreIds.length === 0) {
-        setSnackbarMessage('店舗が選択されていません');
+        setSnackbarMessage('すべての店舗の確認が完了していません');
         setSnackbarSeverity('error');
         setSnackbarOpen(true);
         return;
