@@ -43,82 +43,82 @@ const safeDepartmentId = departmentId as string;
 // データを取得
 // useEffect内のデータ取得部分を修正
 useEffect(() => {
-    // DynamoDBからのデータ取得をサブスクライブ
-    const subscription = client.models.Box.observeQuery({
+  const fetchData = async () => {
+    setLoading(true); // ローディング開始
+    try {
+      const result = await client.models.Box.list({
         filter: {
-            date: {
-                eq: date
-            },
-            departmentId: { eq: safeDepartmentId }
-        }
-    }).subscribe({
-        next: ({ items, isSynced }) => {
-            if (!isSynced) {
-                console.log("データ同期中...");
-                return;
-            }
-            console.log('全Boxレコード:', items);
-            const storeMap = new Map<string, Store>();
-            const boxCountsData: Record<string, Record<string, number>> = {};
-            const confirmedStores = new Set<string>();
-            // 代表レコードと仕分け時間ごとのBoxレコードを分離
-            const representativeBoxes = items.filter(box => !box.storeId.includes('_'));
-            const roundBoxes = items.filter(box => box.storeId.includes('_'));
-            console.log('代表レコード:', representativeBoxes);
-            console.log('仕分け時間ごとのBoxレコード:', roundBoxes);
-            // 1. まず全店舗分のstoreMapとboxCountsDataを「仕分け時間ごとのBoxレコード」で構築
-            roundBoxes.forEach(box => {
-                const actualStoreId = box.storeId.split('_')[0];
-                if (!storeMap.has(actualStoreId)) {
-                    storeMap.set(actualStoreId, {
-                        id: actualStoreId,
-                        storeName: box.storeName || '',
-                        storeNumber: actualStoreId,
-                        storeTc: box.storeTc || '',
-                        isChecked: false
-                    });
-                }
-                if (!boxCountsData[actualStoreId]) {
-                    boxCountsData[actualStoreId] = {};
-                }
-                if (!boxCountsData[actualStoreId][box.boxColor]) {
-                    boxCountsData[actualStoreId][box.boxColor] = 0;
-                }
-                boxCountsData[actualStoreId][box.boxColor] += box.boxCount;
-                if (box.status === 'DOUBLE_CHECKED') {
-                    confirmedStores.add(actualStoreId);
-                }
-            });
-            // 2. 代表レコードがあればboxCountsDataだけ上書き（storeMapは上書きしない）
-            representativeBoxes.forEach(box => {
-                const actualStoreId = box.storeId;
-                if (!boxCountsData[actualStoreId]) {
-                    boxCountsData[actualStoreId] = {};
-                }
-                boxCountsData[actualStoreId]['green'] = box.boxCount;
-                if (box.status === 'DOUBLE_CHECKED') {
-                    confirmedStores.add(actualStoreId);
-                }
-            });
-            console.log('boxCountsData:', boxCountsData);
-            const storesArray = Array.from(storeMap.values());
-            console.log('storesArray:', storesArray);
-            setStores(storesArray);
-            setBoxCounts(boxCountsData);
-            setError(null);
-            setLoading(false);
+          date: { eq: date },
+          departmentId: { eq: safeDepartmentId }
         },
-        error: (err) => {
-            console.error('データの取得に失敗しました', err);
-            setError('データの取得に失敗しました');
-            setSnackbarMessage('データの取得に失敗しました');
-            setSnackbarSeverity('error');
-            setSnackbarOpen(true);
-            setLoading(false);
+        limit: 1000
+      });
+
+      const items = result.data;
+      console.log('全Boxレコード:', items);
+
+      const storeMap = new Map<string, Store>();
+      const boxCountsData: Record<string, Record<string, number>> = {};
+      const confirmedStores = new Set<string>();
+
+      // 代表レコードと仕分け時間ごとのBoxレコードを分離
+      const representativeBoxes = items.filter(box => !box.storeId.includes('_'));
+      const roundBoxes = items.filter(box => box.storeId.includes('_'));
+
+      // 1. roundBoxesから storeMap と boxCountsData を構築
+      roundBoxes.forEach(box => {
+        const actualStoreId = box.storeId.split('_')[0];
+        if (!storeMap.has(actualStoreId)) {
+          storeMap.set(actualStoreId, {
+            id: actualStoreId,
+            storeName: box.storeName || '',
+            storeNumber: actualStoreId,
+            storeTc: box.storeTc || '',
+            isChecked: false
+          });
         }
-    });
-    return () => subscription.unsubscribe();
+        if (!boxCountsData[actualStoreId]) {
+          boxCountsData[actualStoreId] = {};
+        }
+        if (!boxCountsData[actualStoreId][box.boxColor]) {
+          boxCountsData[actualStoreId][box.boxColor] = 0;
+        }
+        boxCountsData[actualStoreId][box.boxColor] += box.boxCount;
+        if (box.status === 'DOUBLE_CHECKED') {
+          confirmedStores.add(actualStoreId);
+        }
+      });
+
+      // 2. representativeBoxes で boxCountsData のみ上書き
+      representativeBoxes.forEach(box => {
+        const actualStoreId = box.storeId;
+        if (!boxCountsData[actualStoreId]) {
+          boxCountsData[actualStoreId] = {};
+        }
+        boxCountsData[actualStoreId]['green'] = box.boxCount;
+        if (box.status === 'DOUBLE_CHECKED') {
+          confirmedStores.add(actualStoreId);
+        }
+      });
+
+      const storesArray = Array.from(storeMap.values());
+      setStores(storesArray);
+      setBoxCounts(boxCountsData);
+      setError(null);
+    } catch (err) {
+      console.error('データの取得に失敗しました', err);
+      setError('データの取得に失敗しました');
+      setSnackbarMessage('データの取得に失敗しました');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    } finally {
+      setLoading(false); // ローディング終了
+    }
+  };
+
+  fetchData();
 }, []);
+
 
 // 店舗選択ハンドラー
 const handleStoreSelect = (storeId: string) => {
