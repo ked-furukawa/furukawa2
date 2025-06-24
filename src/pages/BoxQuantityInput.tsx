@@ -1,6 +1,6 @@
 // src/pages/BoxQuantityInput.tsx
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Box,
   Container,
@@ -74,7 +74,7 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
   const [completedStores, setCompletedStores] = useState<CompletedStore[]>([]);
   const [allStores, setAllStores] = useState<Store[]>([]);
   const [selectedColor, setSelectedColor] = useState<BoxColor>('green');
-  const [refreshKey, setRefreshKey] = useState(0);
+  // const [refreshKey, setRefreshKey] = useState(0);
   const [currentDate, setCurrentDate] = useState<string>('');
   const [importId, setImportId] = useState<string | null>(null);
   const [currentRegion, setCurrentRegion] = useState<string>('中之島'); // 初期値は中之島
@@ -113,6 +113,11 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
     [completedStores]
   );
  
+  // completedStoresのメモ化
+const memoizedCompletedStores = useMemo(() => {
+  return completedStores;
+}, [completedStores]);
+  
 // フィルタリングされた店舗リスト（メモ化）
 const filteredStores = useMemo(() => {
   const filtered = allStores.filter(store => store.storeTc === currentRegion);
@@ -128,6 +133,16 @@ const filteredStores = useMemo(() => {
   
   return filtered;
 }, [allStores, currentRegion]);
+
+// filteredStoresから店舗プロップスを生成（再レンダリング最適化）
+const storeProps = useMemo(() => {
+  return filteredStores.map(store => ({
+    id: store.storeId,
+    storeNumber: store.storeId,
+    storeName: store.storeName,
+    storeTc: store.storeTc
+  }));
+}, [filteredStores]); // filteredStoresが変わった時だけ再計算
 
 // 初期データの一括取得
 useEffect(() => {
@@ -150,7 +165,7 @@ useEffect(() => {
       console.log('resolveImportId result:', importResult);
       
       if (!importResult) {
-        setError('仕分け作業は完了しています');
+        setError('本日の仕分け作業は既に完了しています。新しい作業はありません。');
         setLoading(false);
         return;
       }
@@ -259,7 +274,7 @@ useEffect(() => {
       });
       
       if (filteredOrders.length === 0) {
-        setError('このImportIdには処理可能なデータがありません');
+        setError('現在処理可能な商品データがありません。データが登録されるまでお待ちください。');
         setLoading(false);
         return;
       }
@@ -340,11 +355,11 @@ useEffect(() => {
         handleStoreSelectInternal(firstStoreId, typedOrders, mappedBoxData);
         setNextStore(getNextStore(firstStoreId, stores));
       } else {
-        setError('この部門に割り当てられた店舗がありません');
+        setError('現在、この部門に割り当てられた店舗はありません。データが登録されるまでお待ちください。');
       }
     } catch (err) {
       console.error('データの読み込みに失敗しました:', err);
-      setError('データの読み込みに失敗しました: ' + (err instanceof Error ? err.message : String(err)));
+      setError('データの読み込みに問題が発生しました。しばらく経ってから再度お試しください。 ');
     } finally {
       setLoading(false);
     }
@@ -420,8 +435,9 @@ function extractStoresFromGroupedOrders(
   return stores;
 }
 
-  // 次の店舗を取得する関数
-  function getNextStore(currentStoreId: string, storeList = allStores): Store | null {
+// 次の店舗を取得する関数
+const getNextStore = useCallback(
+  (currentStoreId: string, storeList = allStores): Store | null => {
     if (!storeList.length) return null;
     const currentIndex = storeList.findIndex(s => s.storeId === currentStoreId);
     if (currentIndex === -1) return storeList[0];
@@ -429,18 +445,17 @@ function extractStoresFromGroupedOrders(
       return storeList[currentIndex + 1];
     }
     return null;
-  }
+  },
+  [allStores]
+);
 
-  // 内部用の店舗選択処理（キャッシュデータを使用）
-  function handleStoreSelectInternal(
-    storeId: string,
-    orderData: OrderData[],
-    boxData: BoxData[]
-  ) {
+// 内部用の店舗選択処理（キャッシュデータを使用）
+const handleStoreSelectInternal = useCallback(
+  (storeId: string, orderData: OrderData[], boxData: BoxData[]) => {
     setSelectedStoreId(storeId);
     const filtered = orderData.filter(order => order.storeId === storeId);
     if (filtered.length === 0) {
-      setError(`店舗ID: ${storeId} のデータが見つかりませんでした`);
+      setError(`選択された店舗ID: ${storeId} の商品データが見つかりません。別の店舗を選択してください。`);
       return;
     }
    
@@ -480,7 +495,7 @@ function extractStoresFromGroupedOrders(
     // 入力値をクリア
     setInputValue('');
    
-        // 完了済み店舗または箱データがある場合、すべての商品を選択状態にする
+    // 完了済み店舗または箱データがある場合、すべての商品を選択状態にする
     const shouldSelectAll = isCompletedStore || storeBoxData.length > 0;
     if (shouldSelectAll) {
       const allProductIds = productList.map(p => p.id);
@@ -494,17 +509,22 @@ function extractStoresFromGroupedOrders(
     if (allStores.length > 0) {
       setNextStore(getNextStore(storeId));
     }
-  }
+  },
+  [completedStores, departmentId, importId, allStores, setSelectedStoreId, setStoreData, setProducts, setInputValue, setSelectedProductIds, setNextStore, getNextStore]
+);
 
-  // 店舗選択時の処理（外部向け - キャッシュデータを使用）
-  function handleStoreSelect(storeId: string) {
+// 店舗選択時の処理（外部向け - キャッシュデータを使用）
+const handleStoreSelect = useCallback(
+  (storeId: string) => {
     handleStoreSelectInternal(storeId, orders, boxDataCache);
-  }
+  },
+  [handleStoreSelectInternal, orders, boxDataCache]
+);
 
   async function handleQuantityUpdate() {
     const quantity = parseInt(inputValue, 10);
     if (isNaN(quantity)) {
-      setError('有効な数値を入力してください');
+      setError('箱数は1以上の数字で入力してください');
       return;
     }
    
@@ -560,7 +580,7 @@ function extractStoresFromGroupedOrders(
   // 次の店舗へ移動する関数（修正版は次の段階で実装）
   async function navigateToNextStore() {
     if (!selectedStoreId || !storeData || !importId) {
-      setError('店舗情報が不足しています');
+      setError('店舗を選択してから操作してください');
       return;
     }
 
@@ -613,7 +633,7 @@ function extractStoresFromGroupedOrders(
       });
      
       // リフレッシュキーを更新して StoreList を再レンダリング
-      setRefreshKey(prev => prev + 1);
+      // setRefreshKey(prev => prev + 1);
      
       // 中之島店舗の完了チェック
       const nakanoshimaStores = allStores.filter(s => s.storeTc === '中之島');
@@ -705,7 +725,7 @@ if (newlyCompleted.length === nakanoshimaStores.length) {
         }
   } catch (error) {
     console.error('中之島エリア完了処理中にエラーが発生しました:', error);
-    setError('中之島エリア完了処理中にエラーが発生しました');
+    setError('中之島エリアの処理は完了しましたが、システム上の更新処理で問題が発生しました。入力した箱数データは保存されていますので、このまま作業を続けることができます。');
   }
   return;
 }
@@ -784,7 +804,7 @@ if (!nextStore) {
     }
   } catch (error) {
     console.error('上越エリア完了処理中にエラーが発生しました:', error);
-    setError('上越エリア完了処理中にエラーが発生しました');
+    setError('上越エリアの処理は完了しましたが、システム上の更新処理で問題が発生しました。入力した箱数データは保存されていますので、このまま次の画面に進むことができます。');
   }
   return;
 }
@@ -795,8 +815,7 @@ if (!nextStore) {
       // 選択をクリア
       setInputValue('');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      setError(`データの保存に失敗しました: ${errorMessage}`);
+      setError(`箱数データの保存に問題が発生しました。ネットワーク接続を確認し、再度お試しください。`);
       console.error('データ保存エラー:', err);
     } finally {
       setSavingData(false);
@@ -826,16 +845,11 @@ if (!nextStore) {
             {/* 左側：店舗リスト */}
             <Box sx={{pr:0.2, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
               <StoreList
-              key={refreshKey}
+              // key={refreshKey} // refreshKeyは箱データ保存時など、強制的に再レンダリングが必要な場合のみ使用
               selectedStoreId={selectedStoreId}
               onSelectStore={handleStoreSelect}
-              completedStores={completedStores}
-              stores={filteredStores.map(store => ({
-                id: store.storeId,
-                storeNumber: store.storeId,
-                storeName: store.storeName,
-                storeTc: store.storeTc
-              }))}
+              completedStores={memoizedCompletedStores}
+              stores={storeProps}  // 事前に計算した値を使用
             />
             </Box>
             {/* 中央：統合された店舗情報と商品リスト */}
