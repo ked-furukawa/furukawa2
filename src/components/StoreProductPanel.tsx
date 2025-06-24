@@ -80,17 +80,17 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
         // 既存のコード
         onProductSelect(productId);
         
-        setTimeout(() => {
-            if (tableContainerRef.current) {
-                const currentScrollTop = tableContainerRef.current.scrollTop;
-                const scrollAmount = 60;
+    //     setTimeout(() => {
+    //         if (tableContainerRef.current) {
+    //             const currentScrollTop = tableContainerRef.current.scrollTop;
+    //             const scrollAmount = 60;
                 
-                tableContainerRef.current.scrollTo({
-                    top: currentScrollTop + scrollAmount,
-                    behavior: 'smooth'
-                });
-            }
-        }, 100);
+    //             tableContainerRef.current.scrollTo({
+    //                 top: currentScrollTop + scrollAmount,
+    //                 behavior: 'smooth'
+    //             });
+    //         }
+    //     }, 100);
     };
 
 
