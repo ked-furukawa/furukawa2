@@ -374,13 +374,15 @@ export const FinalCheck = () => {
             case '3souzai':
                 return '惣菜3';
             case 'kakou1':
+                return '加工'
             case 'kakou2':
-                return '加工';
+                return '加工(ロースとんかつ)';
             case 'seiniku':
                 return '精肉';
             case 'namashitsu1':
+                return '生室(水産部門)'
             case 'namashitsu2':
-                return '生室';
+                return '生室(精肉部門)';
             case 'honsyabuturyu':
                 return '本社物流';
             case 'seika':
@@ -396,23 +398,67 @@ export const FinalCheck = () => {
         }
         };
 
-    // 箱詳細情報を取得する関数
-    const fetchBoxDetails = async (storeId:string, date:string) => {
-    try {
-        const response = await boxClient.models.Box.listBoxesByDateAndStore({
-        date: date,
-        storeId: { eq: storeId }
-        });
-        
-        // "status" が "DOUBLE_CHECKED" のものだけ抽出
-        const doubleCheckedBoxes = response.data.filter(box => box.status === "DOUBLE_CHECKED");
-        console.log('取得した箱情報:', doubleCheckedBoxes);
-        setBoxDetails(doubleCheckedBoxes || []);
-    } catch (error) {
-        console.error('箱情報の取得エラー:', error);
-        setBoxDetails([]);
-    }
+
+// 箱詳細情報を取得する関数
+const fetchBoxDetails = async (storeId: string, date: string) => {
+  try {
+    const response = await boxClient.models.Box.listBoxesByDateAndStore({
+      date: date,
+      storeId: { eq: storeId }
+    });
+    
+    // "status" が "DOUBLE_CHECKED" のものだけ抽出
+    const doubleCheckedBoxes = response.data.filter(box => box.status === "DOUBLE_CHECKED");
+    
+    // 部門の表示順を定義（指定された順序に基づく）
+    const departmentOrder: Record<string, number> = {
+      // 本番工場
+      'seiniku': 1,        // 本番工場精肉
+      'kakou1': 2,         // 本番工場加工
+      'kakou2': 3,         // 本番工場加工
+      'honsyabuturyu': 4,  // 本番工場本社物流
+      'seika': 5,          // 青果（順序指定になかったが追加）
+      
+      // 第二工場
+      '1souzai': 6,        // 第二工場惣菜１
+      '2souzai': 7,        // 第二工場惣菜2
+      '3souzai': 8,        // 第二工場惣菜３
+      'namashitsu1': 9,    // 第二工場生室
+      'namashitsu2': 10,   // 第二工場生室
     };
+    
+    // 箱の色の表示順を定義
+    const colorOrder: Record<string, number> = {
+      'green': 1,  // 緑
+      'red': 2,    // 赤
+      'blue': 3,   // 青
+      'orange': 4  // 橙
+    };
+    
+    // 箱の表示順をソート
+    const sortedBoxes = doubleCheckedBoxes.sort((a, b) => {
+      // 1. 部門順でソート
+      const orderA = departmentOrder[a.departmentId] || 999;
+      const orderB = departmentOrder[b.departmentId] || 999;
+      
+      if (orderA !== orderB) {
+        return orderA - orderB;
+      }
+      
+      // 2. 同じ部門内では箱の色でソート
+      const colorA = colorOrder[a.boxColor] || 999;
+      const colorB = colorOrder[b.boxColor] || 999;
+      
+      return colorA - colorB;
+    });
+    
+    console.log('取得した箱情報:', sortedBoxes);
+    setBoxDetails(sortedBoxes || []);
+  } catch (error) {
+    console.error('箱情報の取得エラー:', error);
+    setBoxDetails([]);
+  }
+};
 
 
     const handleStoreClick = async(store:StoreBoxSummary) => {//モーダル開閉用関数
@@ -427,7 +473,7 @@ export const FinalCheck = () => {
         setSelectedStoreId('');
     };
 
-    const fetchOrderDetails = async (departmentId: string,date:string) => {
+    const fetchOrderDetails = async (storeId:string,departmentId: string,date:string) => {
     try {
         const response = await boxClient.models.Order.listOrdersByDept({
         date: date,
@@ -438,36 +484,61 @@ export const FinalCheck = () => {
     limit: 1000  // 最大1000件取得
 }
 );
-        const orders: OrderItem[] = response.data;
+        const filteredOrders = response.data.filter(order => order.storeId === storeId);
+        const orders: OrderItem[] = filteredOrders
 
     const aggregated: Record<string, OrderItem> = {};
 
+    // 店舗ID + 商品IDの組み合わせでグループ化して集計
     for (const order of orders) {
-        const key = `${order.storeId}_${order.itemId}`;
-        
-        if (!aggregated[key]) {
-            // 最初の1件をコピー（itemCountは0から加算）
-            aggregated[key] = { ...order, itemCount: 0 };
-        }
+      const key = `${order.storeId}_${order.itemId}`;
+      
+      if (!aggregated[key]) {
+        // 最初の1件をコピー（itemCountは0から加算）
+        aggregated[key] = { ...order, itemCount: 0 };
+      }
 
-        aggregated[key].itemCount += order.itemCount ?? 0;
+      aggregated[key].itemCount += order.itemCount ?? 0;
     }
 
+    // 集計したデータを配列に変換
     const aggregatedOrders: OrderItem[] = Object.values(aggregated);
+    
+    // TC順→店舗番号順→商品名順でソート
+    const sortedOrders = aggregatedOrders.sort((a, b) => {
+      // 1. TC順でソート（中之島を先頭にする場合）
+      if (a.storeTc === '中之島' && b.storeTc !== '中之島') return -1;
+      if (a.storeTc !== '中之島' && b.storeTc === '中之島') return 1;
+      
+      // 同じTCの場合は店舗番号順でソート
+      if (a.storeTc === b.storeTc) {
+        // 2. 店舗番号順でソート
+        if (a.storeId !== b.storeId) {
+          return Number(a.storeId) - Number(b.storeId);
+        }
         
-        console.log('取得したOrder情報:', aggregatedOrders);
-        setOrderDetails(aggregatedOrders || []);
-    } catch (error) {
-        console.error('Order情報の取得エラー:', error);
-        setOrderDetails([]);
-    }
-    };
+        // 3. 同じ店舗の場合は商品名順でソート
+        return (a.itemFormalName || '').localeCompare(b.itemFormalName || '');
+      }
+      
+      // それ以外の場合はTC名でソート
+      return (a.storeTc || '').localeCompare(b.storeTc || '');
+    });
+    
+    console.log('ソート後のOrder情報:', sortedOrders);
+    setOrderDetails(sortedOrders || []);
+  } catch (error) {
+    console.error('Order情報の取得エラー:', error);
+    setOrderDetails([]);
+  }
+};
+    
 
     const handleDepartmentClick = async(box:StoreData) => {//モーダル開閉用関数
         const departmentName = getDepartmentName(box.departmentId);
         setSelectedDepartmentName(departmentName);
         setOpenSecond(true);
-        await fetchOrderDetails(box.departmentId, selectedDate?.toISOString().split('T')[0].replace(/-/g, '')||'');
+        await fetchOrderDetails(box.storeId,box.departmentId, selectedDate?.toISOString().split('T')[0].replace(/-/g, '')||'');
     };
 
     const handleClose2 = () => {
@@ -538,7 +609,7 @@ export const FinalCheck = () => {
                 return reordered.map((store) => (
                 <TableRow key={store.storeId} hover>
                 <TableCell>{store.storeTc}</TableCell>
-                <TableCell 
+                <TableCell  //店舗の箱数詳細
                     sx={{ 
                     cursor: 'pointer', 
                     color: 'primary.main', 
@@ -676,7 +747,7 @@ export const FinalCheck = () => {
                     
                     {boxDetails.map((box, index) => (
                     <React.Fragment key={`${box.storeId}-${index}`}>
-                        <ListItemButton
+                        <ListItemButton //の部門の注文詳細を表示する
                             onClick={() => {
                             handleDepartmentClick(box)
                             }} sx={{ 
@@ -965,28 +1036,45 @@ export const FinalCheck = () => {
     <SummaryTable title={summaryTitle0} total={totalAll} />
     <SummaryTable title={summaryTitle1} total={totalNakanoshima} />
     <SummaryTable title={summaryTitle2} total={totalJyoetsu} />
+    {/* スペーサーとして空Boxを使う */}
+    <Box sx={{ height: '100px' }} />
+    {!isAllDone ? (
     <Tooltip title="仕分け作業が完了していません">
-    <span>
+        <Box component="span" sx={{ display: 'inline-block' }}>
         <Button
-        sx={{
-            mt: "100px",
+            sx={{
             backgroundColor: 'primary.main',
             color: 'white',
             '&:hover': {
-            backgroundColor: 'primary.dark',
+                backgroundColor: 'primary.dark',
             },
             '&.Mui-disabled': {
-            backgroundColor: 'grey.400',
-            color: 'white',
+                backgroundColor: 'grey.400',
+                color: 'white',
             },
+            }}
+            onClick={handleDownloadExcel}
+            disabled
+        >
+            {buttonLabel}
+        </Button>
+        </Box>
+    </Tooltip>
+    ) : (
+    <Button
+        sx={{
+        mt: "100px",
+        backgroundColor: 'primary.main',
+        color: 'white',
+        '&:hover': {
+            backgroundColor: 'primary.dark',
+        },
         }}
         onClick={handleDownloadExcel}
-        disabled={!isAllDone}
-        >
+    >
         {buttonLabel}
-        </Button>
-    </span>
-    </Tooltip>
+    </Button>
+    )}
     </Box>
     </Box>
     );

@@ -45,8 +45,6 @@ export const TestComponent = () => {
         console.log(StatusTemplate.PENDING); //PENDING
 
                 // 店舗IDは指定せず、日付のみで取得
-
-        const date='20250606'
         const result = await boxClient.models.Order.listOrdersByDeptAndImport({
         date, // GSI の partitionKey
         departmentIdImportId: {

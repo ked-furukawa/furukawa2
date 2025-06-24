@@ -652,6 +652,16 @@ if (newlyCompleted.length === nakanoshimaStores.length) {
       importId: importId,
       sortingPhase: 'COMPLETED_NAKANOSHIMA'
     });
+    if (isJoetsuMissing) {
+    // ImportWorkStatus の sortingPhase を COMPLETED_JYOETSU に更新し、importProgress も DONE に更新
+    await dataClient.models.ImportWorkStatus.update({
+      date: currentDate,
+      departmentId: departmentId as string,
+      importId: importId,
+      sortingPhase: 'COMPLETED_JYOETSU',
+      importProgress: 'DONE'
+    });
+  }
     
     // 中之島エリアの全注文ステータスを更新
     const nakanoshimaStoreIds = nakanoshimaStores.map(s => s.storeId);

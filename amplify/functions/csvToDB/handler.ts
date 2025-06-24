@@ -173,7 +173,7 @@ try {
                 await docClient.send(command);
             }
             for (const departmentId of departmentIdSet) {//ImportWorkStatus登録
-            console.log('Processing for importId:', importId);
+            console.log('Processing for departmentId:', departmentId);
                 const item: Record<string, any> = {};
                     item.importId = importId;
                     item.date = date;
@@ -181,8 +181,13 @@ try {
                     item.createdAt = new Date().toISOString();
                     item.updatedAt = item.createdAt;
                     item.departmentId = departmentId;
-                    item.importProgress = 'PENDING';
-                    item.sortingPhase = 'PENDING';
+                    if(departmentId==="a" || departmentId==="b"){
+                        item.importProgress = 'DONE';
+                        item.sortingPhase = 'DONE';
+                    }else{
+                        item.importProgress = 'PENDING';
+                        item.sortingPhase = 'PENDING';
+                    }
                 item['departmentId#importId'] = `${item.departmentId}#${item.importId}`
 
                 const params = {
