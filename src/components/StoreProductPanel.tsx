@@ -174,48 +174,84 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
         </Box>
         ) : (
         <TableContainer 
-                ref={tableContainerRef} // ここにrefを追加
-                sx={{ flex: 1, overflowY: 'auto' }}
-            >
-            <Table stickyHeader size="medium" sx={{ tableLayout: 'fixed' }}>
+        ref={tableContainerRef}
+        sx={{ flex: 1, overflowY: 'auto' }}
+        >
+        <Table 
+            stickyHeader 
+            size="medium" 
+            sx={{ 
+            tableLayout: 'fixed', // 固定レイアウトを強制
+            width: '100%' // 幅を100%に設定
+            }}
+        >
             <TableHead>
             <TableRow>
-                <TableCell sx={{ fontSize: '1.1rem', fontWeight: 'bold', padding: '16px 12px' }}>商品名</TableCell>
-                <TableCell align="right" sx={{ fontSize: '1.1rem', fontWeight: 'bold' }}>個数</TableCell>
-                <TableCell align="center" sx={{ fontSize: '1.1rem', fontWeight: 'bold' }}>選択</TableCell>
+                <TableCell 
+                sx={{ 
+                    fontSize: '1.1rem', 
+                    fontWeight: 'bold', 
+                    padding: '16px 12px',
+                    width: '60%' // 商品名列の幅を固定
+                }}
+                >
+                商品名
+                </TableCell>
+                <TableCell 
+                align="right" 
+                sx={{ 
+                    fontSize: '1.1rem', 
+                    fontWeight: 'bold',
+                    width: '20%' // 個数列の幅を固定
+                }}
+                >
+                個数
+                </TableCell>
+                <TableCell 
+                align="center" 
+                sx={{ 
+                    fontSize: '1.1rem', 
+                    fontWeight: 'bold',
+                    width: '20%' // 選択列の幅を固定
+                }}
+                >
+                選択
+                </TableCell>
             </TableRow>
             </TableHead>
             <TableBody>
-                {products.map((product) => (
+            {products.map((product) => (
                 <TableRow
-                    key={product.id}
-                    hover={!touchedProductIds.includes(product.id)} // タッチ済みの場合はホバー効果を無効化
-                    selected={completedStoreIds?.includes(storeNumber) || selectedProductIds.includes(product.id)}
-                    onClick={() => handleRowTouch(product.id)} // 行タッチ時のハンドラーを追加
-                    sx={{
-                        cursor: touchedProductIds.includes(product.id) ? 'default' : 'pointer', // タッチ済みの場合はカーソルスタイルを変更
-                        backgroundColor: touchedProductIds.includes(product.id) ? 'rgba(144, 202, 249, 0.3)' : 'inherit', // タッチ済みの場合は背景色を変更
-                        '&:hover': {
-                        backgroundColor: touchedProductIds.includes(product.id) ? 'rgba(144, 202, 249, 0.3)' : undefined, // タッチ済みの場合はホバー時の背景色も固定
-                        }
-                    }}
-                    >
-                    <TableCell sx={{ 
-                    maxWidth: 0, // これが重要: テキストの省略を強制
+                key={product.id}
+                hover={!touchedProductIds.includes(product.id)}
+                selected={completedStoreIds?.includes(storeNumber) || selectedProductIds.includes(product.id)}
+                onClick={() => handleRowTouch(product.id)}
+                sx={{
+                    cursor: touchedProductIds.includes(product.id) ? 'default' : 'pointer',
+                    backgroundColor: touchedProductIds.includes(product.id) ? 'rgba(144, 202, 249, 0.3)' : 'inherit',
+                    '&:hover': {
+                    backgroundColor: touchedProductIds.includes(product.id) ? 'rgba(144, 202, 249, 0.3)' : undefined,
+                    }
+                }}
+                >
+                <TableCell 
+                    sx={{ 
+                    maxWidth: '100%', // セル内の最大幅を100%に
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
-                    fontSize: '1rem', // フォントサイズを大きく
-                    padding: '16px 12px' // パディングを増やす
-                }}>
+                    fontSize: '1rem',
+                    padding: '16px 12px'
+                    }}
+                >
                     <Typography 
-                    variant="body1" // body2からbody1に変更してサイズアップ
+                    variant="body1"
                     sx={{ 
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
-                        fontWeight: 500, // やや太めに
-                        lineHeight: 1.4 // 行の高さを調整
+                        fontWeight: 500,
+                        lineHeight: 1.4
                     }}
                     >
                     {/* 社内呼称がない場合は正式名称を表示 */}
@@ -223,53 +259,59 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
                     </Typography>
                     {/* 社内呼称がある場合のみ正式名称をキャプションとして表示 */}
                     {product.itemName && product.itemFormalName && (
-                        <Typography 
+                    <Typography 
                         variant="caption" 
                         color="text.secondary"
                         sx={{ 
-                            display: 'block',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            fontSize: '0.85rem' // キャプションも大きく
+                        display: 'block',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        fontSize: '0.85rem'
                         }}
-                        >
+                    >
                         {product.itemFormalName}
-                        </Typography>
+                    </Typography>
                     )}
-                    </TableCell>
-                    <TableCell 
-                        align="right"
-                        sx={{ 
-                            fontSize: '1.5rem', // 個数表示を大きく
-                            fontWeight: 500, // やや太めに
-                            padding: '16px 8px', // パディングを増やす
-                            textAlign: 'right', // 右寄せのまま
-                            paddingRight: '24px' // 右側の余白を増やして全体的に左に寄せる
-                        }}
-                        >
-                        {product.orderCount}
-                        </TableCell>
-                    <TableCell 
+                </TableCell>
+                <TableCell 
+                    align="right"
+                    sx={{ 
+                    fontSize: '1.5rem',
+                    fontWeight: 500,
+                    padding: '16px 8px',
+                    textAlign: 'right',
+                    paddingRight: '24px',
+                    width: '20%' // 幅を固定
+                    }}
+                >
+                    {product.orderCount}
+                </TableCell>
+                <TableCell 
                     align="center" 
                     onClick={(e) => e.stopPropagation()}
-                    sx={{ padding: '8px' }} // パディングを調整
-                    > 
+                    sx={{ 
+                    padding: '8px',
+                    width: '20%' // 幅を固定
+                    }}
+                > 
+                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                     <Checkbox
-                        checked={completedStoreIds?.includes(storeNumber)||selectedProductIds.includes(product.id)}
+                        checked={completedStoreIds?.includes(storeNumber) || selectedProductIds.includes(product.id)}
                         onChange={() => handleProductSelect(product.id)}
                         sx={{ 
                         '& .MuiSvgIcon-root': { 
-                            fontSize: 35 // チェックボックスのサイズを大きく
+                            fontSize: 35
                         },
-                        padding: '8px' // チェックボックス自体のパディングも調整
+                        padding: '8px'
                         }}
                     />
-                    </TableCell>
-                    </TableRow>
-                ))}
+                    </Box>
+                </TableCell>
+                </TableRow>
+            ))}
             </TableBody>
-            </Table>
+        </Table>
         </TableContainer>
         )}
 
