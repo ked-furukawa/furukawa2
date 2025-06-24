@@ -68,12 +68,18 @@ const StartSorting: React.FC<StartSortingProps> = ({navigateTo}) => {
                 departmentId: {
                     eq: departmentId
                 }
-            },
-            {
-        limit: 1000  // 最大1000件取得
-        });
+            });
         const pendingStatuses = ImportIds.filter((item: any) => item.importProgress === StatusTemplate.PENDING);
+        const inProgressStatuses = ImportIds.filter((item: any) => item.importProgress === StatusTemplate.IN_PROGRESS);
 
+        // IN_PROGRESS が存在する場合、集約処理は行わず次の画面へ遷移
+        if (inProgressStatuses.length > 0) {
+        alert("すでに仕分け作業が開始されています。続行します。");
+        navigateTo('SortingCheckScreen') // ← 遷移処理（必要に応じて実装済みの関数を呼び出す）
+        return;
+        }
+
+        // PENDING が 0 件の場合も警告して中断
         if (pendingStatuses.length === 0) {
         alert("保留中の注文が存在しません");
         return;
