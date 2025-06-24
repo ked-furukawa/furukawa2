@@ -157,7 +157,7 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
 
     {/* エラー表示 */}
     {error && (
-        <Box sx={{ p: 2, color: 'error.main' }}>
+        <Box sx={{ p: 2, color: "rgba(0, 0, 0, 0.87)" }}>
         <Typography>{error}</Typography>
         </Box>
     )}

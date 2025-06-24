@@ -165,7 +165,7 @@ useEffect(() => {
       console.log('resolveImportId result:', importResult);
       
       if (!importResult) {
-        setError('仕分け作業は完了しています');
+        setError('本日の仕分け作業は既に完了しています。新しい作業はありません。');
         setLoading(false);
         return;
       }
@@ -274,7 +274,7 @@ useEffect(() => {
       });
       
       if (filteredOrders.length === 0) {
-        setError('このImportIdには処理可能なデータがありません');
+        setError('現在処理可能な商品データがありません。データが登録されるまでお待ちください。');
         setLoading(false);
         return;
       }
@@ -355,11 +355,11 @@ useEffect(() => {
         handleStoreSelectInternal(firstStoreId, typedOrders, mappedBoxData);
         setNextStore(getNextStore(firstStoreId, stores));
       } else {
-        setError('この部門に割り当てられた店舗がありません');
+        setError('現在、この部門に割り当てられた店舗はありません。データが登録されるまでお待ちください。');
       }
     } catch (err) {
       console.error('データの読み込みに失敗しました:', err);
-      setError('データの読み込みに失敗しました: ' + (err instanceof Error ? err.message : String(err)));
+      setError('データの読み込みに問題が発生しました。しばらく経ってから再度お試しください。 ');
     } finally {
       setLoading(false);
     }
@@ -455,7 +455,7 @@ const handleStoreSelectInternal = useCallback(
     setSelectedStoreId(storeId);
     const filtered = orderData.filter(order => order.storeId === storeId);
     if (filtered.length === 0) {
-      setError(`店舗ID: ${storeId} のデータが見つかりませんでした`);
+      setError(`選択された店舗ID: ${storeId} の商品データが見つかりません。別の店舗を選択してください。`);
       return;
     }
    
@@ -524,7 +524,7 @@ const handleStoreSelect = useCallback(
   async function handleQuantityUpdate() {
     const quantity = parseInt(inputValue, 10);
     if (isNaN(quantity)) {
-      setError('有効な数値を入力してください');
+      setError('箱数は1以上の数字で入力してください');
       return;
     }
    
@@ -580,7 +580,7 @@ const handleStoreSelect = useCallback(
   // 次の店舗へ移動する関数（修正版は次の段階で実装）
   async function navigateToNextStore() {
     if (!selectedStoreId || !storeData || !importId) {
-      setError('店舗情報が不足しています');
+      setError('店舗を選択してから操作してください');
       return;
     }
 
@@ -715,7 +715,7 @@ if (newlyCompleted.length === nakanoshimaStores.length) {
         }
   } catch (error) {
     console.error('中之島エリア完了処理中にエラーが発生しました:', error);
-    setError('中之島エリア完了処理中にエラーが発生しました');
+    setError('中之島エリアの処理は完了しましたが、システム上の更新処理で問題が発生しました。入力した箱数データは保存されていますので、このまま作業を続けることができます。');
   }
   return;
 }
@@ -794,7 +794,7 @@ if (!nextStore) {
     }
   } catch (error) {
     console.error('上越エリア完了処理中にエラーが発生しました:', error);
-    setError('上越エリア完了処理中にエラーが発生しました');
+    setError('上越エリアの処理は完了しましたが、システム上の更新処理で問題が発生しました。入力した箱数データは保存されていますので、このまま次の画面に進むことができます。');
   }
   return;
 }
@@ -805,8 +805,7 @@ if (!nextStore) {
       // 選択をクリア
       setInputValue('');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      setError(`データの保存に失敗しました: ${errorMessage}`);
+      setError(`箱数データの保存に問題が発生しました。ネットワーク接続を確認し、再度お試しください。`);
       console.error('データ保存エラー:', err);
     } finally {
       setSavingData(false);
