@@ -229,11 +229,15 @@ return (
                 }}
                     sx={{ cursor: 'pointer', textDecoration: 'underline' }}>{getStoreBoxCount(store.id)}</TableCell>
                 <TableCell align="center">
-                    <Checkbox 
-                    checked={selectedStoreIds.includes(store.id)} 
-                    onChange={() => onStoreSelect(store.id)} 
-                     sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }} // チェックボックスを大きく
-                    />
+<Checkbox 
+  checked={selectedStoreIds.includes(store.id)} 
+  onChange={() => onStoreSelect(store.id)} 
+  sx={{ 
+    '& .MuiSvgIcon-root': { fontSize: 36 },  // サイズを36pxに増加（現在の28pxから）
+    padding: 1,  // パディングを増やして、タップ領域を広げる
+    transform: 'scale(1.2)',  // 全体的に1.2倍に拡大
+  }} 
+/>
                 </TableCell>
                 </TableRow>
             ))}
