@@ -61,7 +61,6 @@ const StartSorting: React.FC<StartSortingProps> = ({navigateTo}) => {
     const handleConfirm = async () => {
     setDialogOpen(false);
     setProcessing(true);
-
     try {
         // Step 1: PENDINGなImportWorkStatusを取得
         const { data : ImportIds } = await client.models.ImportWorkStatus.listImportIdsByDateAndDept({
@@ -139,7 +138,38 @@ const StartSorting: React.FC<StartSortingProps> = ({navigateTo}) => {
         }
         }
 
-        // Step 6: ImportWorkStatus を更新(最古のものをIN_PROGRESS、それ以外はDONEに)
+        // Step 6: 集約元の importId に属する Order を削除
+        const nonTargetImportIds = importIds.filter(id => id !== targetImportId);
+
+        for (const importId of nonTargetImportIds) {
+        const { data: ordersToDelete } = await client.models.Order.listOrdersByDeptAndImport(
+            {
+            date: date,
+            departmentIdImportId: {
+                eq: {
+                departmentId: departmentId,
+                importId: importId
+                }
+            }
+            },
+            {
+            limit: 1000
+            }
+        );
+
+        console.log(`削除対象のimportId: ${importId} のOrder件数: ${ordersToDelete.length}`);
+        console.table(ordersToDelete.map(({ storeId, itemId, itemCount }) => ({
+            storeId,
+            itemId,
+            itemCount
+        })));
+        
+        for (const order of ordersToDelete) {
+            await client.models.Order.delete(order);
+        }
+        }
+
+        // Step 7: ImportWorkStatus を更新(最古のものをIN_PROGRESS、それ以外はDONEに)
         for (const status of pendingStatuses) {
         const isTarget = status.importId === targetImportId;
         await client.models.ImportWorkStatus.update({

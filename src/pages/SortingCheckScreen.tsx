@@ -105,6 +105,7 @@ const loadProducts = async () => {
       setLoading(false);
       return;
     }
+    console.log("importResult",resolvedImportId)
 
     const result = await client.models.Order.listOrdersByDeptAndImport({
       date,
@@ -122,6 +123,7 @@ const loadProducts = async () => {
   }); 
     
     const rawOrders = result.data; //加工前の注文データ
+    console.log("rawOrders",rawOrders)
 
     const productMap: { [itemId: string]: Product } = {};
 
