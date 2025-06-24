@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
 Paper,
 Table,
@@ -61,6 +61,32 @@ if (stores.length === 0) {
     const [selectedColor, setSelectedColor] = useState<BoxColor>('green');
     const [selectedStoreId, setSelectedStoreId] = useState<string>('0');
     const { departmentId } = useParams<{ departmentId?: string }>();
+
+     // 店舗要素への参照を保持するためのオブジェクト
+    const storeRefs = useRef<Record<string, HTMLTableRowElement | null>>({});
+    // テーブルコンテナへの参照
+    const tableContainerRef = useRef<HTMLDivElement | null>(null);
+
+    
+  // 選択された店舗が変更されたときに自動スクロール
+    useEffect(() => {
+        if (selectedStoreIds.length > 0 && !loading) {
+        // 最後に選択された店舗ID
+        const lastSelectedStoreId = selectedStoreIds[selectedStoreIds.length - 1];
+        
+        // 選択された店舗の要素を取得
+        const selectedStoreElement = storeRefs.current[lastSelectedStoreId];
+        
+        if (selectedStoreElement && tableContainerRef.current) {
+            // スムーズにスクロール
+            selectedStoreElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center', // 要素が中央に来るようにスクロール
+            });
+        }
+        }
+    }, [selectedStoreIds, loading]);
+
 
     if (!departmentId) {
         return <div>部門IDが必要です</div>;
