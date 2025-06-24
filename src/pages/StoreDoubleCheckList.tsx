@@ -7,7 +7,9 @@ Button,
 Snackbar,
 Alert,
 Divider,
-Paper
+Paper,
+Fade,
+Modal
 } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { StoreDoubleCheckList as StoreDoubleCheckListComponent } from '../components/StoreDoubleCheckList';
@@ -16,6 +18,7 @@ import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
 import { useParams } from 'react-router-dom';
 import { formatDateToJST } from '../components/utils/formatDateToJST';
+import TaskAltIcon from '@mui/icons-material/TaskAlt';
 
 // Amplify クライアントの生成
 const client = generateClient<Schema>();
@@ -32,6 +35,8 @@ const [snackbarMessage, setSnackbarMessage] = useState<string>('');
 const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
   const date = formatDateToJST(new Date);
 
+const [completionModalOpen, setCompletionModalOpen] = useState<boolean>(false);
+const [completionMessage, setCompletionMessage] = useState<string>('');
 const { departmentId } = useParams<{ departmentId?: string }>();
 if (!departmentId) {
     setError('部門IDが必要です');
@@ -43,82 +48,82 @@ const safeDepartmentId = departmentId as string;
 // データを取得
 // useEffect内のデータ取得部分を修正
 useEffect(() => {
-  const fetchData = async () => {
-    setLoading(true); // ローディング開始
-    try {
-      const result = await client.models.Box.list({
+    // DynamoDBからのデータ取得をサブスクライブ
+    const subscription = client.models.Box.observeQuery({
         filter: {
-          date: { eq: date },
-          departmentId: { eq: safeDepartmentId }
+            date: {
+                eq: date
+            },
+            departmentId: { eq: safeDepartmentId }
+        }
+    }).subscribe({
+        next: ({ items, isSynced }) => {
+            if (!isSynced) {
+                console.log("データ同期中...");
+                return;
+            }
+            console.log('全Boxレコード:', items);
+            const storeMap = new Map<string, Store>();
+            const boxCountsData: Record<string, Record<string, number>> = {};
+            const confirmedStores = new Set<string>();
+            // 代表レコードと仕分け時間ごとのBoxレコードを分離
+            const representativeBoxes = items.filter(box => !box.storeId.includes('_'));
+            const roundBoxes = items.filter(box => box.storeId.includes('_'));
+            console.log('代表レコード:', representativeBoxes);
+            console.log('仕分け時間ごとのBoxレコード:', roundBoxes);
+            // 1. まず全店舗分のstoreMapとboxCountsDataを「仕分け時間ごとのBoxレコード」で構築
+            roundBoxes.forEach(box => {
+                const actualStoreId = box.storeId.split('_')[0];
+                if (!storeMap.has(actualStoreId)) {
+                    storeMap.set(actualStoreId, {
+                        id: actualStoreId,
+                        storeName: box.storeName || '',
+                        storeNumber: actualStoreId,
+                        storeTc: box.storeTc || '',
+                        isChecked: false
+                    });
+                }
+                if (!boxCountsData[actualStoreId]) {
+                    boxCountsData[actualStoreId] = {};
+                }
+                if (!boxCountsData[actualStoreId][box.boxColor]) {
+                    boxCountsData[actualStoreId][box.boxColor] = 0;
+                }
+                boxCountsData[actualStoreId][box.boxColor] += box.boxCount;
+                if (box.status === 'DOUBLE_CHECKED') {
+                    confirmedStores.add(actualStoreId);
+                }
+            });
+            // 2. 代表レコードがあればboxCountsDataだけ上書き（storeMapは上書きしない）
+            representativeBoxes.forEach(box => {
+                const actualStoreId = box.storeId;
+                if (!boxCountsData[actualStoreId]) {
+                    boxCountsData[actualStoreId] = {};
+                }
+                boxCountsData[actualStoreId]['green'] = box.boxCount;
+                if (box.status === 'DOUBLE_CHECKED') {
+                    confirmedStores.add(actualStoreId);
+                }
+            });
+            console.log('boxCountsData:', boxCountsData);
+            const storesArray = Array.from(storeMap.values());
+            console.log('storesArray:', storesArray);
+            setStores(storesArray);
+            setBoxCounts(boxCountsData);
+            setError(null);
+            setLoading(false);
         },
-        limit: 1000
-      });
-
-      const items = result.data;
-      console.log('全Boxレコード:', items);
-
-      const storeMap = new Map<string, Store>();
-      const boxCountsData: Record<string, Record<string, number>> = {};
-      const confirmedStores = new Set<string>();
-
-      // 代表レコードと仕分け時間ごとのBoxレコードを分離
-      const representativeBoxes = items.filter(box => !box.storeId.includes('_'));
-      const roundBoxes = items.filter(box => box.storeId.includes('_'));
-
-      // 1. roundBoxesから storeMap と boxCountsData を構築
-      roundBoxes.forEach(box => {
-        const actualStoreId = box.storeId.split('_')[0];
-        if (!storeMap.has(actualStoreId)) {
-          storeMap.set(actualStoreId, {
-            id: actualStoreId,
-            storeName: box.storeName || '',
-            storeNumber: actualStoreId,
-            storeTc: box.storeTc || '',
-            isChecked: false
-          });
+        error: (err) => {
+            console.error('データの取得に失敗しました', err);
+            setError('データの取得に失敗しました');
+            setSnackbarMessage('データの取得に失敗しました');
+            setSnackbarSeverity('error');
+            setSnackbarOpen(true);
+            setLoading(false);
         }
-        if (!boxCountsData[actualStoreId]) {
-          boxCountsData[actualStoreId] = {};
-        }
-        if (!boxCountsData[actualStoreId][box.boxColor]) {
-          boxCountsData[actualStoreId][box.boxColor] = 0;
-        }
-        boxCountsData[actualStoreId][box.boxColor] += box.boxCount;
-        if (box.status === 'DOUBLE_CHECKED') {
-          confirmedStores.add(actualStoreId);
-        }
-      });
-
-      // 2. representativeBoxes で boxCountsData のみ上書き
-      representativeBoxes.forEach(box => {
-        const actualStoreId = box.storeId;
-        if (!boxCountsData[actualStoreId]) {
-          boxCountsData[actualStoreId] = {};
-        }
-        boxCountsData[actualStoreId]['green'] = box.boxCount;
-        if (box.status === 'DOUBLE_CHECKED') {
-          confirmedStores.add(actualStoreId);
-        }
-      });
-
-      const storesArray = Array.from(storeMap.values());
-      setStores(storesArray);
-      setBoxCounts(boxCountsData);
-      setError(null);
-    } catch (err) {
-      console.error('データの取得に失敗しました', err);
-      setError('データの取得に失敗しました');
-      setSnackbarMessage('データの取得に失敗しました');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-    } finally {
-      setLoading(false); // ローディング終了
-    }
-  };
-
-  fetchData();
+    });
+    return () => subscription.unsubscribe();
 }, []);
-
 
 // 店舗選択ハンドラー
 const handleStoreSelect = (storeId: string) => {
@@ -132,7 +137,7 @@ const handleStoreSelect = (storeId: string) => {
 // 選択した店舗を確定済みにする
 const handleConfirmSelected = async () => {
     if (selectedStoreIds.length === 0) {
-        setSnackbarMessage('すべての店舗の確認が完了していません');
+        setSnackbarMessage('店舗が選択されていません');
         setSnackbarSeverity('error');
         setSnackbarOpen(true);
         return;
@@ -236,14 +241,13 @@ const handleConfirmSelected = async () => {
                     : store
             )
         );
-        if (updatedStoreCount > 0) {
-            setSnackbarMessage(`${updatedStoreCount}件の店舗を確定済みにしました`);
-        } else {
-            setSnackbarMessage('すべての店舗はすでに確定済みです');
-        }
-        setSnackbarSeverity('success');
-        setSnackbarOpen(true);
-        setSelectedStoreIds([]);
+if (updatedStoreCount > 0) {
+  setCompletionMessage(`${updatedStoreCount}件の店舗を確定済みにしました`);
+} else {
+  setCompletionMessage('すべての店舗はすでに確定済みです');
+}
+setCompletionModalOpen(true);
+setSelectedStoreIds([]);
     } catch (err) {
         setSnackbarMessage('店舗の確定に失敗しました');
         setSnackbarSeverity('error');
@@ -255,85 +259,159 @@ const handleConfirmSelected = async () => {
 
 // スナックバーを閉じる
 const handleCloseSnackbar = () => {
-    setSnackbarOpen(false);
+  setSnackbarOpen(false);
 };
 
-return (
+// 完了モーダルを閉じる
+const handleCloseCompletionModal = () => {
+  setCompletionModalOpen(false);
+};
+
+
+ return (
     <Container maxWidth={false} disableGutters sx={{ 
-        height: '100vh', 
-        display: 'flex', 
-        flexDirection: 'column',
-        // px: 2, 
-        py: 2,
-        }}>
-    <Paper elevation={1} sx={{ p: 3, mb: 2, borderRadius: 2 }}>
-    <Typography variant="h4" component="h1" gutterBottom sx={{ fontSize: '1.8rem' }}>
-        店舗ダブルチェック
-    </Typography>
-    <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1.1rem' }}>
-        各店舗の箱数を確認し、問題がなければ確定してください。
-    </Typography>
-    </Paper>
-        
-    <Divider sx={{ mb: 3 }} />
-    
-    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-    <StoreDoubleCheckListComponent
-        stores={stores}
-        selectedStoreIds={selectedStoreIds}
-        onStoreSelect={handleStoreSelect}
-        loading={loading}
-        error={error}
-        boxCounts={boxCounts}
-    />
-    </Box>
-    
-    <Box display="flex" justifyContent="center" mt={1} mb={2}>
-    <Button
-    variant="contained"
-    color="primary"
-    size="large"
-    startIcon={<CheckCircleOutlineIcon />}
-    onClick={handleConfirmSelected}
-    disabled={selectedStoreIds.length !== stores.length || loading} // ここを変更
-    sx={{ 
-        py: 1.5, 
-        px: 4, 
-        fontSize: '1.2rem',
-        borderRadius: 2,
-        width: '80%',
-        maxWidth: '500px'
-    }}
-    >
-    {selectedStoreIds.length === stores.length 
-        ? '全店舗を確定する' 
-        : `全店舗を選択してください (${selectedStoreIds.length}/${stores.length})`}
-    </Button>
-    </Box>
-    
-<Snackbar
-  open={snackbarOpen}
-  autoHideDuration={6000}
-  onClose={handleCloseSnackbar}
-  anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }} // 'bottom' を使用
-  sx={{ maxWidth: '80%' }}
+      height: '100vh', 
+      display: 'flex', 
+      flexDirection: 'column',
+      py: 2,
+    }}>
+      <Paper elevation={1} sx={{ p: 3, mb: 2, borderRadius: 2 }}>
+        <Typography variant="h4" component="h1" gutterBottom sx={{ fontSize: '1.8rem' }}>
+          店舗ダブルチェック
+        </Typography>
+        <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1.1rem' }}>
+          各店舗の箱数を確認し、問題がなければ確定してください。
+        </Typography>
+      </Paper>
+      
+      <Divider sx={{ mb: 3 }} />
+      
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <StoreDoubleCheckListComponent
+          stores={stores}
+          selectedStoreIds={selectedStoreIds}
+          onStoreSelect={handleStoreSelect}
+          loading={loading}
+          error={error}
+          boxCounts={boxCounts}
+        />
+      </Box>
+      
+      <Box display="flex" justifyContent="center" mt={1} mb={2}>
+        <Button
+          variant="contained"
+          color="primary"
+          size="large"
+          startIcon={<CheckCircleOutlineIcon />}
+          onClick={handleConfirmSelected}
+          disabled={selectedStoreIds.length !== stores.length || loading}
+          sx={{ 
+            py: 1.5, 
+            px: 4, 
+            fontSize: '1.2rem',
+            borderRadius: 2,
+            width: '80%',
+            maxWidth: '500px'
+          }}
+        >
+          {selectedStoreIds.length === stores.length 
+            ? '全店舗を確定する' 
+            : `全店舗を選択してください (${selectedStoreIds.length}/${stores.length})`}
+        </Button>
+      </Box>
+      
+      {/* エラー通知用のスナックバー */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }} 
+      >
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity={snackbarSeverity} 
+          sx={{ width: '100%', fontSize: '1.1rem' }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+      
+      {/* 完了通知用のモーダル */}
+{/* 完了通知用のモーダル */}
+<Modal
+  open={completionModalOpen}
+  onClose={handleCloseCompletionModal}
+  aria-labelledby="completion-modal-title"
+  closeAfterTransition
 >
-  <Alert 
-    onClose={handleCloseSnackbar} 
-    severity={snackbarSeverity} 
-    variant="filled" // 塗りつぶしスタイル
-    sx={{ 
-      width: '100%', 
-      fontSize: '1.2rem',
-      padding: '16px 24px',
-      boxShadow: 3
-    }}
-  >
-    {snackbarMessage}
-  </Alert>
-</Snackbar>
+  <Fade in={completionModalOpen}>
+    <Paper
+      elevation={6}
+      sx={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: { xs: '85%', sm: '450px' },
+        p: 4,
+        borderRadius: 3,
+        textAlign: 'center',
+        boxShadow: 24,
+        bgcolor: 'background.paper',
+      }}
+    >
+      <TaskAltIcon 
+        color="success" 
+        sx={{ 
+          fontSize: 80, 
+          mb: 2,
+          animation: 'pulse 1.5s ease-in-out',
+          '@keyframes pulse': {
+            '0%': { transform: 'scale(0.8)', opacity: 0 },
+            '50%': { transform: 'scale(1.1)' },
+            '100%': { transform: 'scale(1)', opacity: 1 }
+          }
+        }} 
+      />
+      
+      <Typography 
+        id="completion-modal-title" 
+        variant="h4" 
+        component="h2" 
+        gutterBottom
+        sx={{ fontWeight: 'bold', color: 'success.main' }}
+      >
+        作業完了
+      </Typography>
+      <Typography 
+        variant="h6" 
+        sx={{ 
+          mb: 3,
+          color: 'text.primary'
+        }}
+      >
+        {completionMessage}
+      </Typography>
+      <Button 
+        variant="contained" 
+        color="primary"
+        size="large"
+        onClick={handleCloseCompletionModal}
+        sx={{ 
+          minWidth: 150,
+          py: 1.2,
+          px: 4,
+          fontSize: '1.1rem',
+          borderRadius: 2
+        }}
+      >
+        閉じる
+      </Button>
+    </Paper>
+  </Fade>
+</Modal>
     </Container>
-);
+  );
 };
 
 export default StoreDoubleCheckListPage;
