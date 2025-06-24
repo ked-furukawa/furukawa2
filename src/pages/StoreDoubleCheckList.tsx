@@ -311,20 +311,27 @@ return (
     </Button>
     </Box>
     
-    <Snackbar
-    open={snackbarOpen}
-    autoHideDuration={6000}
-    onClose={handleCloseSnackbar}
-    anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-    >
-    <Alert 
-        onClose={handleCloseSnackbar} 
-        severity={snackbarSeverity} 
-        sx={{ width: '100%', fontSize: '1.1rem' }}
-    >
-        {snackbarMessage}
-    </Alert>
-    </Snackbar>
+<Snackbar
+  open={snackbarOpen}
+  autoHideDuration={6000}
+  onClose={handleCloseSnackbar}
+  anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }} // 'bottom' を使用
+  sx={{ maxWidth: '80%' }}
+>
+  <Alert 
+    onClose={handleCloseSnackbar} 
+    severity={snackbarSeverity} 
+    variant="filled" // 塗りつぶしスタイル
+    sx={{ 
+      width: '100%', 
+      fontSize: '1.2rem',
+      padding: '16px 24px',
+      boxShadow: 3
+    }}
+  >
+    {snackbarMessage}
+  </Alert>
+</Snackbar>
     </Container>
 );
 };
