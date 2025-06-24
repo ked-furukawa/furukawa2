@@ -79,18 +79,6 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
     const handleProductSelect = (productId: string) => {
         // 既存のコード
         onProductSelect(productId);
-        
-    //     setTimeout(() => {
-    //         if (tableContainerRef.current) {
-    //             const currentScrollTop = tableContainerRef.current.scrollTop;
-    //             const scrollAmount = 60;
-                
-    //             tableContainerRef.current.scrollTo({
-    //                 top: currentScrollTop + scrollAmount,
-    //                 behavior: 'smooth'
-    //             });
-    //         }
-    //     }, 100);
     };
 
 
@@ -124,7 +112,7 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
         {/* 店舗情報ヘッダー部分 */}
         <Box
             sx={{
-            p: 2,
+            p: 1,
             backgroundColor: '#f5f5f5',
             borderBottom: '1px solid rgba(224, 224, 224, 1)'
             }}
@@ -138,14 +126,14 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
             ) : (
             // 店舗情報の表示
             <Box>
-            <Box display="flex" alignItems="center" mb={1}>
+            <Box display="flex" alignItems="center" mb={0}>
                 {/* 店舗番号を太字で表示 */}
                 <Typography
                 variant="h4"  // サイズを大きくして目立たせる
                 component="span"
                 sx={{
-                    px: 1.5,
-                    py: 0.5,
+                    px: 1,
+                    py: 0.25,
                     borderRadius: 1,
                     fontWeight: 'bold',  // 太字に変更
                     mr: 2
