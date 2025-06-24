@@ -8,13 +8,9 @@ import {
   ListItemText, 
   Typography, 
   Divider,
-  Collapse,
-  IconButton,
   CircularProgress,
   Paper
 } from '@mui/material';
-import ExpandLess from '@mui/icons-material/ExpandLess';
-import ExpandMore from '@mui/icons-material/ExpandMore';
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../../amplify/data/resource";
 import { formatDateToJST } from './utils/formatDateToJST';
@@ -77,7 +73,6 @@ const StoreList: React.FC<StoreListProps> = ({
   const [storesByDestination, setStoresByDestination] = useState<StoresByDestination[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [expandedDestinations, setExpandedDestinations] = useState<Record<string, boolean>>({});
   const [boxData, setBoxData] = useState<BoxData[]>([]); // 箱数データの状態を追加
   const departmentId = useParams().departmentId!;
 
@@ -186,59 +181,34 @@ useEffect(() => {
       stores: dest.stores.sort((a, b) => Number(a.id) - Number(b.id))
     }));
     
-    // 送り先の順序を調整（中之島を先頭に）
-    result.sort((a, b) => {
-      if (a.destination.id === '中之島') return -1;
-      if (b.destination.id === '中之島') return 1;
-      return 0;
-    });
-    
-    setStoresByDestination(result);
-    
-    // 初期状態ですべての送り先を展開
-    const initialExpandState: Record<string, boolean> = {};
-    result.forEach(item => {
-      initialExpandState[item.destination.id] = true;
-    });
-    setExpandedDestinations(initialExpandState);
-  } catch (err) {
-    console.error('店舗データの処理に失敗しました:', err);
-    setError('店舗データの処理に失敗しました');
-  } finally {
-    setLoading(false);
-  }
-}, [boxData, completedStores, stores]); // stores を依存配列に追加
+      // 送り先の順序を調整（中之島を先頭に）
+      result.sort((a, b) => {
+        if (a.destination.id === '中之島') return -1;
+        if (b.destination.id === '中之島') return 1;
+        return 0;
+      });
+      
+      setStoresByDestination(result);
+    } catch (err) {
+      console.error('店舗データの処理に失敗しました:', err);
+      setError('店舗データの処理に失敗しました');
+    } finally {
+      setLoading(false);
+    }
+  }, [boxData, completedStores, stores]); // stores を依存配列に追加
 
 // 選択された店舗が変更されたときに自動スクロール
-  useEffect(() => {
-    if (selectedStoreId && !loading) {
-      // 選択された店舗の要素を取得
-      const selectedStoreElement = storeRefs.current[selectedStoreId];
-      
-      if (selectedStoreElement) {
-        // 選択された店舗が属する送り先を見つける
-        const destinationGroup = storesByDestination.find(group => 
-          group.stores.some(store => store.id === selectedStoreId)
-        );
-        
-        // 送り先が見つかり、折りたたまれている場合は展開
-        if (destinationGroup && !expandedDestinations[destinationGroup.destination.id]) {
-          setExpandedDestinations(prev => ({
-            ...prev,
-            [destinationGroup.destination.id]: true
-          }));
-          
-          // 展開後にスクロールするために少し遅延
-          setTimeout(() => {
-            scrollToSelectedStore(selectedStoreId);
-          }, 300);
-        } else {
-          // 送り先が既に展開されている場合は即座にスクロール
-          scrollToSelectedStore(selectedStoreId);
-        }
-      }
+useEffect(() => {
+  if (selectedStoreId && !loading) {
+    // 選択された店舗の要素を取得
+    const selectedStoreElement = storeRefs.current[selectedStoreId];
+    
+    if (selectedStoreElement) {
+      // 即座にスクロール（折りたたみ関連のコードを削除）
+      scrollToSelectedStore(selectedStoreId);
     }
-  }, [selectedStoreId, loading, storesByDestination, expandedDestinations]);
+  }
+}, [selectedStoreId, loading]);
   
   // 選択された店舗にスクロールする関数
   const scrollToSelectedStore = (storeId: string) => {
@@ -252,14 +222,6 @@ useEffect(() => {
         block: 'center', // 画面真ん中に出るようにスクロール
       });
     }
-  };
-  
-  // 送り先の展開/折りたたみを切り替え
-  const toggleDestination = (destinationId: string) => {
-    setExpandedDestinations(prev => ({
-      ...prev,
-      [destinationId]: !prev[destinationId]
-    }));
   };
 
   const getStoreBoxInfo = (storeId: string): BoxData | undefined => {
@@ -392,17 +354,9 @@ useEffect(() => {
                   primary={group.destination.name} 
                   primaryTypographyProps={{ fontWeight: 'bold' }}
                 />
-                <IconButton 
-                  edge="end" 
-                  size="small"
-                  onClick={() => toggleDestination(group.destination.id)}
-                >
-                  {expandedDestinations[group.destination.id] ? <ExpandLess /> : <ExpandMore />}
-                </IconButton>
               </ListItem>
               
               {/* 送り先に属する店舗リスト */}
-              <Collapse in={expandedDestinations[group.destination.id]} timeout="auto" unmountOnExit>
                 <List component="div" disablePadding>
                   {group.stores.map((store) => {
                     // 店舗の箱数情報を取得
@@ -464,7 +418,7 @@ useEffect(() => {
                     );
                   })}
                 </List>
-              </Collapse>
+
               
               <Divider />
             </React.Fragment>
