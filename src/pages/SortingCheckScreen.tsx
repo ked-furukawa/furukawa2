@@ -155,7 +155,7 @@ const loadProducts = async () => {
 
     setProducts(Object.values(productMap));
   } catch (err) {
-    setError("エラーです");
+    setError("データ取得中に問題が発生しました。ネットワークを確認するか、再読み込みしてください。");
   } finally{
     setLoading(false); // 読み込み完了
   }

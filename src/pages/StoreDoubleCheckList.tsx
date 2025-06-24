@@ -116,7 +116,7 @@ useEffect(() => {
         error: (err) => {
             console.error('データの取得に失敗しました', err);
             setError('データの取得に失敗しました');
-            setSnackbarMessage('データの取得に失敗しました');
+            setSnackbarMessage('データ取得中に問題が発生しました。ネットワークを確認するか、再読み込みしてください。');
             setSnackbarSeverity('error');
             setSnackbarOpen(true);
             setLoading(false);
