@@ -67,6 +67,20 @@ if (stores.length === 0) {
     // テーブルコンテナへの参照
     const tableContainerRef = useRef<HTMLDivElement | null>(null);
 
+    // タッチされた店舗IDを記録するための状態を追加
+    const [touchedStoreIds, setTouchedStoreIds] = useState<string[]>([]);
+
+    // 店舗行タッチ時のハンドラー
+    const handleRowTouch = (storeId: string) => {
+        // すでにタッチされている場合は何もしない
+        if (touchedStoreIds.includes(storeId)) {
+        return;
+        }
+        
+        // タッチされた店舗IDを記録
+        setTouchedStoreIds(prev => [...prev, storeId]);
+    };
+
     
   // 選択された店舗が変更されたときに自動スクロール
     useEffect(() => {
@@ -236,34 +250,49 @@ return (
             ].map((store) => (
                 <TableRow 
                 key={store.id} 
-                hover 
+                hover={!touchedStoreIds.includes(store.id)} // タッチ済みの場合はホバー効果を無効化
                 selected={selectedStoreIds.includes(store.id)}
+                onClick={() => handleRowTouch(store.id)} // 行タッチ時のハンドラーを追加
                 sx={{ 
-                    // bgcolor: !store.isChecked ? 'rgba(255, 244, 229, 0.7)' : 'inherit' ,
-                    height: '60px' // 行の高さを大きくしてタップしやすく
+                    height: '60px', // 行の高さを大きくしてタップしやすく
+                    cursor: touchedStoreIds.includes(store.id) ? 'default' : 'pointer', // タッチ済みの場合はカーソルスタイルを変更
+                    backgroundColor: touchedStoreIds.includes(store.id) ? 'rgba(144, 202, 249, 0.3)' : 'inherit', // タッチ済みの場合は背景色を変更
+                    '&:hover': {
+                    backgroundColor: touchedStoreIds.includes(store.id) ? 'rgba(144, 202, 249, 0.3)' : undefined, // タッチ済みの場合はホバー時の背景色も固定
+                    }
                 }}
                 >
                 <TableCell>{store.storeTc}</TableCell>
                 <TableCell>{store.storeName}</TableCell>
                 <TableCell align="center">{store.storeNumber}</TableCell>
-                <TableCell align="center"  onClick={() => {
+                <TableCell 
+                align="center"  
+                onClick={(e) => {
+                    e.stopPropagation(); // 行のクリックイベントが発火しないようにする
                     const currentValue = getStoreBoxCount(store.id);
                     console.log('テンキー開く: store.id=', store.id, 'currentValue=', currentValue, 'boxCounts[store.id]=', boxCounts[store.id]);
                     setSelectedStoreId(store.id);
                     setInputValue(String(currentValue)); // ← 文字列として Keypad に渡す
                     setIsModalOpen(true);
                 }}
-                    sx={{ cursor: 'pointer', textDecoration: 'underline' }}>{getStoreBoxCount(store.id)}</TableCell>
-                <TableCell align="center">
-<Checkbox 
-  checked={selectedStoreIds.includes(store.id)} 
-  onChange={() => onStoreSelect(store.id)} 
-  sx={{ 
-    '& .MuiSvgIcon-root': { fontSize: 36 },  // サイズを36pxに増加（現在の28pxから）
-    padding: 1,  // パディングを増やして、タップ領域を広げる
-    transform: 'scale(1.2)',  // 全体的に1.2倍に拡大
-  }} 
-/>
+                sx={{ cursor: 'pointer', textDecoration: 'underline' }}
+                >
+                {getStoreBoxCount(store.id)}
+                </TableCell>
+                <TableCell 
+                align="center"
+                  onClick={(e) => e.stopPropagation()} // 行のクリックイベントが発火しないようにする
+                  sx={{ padding: '8px' }} // パディングを調整
+                > 
+                <Checkbox 
+                checked={selectedStoreIds.includes(store.id)} 
+                onChange={() => onStoreSelect(store.id)} 
+                sx={{ 
+                    '& .MuiSvgIcon-root': { fontSize: 36 },  // サイズを36pxに増加（現在の28pxから）
+                    padding: 1,  // パディングを増やして、タップ領域を広げる
+                    transform: 'scale(1.2)',  // 全体的に1.2倍に拡大
+                }} 
+                />
                 </TableCell>
                 </TableRow>
             ))}
@@ -305,13 +334,13 @@ return (
         </Modal>
     </TableContainer>
 <Box sx={{ p: 2, borderTop: '1px solid rgba(224, 224, 224, 1)' }}>
-  <Typography variant="body2" sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+<Typography variant="body2" sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' }}>
     <span>合計店舗数: {stores.length} / 合計箱数: {totalBoxCount}</span>
     <span>
-      中之島センター: {nakanoshimaTotal}箱 / 
-      上越センター: {joetsuTotal}箱
+    中之島センター: {nakanoshimaTotal}箱 / 
+    上越センター: {joetsuTotal}箱
     </span>
-  </Typography>
+</Typography>
 </Box>
     </Paper>
 );
