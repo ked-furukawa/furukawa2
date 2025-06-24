@@ -137,6 +137,21 @@ setSelectedColor(color);
 // 全店舗の合計箱数
 const totalBoxCount = stores.reduce((sum, store) => sum + getStoreBoxCount(store.id), 0);
 
+// センター別の合計箱数を計算する関数
+const calculateCenterTotals = () => {
+  const nakanoshima = stores
+    .filter(store => store.storeTc === '中之島')
+    .reduce((sum, store) => sum + getStoreBoxCount(store.id), 0);
+    
+  const joetsu = stores
+    .filter(store => store.storeTc !== '中之島')
+    .reduce((sum, store) => sum + getStoreBoxCount(store.id), 0);
+    
+  return { nakanoshima, joetsu };
+};
+
+// 関数を呼び出して結果を取得
+const { nakanoshima: nakanoshimaTotal, joetsu: joetsuTotal } = calculateCenterTotals();
 
 return (
     <Paper
@@ -214,11 +229,15 @@ return (
                 }}
                     sx={{ cursor: 'pointer', textDecoration: 'underline' }}>{getStoreBoxCount(store.id)}</TableCell>
                 <TableCell align="center">
-                    <Checkbox 
-                    checked={selectedStoreIds.includes(store.id)} 
-                    onChange={() => onStoreSelect(store.id)} 
-                     sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }} // チェックボックスを大きく
-                    />
+<Checkbox 
+  checked={selectedStoreIds.includes(store.id)} 
+  onChange={() => onStoreSelect(store.id)} 
+  sx={{ 
+    '& .MuiSvgIcon-root': { fontSize: 36 },  // サイズを36pxに増加（現在の28pxから）
+    padding: 1,  // パディングを増やして、タップ領域を広げる
+    transform: 'scale(1.2)',  // 全体的に1.2倍に拡大
+  }} 
+/>
                 </TableCell>
                 </TableRow>
             ))}
@@ -259,11 +278,15 @@ return (
             </Box>
         </Modal>
     </TableContainer>
-    <Box sx={{ p: 2, borderTop: '1px solid rgba(224, 224, 224, 1)' }}>
-        <Typography variant="body2">
-        合計店舗数: {stores.length} / 合計箱数: {totalBoxCount}
-        </Typography>
-    </Box>
+<Box sx={{ p: 2, borderTop: '1px solid rgba(224, 224, 224, 1)' }}>
+  <Typography variant="body2" sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+    <span>合計店舗数: {stores.length} / 合計箱数: {totalBoxCount}</span>
+    <span>
+      中之島センター: {nakanoshimaTotal}箱 / 
+      上越センター: {joetsuTotal}箱
+    </span>
+  </Typography>
+</Box>
     </Paper>
 );
 };

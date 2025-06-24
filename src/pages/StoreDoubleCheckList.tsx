@@ -7,7 +7,9 @@ Button,
 Snackbar,
 Alert,
 Divider,
-Paper
+Paper,
+Fade,
+Modal
 } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { StoreDoubleCheckList as StoreDoubleCheckListComponent } from '../components/StoreDoubleCheckList';
@@ -16,6 +18,7 @@ import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
 import { useParams } from 'react-router-dom';
 import { formatDateToJST } from '../components/utils/formatDateToJST';
+import TaskAltIcon from '@mui/icons-material/TaskAlt';
 
 // Amplify クライアントの生成
 const client = generateClient<Schema>();
@@ -32,6 +35,8 @@ const [snackbarMessage, setSnackbarMessage] = useState<string>('');
 const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
   const date = formatDateToJST(new Date);
 
+const [completionModalOpen, setCompletionModalOpen] = useState<boolean>(false);
+const [completionMessage, setCompletionMessage] = useState<string>('');
 const { departmentId } = useParams<{ departmentId?: string }>();
 if (!departmentId) {
     setError('部門IDが必要です');
@@ -236,14 +241,13 @@ const handleConfirmSelected = async () => {
                     : store
             )
         );
-        if (updatedStoreCount > 0) {
-            setSnackbarMessage(`${updatedStoreCount}件の店舗を確定済みにしました`);
-        } else {
-            setSnackbarMessage('すべての店舗はすでに確定済みです');
-        }
-        setSnackbarSeverity('success');
-        setSnackbarOpen(true);
-        setSelectedStoreIds([]);
+if (updatedStoreCount > 0) {
+  setCompletionMessage(`${updatedStoreCount}件の店舗を確定済みにしました`);
+} else {
+  setCompletionMessage('すべての店舗はすでに確定済みです');
+}
+setCompletionModalOpen(true);
+setSelectedStoreIds([]);
     } catch (err) {
         setSnackbarMessage('店舗の確定に失敗しました');
         setSnackbarSeverity('error');
@@ -255,78 +259,159 @@ const handleConfirmSelected = async () => {
 
 // スナックバーを閉じる
 const handleCloseSnackbar = () => {
-    setSnackbarOpen(false);
+  setSnackbarOpen(false);
 };
 
-return (
+// 完了モーダルを閉じる
+const handleCloseCompletionModal = () => {
+  setCompletionModalOpen(false);
+};
+
+
+ return (
     <Container maxWidth={false} disableGutters sx={{ 
-        height: '100vh', 
-        display: 'flex', 
-        flexDirection: 'column',
-        // px: 2, 
-        py: 2,
-        }}>
-    <Paper elevation={1} sx={{ p: 3, mb: 2, borderRadius: 2 }}>
-    <Typography variant="h4" component="h1" gutterBottom sx={{ fontSize: '1.8rem' }}>
-        店舗ダブルチェック
-    </Typography>
-    <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1.1rem' }}>
-        各店舗の箱数を確認し、問題がなければ確定してください。
-    </Typography>
+      height: '100vh', 
+      display: 'flex', 
+      flexDirection: 'column',
+      py: 2,
+    }}>
+      <Paper elevation={1} sx={{ p: 3, mb: 2, borderRadius: 2 }}>
+        <Typography variant="h4" component="h1" gutterBottom sx={{ fontSize: '1.8rem' }}>
+          店舗ダブルチェック
+        </Typography>
+        <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1.1rem' }}>
+          各店舗の箱数を確認し、問題がなければ確定してください。
+        </Typography>
+      </Paper>
+      
+      <Divider sx={{ mb: 3 }} />
+      
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <StoreDoubleCheckListComponent
+          stores={stores}
+          selectedStoreIds={selectedStoreIds}
+          onStoreSelect={handleStoreSelect}
+          loading={loading}
+          error={error}
+          boxCounts={boxCounts}
+        />
+      </Box>
+      
+      <Box display="flex" justifyContent="center" mt={1} mb={2}>
+        <Button
+          variant="contained"
+          color="primary"
+          size="large"
+          startIcon={<CheckCircleOutlineIcon />}
+          onClick={handleConfirmSelected}
+          disabled={selectedStoreIds.length !== stores.length || loading}
+          sx={{ 
+            py: 1.5, 
+            px: 4, 
+            fontSize: '1.2rem',
+            borderRadius: 2,
+            width: '80%',
+            maxWidth: '500px'
+          }}
+        >
+          {selectedStoreIds.length === stores.length 
+            ? '全店舗を確定する' 
+            : `全店舗を選択してください (${selectedStoreIds.length}/${stores.length})`}
+        </Button>
+      </Box>
+      
+      {/* エラー通知用のスナックバー */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }} 
+      >
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity={snackbarSeverity} 
+          sx={{ width: '100%', fontSize: '1.1rem' }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+      
+      {/* 完了通知用のモーダル */}
+{/* 完了通知用のモーダル */}
+<Modal
+  open={completionModalOpen}
+  onClose={handleCloseCompletionModal}
+  aria-labelledby="completion-modal-title"
+  closeAfterTransition
+>
+  <Fade in={completionModalOpen}>
+    <Paper
+      elevation={6}
+      sx={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: { xs: '85%', sm: '450px' },
+        p: 4,
+        borderRadius: 3,
+        textAlign: 'center',
+        boxShadow: 24,
+        bgcolor: 'background.paper',
+      }}
+    >
+      <TaskAltIcon 
+        color="success" 
+        sx={{ 
+          fontSize: 80, 
+          mb: 2,
+          animation: 'pulse 1.5s ease-in-out',
+          '@keyframes pulse': {
+            '0%': { transform: 'scale(0.8)', opacity: 0 },
+            '50%': { transform: 'scale(1.1)' },
+            '100%': { transform: 'scale(1)', opacity: 1 }
+          }
+        }} 
+      />
+      
+      <Typography 
+        id="completion-modal-title" 
+        variant="h4" 
+        component="h2" 
+        gutterBottom
+        sx={{ fontWeight: 'bold', color: 'success.main' }}
+      >
+        作業完了
+      </Typography>
+      <Typography 
+        variant="h6" 
+        sx={{ 
+          mb: 3,
+          color: 'text.primary'
+        }}
+      >
+        {completionMessage}
+      </Typography>
+      <Button 
+        variant="contained" 
+        color="primary"
+        size="large"
+        onClick={handleCloseCompletionModal}
+        sx={{ 
+          minWidth: 150,
+          py: 1.2,
+          px: 4,
+          fontSize: '1.1rem',
+          borderRadius: 2
+        }}
+      >
+        閉じる
+      </Button>
     </Paper>
-        
-    <Divider sx={{ mb: 3 }} />
-    
-    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-    <StoreDoubleCheckListComponent
-        stores={stores}
-        selectedStoreIds={selectedStoreIds}
-        onStoreSelect={handleStoreSelect}
-        loading={loading}
-        error={error}
-        boxCounts={boxCounts}
-    />
-    </Box>
-    
-    <Box display="flex" justifyContent="center" mt={1} mb={2}>
-    <Button
-    variant="contained"
-    color="primary"
-    size="large"
-    startIcon={<CheckCircleOutlineIcon />}
-    onClick={handleConfirmSelected}
-    disabled={selectedStoreIds.length !== stores.length || loading} // ここを変更
-    sx={{ 
-        py: 1.5, 
-        px: 4, 
-        fontSize: '1.2rem',
-        borderRadius: 2,
-        width: '80%',
-        maxWidth: '500px'
-    }}
-    >
-    {selectedStoreIds.length === stores.length 
-        ? '全店舗を確定する' 
-        : `全店舗を選択してください (${selectedStoreIds.length}/${stores.length})`}
-    </Button>
-    </Box>
-    
-    <Snackbar
-    open={snackbarOpen}
-    autoHideDuration={6000}
-    onClose={handleCloseSnackbar}
-    anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-    >
-    <Alert 
-        onClose={handleCloseSnackbar} 
-        severity={snackbarSeverity} 
-        sx={{ width: '100%', fontSize: '1.1rem' }}
-    >
-        {snackbarMessage}
-    </Alert>
-    </Snackbar>
+  </Fade>
+</Modal>
     </Container>
-);
+  );
 };
 
 export default StoreDoubleCheckListPage;
