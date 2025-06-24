@@ -87,64 +87,40 @@ const StoreList: React.FC<StoreListProps> = ({
   const listContainerRef = useRef<HTMLDivElement | null>(null);
 
   const date = formatDateToJST(new Date);
-  // StoreList.tsx の fetchBoxData 関数を修正
-    const fetchBoxData = async () => {
-      try {
-        // テスト用固定日付
-        // const testDate = "20250609";
-        
-        // Box テーブルからデータを取得（日付フィルタを追加）
-        const { data: boxItems } = await dataClient.models.Box.listBoxesByDateAndDept({
-            date: date,
-            departmentId: {
-              eq: departmentId
-            }
-          },
-          {
-              limit: 1000  // 最大1000件取得
-          });
+// コンポーネントマウント時に箱数データを取得
+useEffect(() => {
+  fetchBoxData();
+  console.log('test');
+}, []);
 
-        const filteredBoxItems = boxItems
-        
-        // 取得したデータを適切な形式に変換
-        const formattedBoxData = filteredBoxItems.map(box => ({
-          storeId: box.storeId,
-          boxCount: box.boxCount || 0,
-          color: (box.boxColor as BoxColor) || 'green'
-        }));
-        
-        setBoxData(formattedBoxData);
-      } catch (err) {
-        console.error('箱数データの取得に失敗しました:', err);
+// 箱数データを取得する関数
+const fetchBoxData = async () => {
+  try {
+    // Box テーブルからデータを取得（日付フィルタを追加）
+    const { data: boxItems } = await dataClient.models.Box.listBoxesByDateAndDept({
+      date: date,
+      departmentId: {
+        eq: departmentId
       }
-    };
+    },
+    {
+      limit: 1000  // 最大1000件取得
+    });
 
-  // コンポーネントマウント時に箱数データを取得
-  useEffect(() => {
-    fetchBoxData();
-
-    console.log('test');
+    const filteredBoxItems = boxItems;
     
-    // リアルタイム更新のためのサブスクリプション設定
-      // const testDate = "20250609";
-      const subscription = dataClient.models.Box.observeQuery({
-        filter: { date: { eq: date },departmentId: {eq:departmentId} }
-      }).subscribe({
-        next: ({ items }) => {
-          const formattedBoxData = items.map(box => ({
-            storeId: box.storeId,
-            boxCount: box.boxCount || 0,
-            color: (box.boxColor as BoxColor) || 'green'
-          }));
-          
-          setBoxData(formattedBoxData);
-        },
-        error: (err) => console.error('箱数データの監視に失敗しました:', err)
-      });
+    // 取得したデータを適切な形式に変換
+    const formattedBoxData = filteredBoxItems.map(box => ({
+      storeId: box.storeId,
+      boxCount: box.boxCount || 0,
+      color: (box.boxColor as BoxColor) || 'green'
+    }));
     
-    // クリーンアップ関数
-    return () => subscription.unsubscribe();
-  }, []);
+    setBoxData(formattedBoxData);
+  } catch (err) {
+    console.error('箱数データの取得に失敗しました:', err);
+  }
+};
 
 // 送り先ごとの店舗データを処理
 useEffect(() => {
