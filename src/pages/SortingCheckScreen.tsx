@@ -433,21 +433,24 @@ useEffect(() => {
                         paddingBottom: '1px', // 下線とテキストの間に少し余白を追加
                       }}
                     >
-                      {product.itemName}
+                      {product.itemName || product.itemFormalName || `商品ID: ${product.itemId}`}
                     </Box>
-                    <Typography 
-                      variant="caption" 
-                      color="text.secondary"
-                      sx={{ 
+                    {/* 社内呼称がある場合のみ正式名称をキャプションとして表示 */}
+                    {product.itemName && product.itemFormalName && (
+                      <Typography 
+                        variant="caption" 
+                        color="text.secondary"
+                        sx={{ 
                           display: 'block',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap',
                           fontSize: '0.85rem' // キャプションも大きく
-                      }}
+                        }}
                       >
-                      {product.itemFormalName}
+                        {product.itemFormalName}
                       </Typography>
+                    )}
                   </TableCell>
                   <TableCell
                     align="right"

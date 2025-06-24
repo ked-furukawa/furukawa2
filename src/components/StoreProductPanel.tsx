@@ -218,22 +218,26 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
                         lineHeight: 1.4 // 行の高さを調整
                     }}
                     >
-                    {product.itemName}
+                    {/* 社内呼称がない場合は正式名称を表示 */}
+                    {product.itemName || product.itemFormalName || `商品ID: ${product.itemId}`}
                     </Typography>
-                    <Typography 
-                    variant="caption" 
-                    color="text.secondary"
-                    sx={{ 
-                        display: 'block',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        fontSize: '0.85rem' // キャプションも大きく
-                    }}
-                    >
-                    {product.itemFormalName}
-                    </Typography>
-                </TableCell>
+                    {/* 社内呼称がある場合のみ正式名称をキャプションとして表示 */}
+                    {product.itemName && product.itemFormalName && (
+                        <Typography 
+                        variant="caption" 
+                        color="text.secondary"
+                        sx={{ 
+                            display: 'block',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            fontSize: '0.85rem' // キャプションも大きく
+                        }}
+                        >
+                        {product.itemFormalName}
+                        </Typography>
+                    )}
+                    </TableCell>
                     <TableCell 
                         align="right"
                         sx={{ 
