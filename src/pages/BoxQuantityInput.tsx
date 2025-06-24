@@ -74,7 +74,7 @@ export const BoxQuantityInput: React.FC<BoxQuantityInputProps> = ({ navigateTo }
   const [completedStores, setCompletedStores] = useState<CompletedStore[]>([]);
   const [allStores, setAllStores] = useState<Store[]>([]);
   const [selectedColor, setSelectedColor] = useState<BoxColor>('green');
-  const [refreshKey, setRefreshKey] = useState(0);
+  // const [refreshKey, setRefreshKey] = useState(0);
   const [currentDate, setCurrentDate] = useState<string>('');
   const [importId, setImportId] = useState<string | null>(null);
   const [currentRegion, setCurrentRegion] = useState<string>('中之島'); // 初期値は中之島
@@ -633,7 +633,7 @@ const handleStoreSelect = useCallback(
       });
      
       // リフレッシュキーを更新して StoreList を再レンダリング
-      setRefreshKey(prev => prev + 1);
+      // setRefreshKey(prev => prev + 1);
      
       // 中之島店舗の完了チェック
       const nakanoshimaStores = allStores.filter(s => s.storeTc === '中之島');
@@ -845,7 +845,7 @@ if (!nextStore) {
             {/* 左側：店舗リスト */}
             <Box sx={{pr:0.2, height: '100%', display: 'flex', alignItems: 'flex-start' }}>
               <StoreList
-              key={refreshKey} // refreshKeyは箱データ保存時など、強制的に再レンダリングが必要な場合のみ使用
+              // key={refreshKey} // refreshKeyは箱データ保存時など、強制的に再レンダリングが必要な場合のみ使用
               selectedStoreId={selectedStoreId}
               onSelectStore={handleStoreSelect}
               completedStores={memoizedCompletedStores}
