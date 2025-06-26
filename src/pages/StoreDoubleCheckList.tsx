@@ -137,7 +137,7 @@ const handleStoreSelect = (storeId: string) => {
 // 選択した店舗を確定済みにする
 const handleConfirmSelected = async () => {
     if (selectedStoreIds.length === 0) {
-        setSnackbarMessage('店舗が選択されていません');
+        setSnackbarMessage('確認可能な店舗の箱数情報がありません');
         setSnackbarSeverity('error');
         setSnackbarOpen(true);
         return;

@@ -101,7 +101,7 @@ const loadProducts = async () => {
 
     const resolvedImportId = await resolveImportId(date, departmentId);
     if (!resolvedImportId) {
-      setError("importIdが取得できませんでした");
+      setError("データが取得できませんでした");
       setLoading(false);
       return;
     }
