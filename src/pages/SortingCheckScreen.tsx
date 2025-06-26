@@ -92,7 +92,8 @@ const loadProducts = async () => {
   setProducts([]);
 
   try {
-        console.log('departmentId:',departmentId)
+    console.log('departmentId:', departmentId);
+
     if (!departmentId) {
       setError("ユーザー情報が取得できませんでした");
       setLoading(false);
@@ -101,11 +102,10 @@ const loadProducts = async () => {
 
     const resolvedImportId = await resolveImportId(date, departmentId);
     if (!resolvedImportId) {
-      setError("データが取得できませんでした");
+      setError("本日の仕分け作業はすでに完了しています。");
       setLoading(false);
       return;
     }
-    console.log("importResult",resolvedImportId)
 
     const result = await client.models.Order.listOrdersByDeptAndImport({
       date,
@@ -114,16 +114,26 @@ const loadProducts = async () => {
           departmentId,
           importId: resolvedImportId.importId,
         },
-        
       },
-      
-    },
-    {
-    limit: 1000  // 最大1000件取得
-  }); 
-    
-    const rawOrders = result.data; //加工前の注文データ
-    console.log("rawOrders",rawOrders)
+    }, { limit: 1000 });
+
+    const rawOrders = result.data;
+
+    if (!rawOrders || rawOrders.length === 0) {
+      setError("注文データが存在しません。");
+      setLoading(false);
+      return;
+    }
+
+    const PendingOrders = rawOrders.filter(o => o.status === "PENDING");
+
+    if (PendingOrders.length === 0) {
+      setError("本日の仕分け作業はすでに完了しています。");
+      setLoading(false);
+      return;
+    }
+
+    setHasAnyPending(true);
 
     const productMap: { [itemId: string]: Product } = {};
 
@@ -156,8 +166,8 @@ const loadProducts = async () => {
     setProducts(Object.values(productMap));
   } catch (err) {
     setError("データ取得中に問題が発生しました。ネットワークを確認するか、再読み込みしてください。");
-  } finally{
-    setLoading(false); // 読み込み完了
+  } finally {
+    setLoading(false);
   }
 };
 
