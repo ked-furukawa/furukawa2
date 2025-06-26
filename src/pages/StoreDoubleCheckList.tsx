@@ -244,7 +244,7 @@ const handleConfirmSelected = async () => {
 if (updatedStoreCount > 0) {
   setCompletionMessage(`${updatedStoreCount}件の店舗を確定済みにしました`);
 } else {
-  setCompletionMessage('すべての店舗はすでに確定済みです');
+  setCompletionMessage('すべての店舗の箱数が確定しました');
 }
 setCompletionModalOpen(true);
 setSelectedStoreIds([]);
