@@ -61,7 +61,7 @@ const pageList: {
         },
         {
         key: "StoreDoubleCheckList",
-        label: "ダブルチェック",
+        label: "箱数ダブルチェック",
         component: () => <StoreDoubleCheckList />,
         },
         {
@@ -76,7 +76,7 @@ const pageList: {
         },
         {
         key: 'SpecialSorting',
-        label: '特殊注文',
+        label: '仕分け箱数入力(特殊注文用)',
         component: (props) => <SpecialSorting {...props} />,
         },
     ];
