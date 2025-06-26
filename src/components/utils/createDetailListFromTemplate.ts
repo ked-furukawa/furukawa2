@@ -21,7 +21,7 @@ export function createDetailListFromTemplate(workbook:ExcelJS.Workbook, detailDa
     };
 
     const suffix = suffixMap[tabValue];
-    if (!suffix) {
+    if (suffix===undefined) {
         throw new Error(`未対応の tabValue: ${tabValue}`);
     }
 

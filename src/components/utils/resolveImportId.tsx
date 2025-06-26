@@ -38,14 +38,14 @@ export const resolveImportId = async (
         .filter((record) => record.importProgress === "PENDING")
         .sort(
             (a, b) =>
-                b.importId.localeCompare(a.importId) // 文字列として降順（新しい順）
+                a.importId.localeCompare(b.importId) // 文字列として降順（古い順）
         );
 
 
     if (pendingList.length === 0) return null;
 
     const latestPending = pendingList[0]; //最新のもの
-    const otherPendings = pendingList.slice(1); // 残り
+    // const otherPendings = pendingList.slice(1); // 残り
 
     // ③ 最新のものを IN_PROGRESS に更新
     await client.models.ImportWorkStatus.update({
@@ -55,17 +55,17 @@ export const resolveImportId = async (
         importProgress: "IN_PROGRESS",
     });
 
-    // ④ 他のPENDINGをすべて DONE に更新
-    await Promise.all(
-        otherPendings.map((record) =>
-            client.models.ImportWorkStatus.update({
-                date: record.date,
-                departmentId: record.departmentId,
-                importId: record.importId,
-                importProgress: "DONE",
-            })
-        )
-    );
+    // // ④ 他のPENDINGをすべて DONE に更新
+    // await Promise.all(
+    //     otherPendings.map((record) =>
+    //         client.models.ImportWorkStatus.update({
+    //             date: record.date,
+    //             departmentId: record.departmentId,
+    //             importId: record.importId,
+    //             importProgress: "DONE",
+    //         })
+    //     )
+    // );
 
     return {
             importId: latestPending.importId,

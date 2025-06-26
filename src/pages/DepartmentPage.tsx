@@ -22,6 +22,7 @@ import StoreDoubleCheckList from "./StoreDoubleCheckList.tsx";
 import AdditionalOrderInput from "./AdditionalOrderInput.tsx";
 import ExcelUpload from "./ExcelUpload.tsx";
 import SpecialSorting from "./SpecialSorting.tsx";
+import StartSorting from "./StartSorting.tsx";
 
 
 import { useParams } from "react-router-dom";
@@ -33,6 +34,11 @@ const pageList: {
         label: string;
         component: (props: { navigateTo: (key: string) => void }) => JSX.Element;
     }[] = [
+        {
+        key: 'StartSorting',
+        label: '仕分け作業開始',
+        component: (props) => <StartSorting {...props} />,
+        },
         {
         key: "Test",
         label: "テスト画面",
@@ -83,42 +89,40 @@ const App = () => {
     if (departmentId === 'office') {
       return 'FinalCheck';
     }
-    if (departmentId === 'honsyabuturyu' || departmentId === 'kakou2') {
-      return 'SortingCheckScreen';
-    }
-    return 'SortingCheckScreen';
+    return 'StartSorting';
   }, [departmentId]);
     const [view, setView] = useState(initialView);
     const [drawerOpen, setDrawerOpen] = useState(false);
 
 
     const filteredPages = useMemo(() => {
-      // 無条件に表示する共通ページ
-      const alwaysVisible = ['Test'];
       // 特定部門に応じた表示許可マップ
       const departmentAccessMap: Record<string, string[]> = {
-        office: ['FinalCheck', 'AdditionalOrderInput'],
-        honsyabuturyu: ['SortingCheckScreen','SpecialSorting'],
-        kakou2: ['SortingCheckScreen','SpecialSorting'],
-        seiniku: ['BoxQuantityInput', 'SortingCheckScreen', 'StoreDoubleCheckList'],
-        kakou1: ['BoxQuantityInput', 'SortingCheckScreen', 'StoreDoubleCheckList'],
-        '1souzai': ['BoxQuantityInput', 'SortingCheckScreen', 'StoreDoubleCheckList'],
-        '2souzai': ['BoxQuantityInput', 'SortingCheckScreen', 'StoreDoubleCheckList'],
-        '3souzai': ['BoxQuantityInput', 'SortingCheckScreen', 'StoreDoubleCheckList'],
-        namashitsu1: ['BoxQuantityInput', 'SortingCheckScreen', 'StoreDoubleCheckList'],
-        namashitsu2: ['BoxQuantityInput', 'SortingCheckScreen', 'StoreDoubleCheckList'],
+        office: ['FinalCheck'],
+        honsyabuturyu: ['SortingCheckScreen', 'SpecialSorting', 'StartSorting'],
+        kakou2: ['SortingCheckScreen', 'SpecialSorting', 'StartSorting'],
+        seiniku: ['BoxQuantityInput', 'SortingCheckScreen', 'StoreDoubleCheckList', 'StartSorting'],
+        kakou1: ['BoxQuantityInput', 'SortingCheckScreen', 'StoreDoubleCheckList', 'StartSorting'],
+        '1souzai': ['BoxQuantityInput', 'SortingCheckScreen', 'StoreDoubleCheckList', 'StartSorting'],
+        '2souzai': ['BoxQuantityInput', 'SortingCheckScreen', 'StoreDoubleCheckList', 'StartSorting'],
+        '3souzai': ['BoxQuantityInput', 'SortingCheckScreen', 'StoreDoubleCheckList', 'StartSorting'],
+        namashitsu1: ['BoxQuantityInput', 'SortingCheckScreen', 'StoreDoubleCheckList', 'StartSorting'],
+        namashitsu2: ['BoxQuantityInput', 'SortingCheckScreen', 'StoreDoubleCheckList', 'StartSorting'],
       };
+
       // フルアクセス部門
       const fullAccessDepartments = ['kurosawa', 'sakurai', 'furukawa'];
 
       // 表示許可されているキーを構築
-      let allowedKeys = [...alwaysVisible];
+      let allowedKeys: string[] = [];
+
       if (departmentId && fullAccessDepartments.includes(departmentId)) {
-        // フルアクセスならすべて
+        // フルアクセスならすべて表示（'Test'含む）
         return pageList;
       }
+
       if (departmentId && departmentAccessMap[departmentId]) {
-        allowedKeys = [...allowedKeys, ...departmentAccessMap[departmentId]];
+        allowedKeys = [...departmentAccessMap[departmentId]];
       }
 
       return pageList.filter(page => allowedKeys.includes(page.key));

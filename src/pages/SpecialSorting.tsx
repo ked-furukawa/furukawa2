@@ -85,6 +85,9 @@ const [importId, setImportId] = useState<string>('');
 const [currentRegion, setCurrentRegion] = useState<string>('中之島'); // 初期値は中之島
 const [savingData, setSavingData] = useState<boolean>(false);
 const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
+//TCが一つしかないことを判定するためのstate
+const [isNakanoshimaMissing, setIsNakanoshimaMissing] = useState<boolean>(false);
+const [isJoetsuMissing, setIsJoetsuMissing] = useState<boolean>(false);
 
 const [phase, setPhase] = useState<Phase>('UNDONE');
 const [hasPending, setHasPending] = useState(false);
@@ -121,13 +124,11 @@ useEffect(() => {
         return;
         }
         setImportId(importResult.importId)
-        // sortingPhase に基づいて currentRegion を設定
-        if (importResult.sortingPhase === 'COMPLETED_NAKANOSHIMA') {
-        // 中之島エリアが完了している場合は上越に切り替え
-        setCurrentRegion('上越');
+        // sortingPhase または 中之島の有無 に基づいて currentRegion を決定
+        if (importResult.sortingPhase === 'COMPLETED_NAKANOSHIMA' || isNakanoshimaMissing) {
+            setCurrentRegion('上越');
         } else {
-        // それ以外の場合は中之島をデフォルトに
-        setCurrentRegion('中之島');
+            setCurrentRegion('中之島');
         }
         } catch (err) {
         console.error("importIdの取得に失敗しました:", err);
@@ -137,7 +138,7 @@ useEffect(() => {
     }
     };
     fetchImportResult();
-}, []);
+}, [isNakanoshimaMissing,isJoetsuMissing]);
 
 useEffect(() => {
     const fetchOrders = async () => {
@@ -153,9 +154,20 @@ useEffect(() => {
                 }
             }
         },
-      {
+        {
     limit: 1000  // 最大1000件取得
-  });
+    });
+    const storeTcSet = new Set(
+        data
+            .map(order => order.storeTc)
+            .filter(tc => tc !== '')
+        );
+        const storeTcArray = [...storeTcSet];
+
+    // 特定文字列が含まれていないかのチェック（含まれていなければ true）
+    setIsNakanoshimaMissing(!storeTcArray.includes('中之島'));
+    setIsJoetsuMissing(!storeTcArray.includes('上越'));
+
 
         if (data.length > 0) {
         // 計算を実行
@@ -291,12 +303,12 @@ const navigateToNextStore = async () => {
         departmentId: departmentId as string,
         importId: importId,
         sortingPhase: sortingPahse,
-        ...(sortingPahse==='COMPLETED_JYOETSU' && { importProgress: "DONE" })
+        ...(sortingPahse === 'COMPLETED_JYOETSU' || isJoetsuMissing ? { importProgress: "DONE" } : {})
     });
     }
 
     if(phase==='UNDONE'){
-        if (currentRegion === "中之島") {
+        if (currentRegion === "中之島" && !isJoetsuMissing) {
             navigateTo('SortingCheckScreen');
             } else {
             setPhase("EVEN");

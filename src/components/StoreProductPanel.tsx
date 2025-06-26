@@ -1,5 +1,5 @@
 // src/components/StoreProductPanel.tsx
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
 Box,
 Typography,
@@ -53,43 +53,34 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
     }) => {
     // テーブルコンテナへの参照を作成
     const tableContainerRef = useRef<HTMLDivElement>(null);
-     // タッチされた商品IDを記録するための状態
+    // タッチされた商品IDを記録するための状態
     const [touchedProductIds, setTouchedProductIds] = useState<string[]>([]);
 
-        // 商品行タッチ時のハンドラー
+    // storeNumberが変更されたときにスクロール位置をリセットする
+    useEffect(() => {
+        if (tableContainerRef.current) {
+            tableContainerRef.current.scrollTop = 0;
+        }
+        // タッチ状態もリセット
+        setTouchedProductIds([]);
+    }, [storeNumber]); // storeNumberが変わったときだけ実行
+
+    // 商品行タッチ時のハンドラー
     const handleRowTouch = (productId: string) => {
-    // すでにタッチされている場合は何もしない
-    console.log('Row touched:', productId); // デバッグ用
-    if (touchedProductIds.includes(productId)) {
-        return;
-    }
-    
-    // タッチされた商品IDを記録
-    setTouchedProductIds(prev => [...prev, productId]);
+        // 既存のコード
+        if (touchedProductIds.includes(productId)) {
+            return;
+        }
+        
+        setTouchedProductIds(prev => [...prev, productId]);
     };
     
     // 商品選択時に自動スクロールを行う関数
     const handleProductSelect = (productId: string) => {
-        // 元の選択処理を実行
+        // 既存のコード
         onProductSelect(productId);
-        
-        // 少し遅延させてスクロール処理を実行（選択状態の更新後に実行するため）
-        setTimeout(() => {
-            if (tableContainerRef.current) {
-                // 現在のスクロール位置を取得
-                const currentScrollTop = tableContainerRef.current.scrollTop;
-                
-                // 少し下にスクロール（約1アイテム分）
-                const scrollAmount = 60; // スクロール量（ピクセル）- 調整可能
-                
-                // スムーズにスクロール
-                tableContainerRef.current.scrollTo({
-                    top: currentScrollTop + scrollAmount,
-                    behavior: 'smooth'
-                });
-            }
-        }, 100);
     };
+
 
 
         
@@ -121,7 +112,7 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
         {/* 店舗情報ヘッダー部分 */}
         <Box
             sx={{
-            p: 2,
+            p: 1,
             backgroundColor: '#f5f5f5',
             borderBottom: '1px solid rgba(224, 224, 224, 1)'
             }}
@@ -135,14 +126,14 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
             ) : (
             // 店舗情報の表示
             <Box>
-            <Box display="flex" alignItems="center" mb={1}>
+            <Box display="flex" alignItems="center" mb={0}>
                 {/* 店舗番号を太字で表示 */}
                 <Typography
                 variant="h4"  // サイズを大きくして目立たせる
                 component="span"
                 sx={{
-                    px: 1.5,
-                    py: 0.5,
+                    px: 1,
+                    py: 0.25,
                     borderRadius: 1,
                     fontWeight: 'bold',  // 太字に変更
                     mr: 2
@@ -166,7 +157,7 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
 
     {/* エラー表示 */}
     {error && (
-        <Box sx={{ p: 2, color: 'error.main' }}>
+        <Box sx={{ p: 2, color: "rgba(0, 0, 0, 0.87)" }}>
         <Typography>{error}</Typography>
         </Box>
     )}
@@ -183,98 +174,144 @@ export const StoreProductPanel: React.FC<StoreProductPanelProps> = ({
         </Box>
         ) : (
         <TableContainer 
-                ref={tableContainerRef} // ここにrefを追加
-                sx={{ flex: 1, overflowY: 'auto' }}
-            >
-            <Table stickyHeader size="medium" sx={{ tableLayout: 'fixed' }}>
+        ref={tableContainerRef}
+        sx={{ flex: 1, overflowY: 'auto' }}
+        >
+        <Table 
+            stickyHeader 
+            size="medium" 
+            sx={{ 
+            tableLayout: 'fixed', // 固定レイアウトを強制
+            width: '100%' // 幅を100%に設定
+            }}
+        >
             <TableHead>
             <TableRow>
-                <TableCell sx={{ fontSize: '1.1rem', fontWeight: 'bold', padding: '16px 12px' }}>商品名</TableCell>
-                <TableCell align="right" sx={{ fontSize: '1.1rem', fontWeight: 'bold' }}>個数</TableCell>
-                <TableCell align="center" sx={{ fontSize: '1.1rem', fontWeight: 'bold' }}>選択</TableCell>
+                <TableCell 
+                sx={{ 
+                    fontSize: '1.1rem', 
+                    fontWeight: 'bold', 
+                    padding: '16px 12px',
+                    width: '60%' // 商品名列の幅を固定
+                }}
+                >
+                商品名
+                </TableCell>
+                <TableCell 
+                align="right" 
+                sx={{ 
+                    fontSize: '1.1rem', 
+                    fontWeight: 'bold',
+                    width: '20%' // 個数列の幅を固定
+                }}
+                >
+                個数
+                </TableCell>
+                <TableCell 
+                align="center" 
+                sx={{ 
+                    fontSize: '1.1rem', 
+                    fontWeight: 'bold',
+                    width: '20%' // 選択列の幅を固定
+                }}
+                >
+                選択
+                </TableCell>
             </TableRow>
             </TableHead>
             <TableBody>
-                {products.map((product) => (
+            {products.map((product) => (
                 <TableRow
-                    key={product.id}
-                    hover={!touchedProductIds.includes(product.id)} // タッチ済みの場合はホバー効果を無効化
-                    selected={completedStoreIds?.includes(storeNumber) || selectedProductIds.includes(product.id)}
-                    onClick={() => handleRowTouch(product.id)} // 行タッチ時のハンドラーを追加
-                    sx={{
-                        cursor: touchedProductIds.includes(product.id) ? 'default' : 'pointer', // タッチ済みの場合はカーソルスタイルを変更
-                        backgroundColor: touchedProductIds.includes(product.id) ? 'rgba(144, 202, 249, 0.3)' : 'inherit', // タッチ済みの場合は背景色を変更
-                        '&:hover': {
-                        backgroundColor: touchedProductIds.includes(product.id) ? 'rgba(144, 202, 249, 0.3)' : undefined, // タッチ済みの場合はホバー時の背景色も固定
-                        }
-                    }}
-                    >
-                    <TableCell sx={{ 
-                    maxWidth: 0, // これが重要: テキストの省略を強制
+                key={product.id}
+                hover={!touchedProductIds.includes(product.id)}
+                selected={completedStoreIds?.includes(storeNumber) || selectedProductIds.includes(product.id)}
+                onClick={() => handleRowTouch(product.id)}
+                sx={{
+                    cursor: touchedProductIds.includes(product.id) ? 'default' : 'pointer',
+                    backgroundColor: touchedProductIds.includes(product.id) ? 'rgba(144, 202, 249, 0.3)' : 'inherit',
+                    '&:hover': {
+                    backgroundColor: touchedProductIds.includes(product.id) ? 'rgba(144, 202, 249, 0.3)' : undefined,
+                    }
+                }}
+                >
+                <TableCell 
+                    sx={{ 
+                    maxWidth: '100%', // セル内の最大幅を100%に
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
-                    fontSize: '1rem', // フォントサイズを大きく
-                    padding: '16px 12px' // パディングを増やす
-                }}>
+                    fontSize: '1rem',
+                    padding: '16px 12px'
+                    }}
+                >
                     <Typography 
-                    variant="body1" // body2からbody1に変更してサイズアップ
+                    variant="body1"
                     sx={{ 
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
-                        fontWeight: 500, // やや太めに
-                        lineHeight: 1.4 // 行の高さを調整
+                        fontWeight: 500,
+                        lineHeight: 1.4
                     }}
                     >
-                    {product.itemName}
+                    {/* 社内呼称がない場合は正式名称を表示 */}
+                    {product.itemName || product.itemFormalName || `商品ID: ${product.itemId}`}
                     </Typography>
+                    {/* 社内呼称がある場合のみ正式名称をキャプションとして表示 */}
+                    {product.itemName && product.itemFormalName && (
                     <Typography 
-                    variant="caption" 
-                    color="text.secondary"
-                    sx={{ 
+                        variant="caption" 
+                        color="text.secondary"
+                        sx={{ 
                         display: 'block',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
-                        fontSize: '0.85rem' // キャプションも大きく
-                    }}
-                    >
-                    {product.itemFormalName}
-                    </Typography>
-                </TableCell>
-                    <TableCell 
-                        align="right"
-                        sx={{ 
-                            fontSize: '1.5rem', // 個数表示を大きく
-                            fontWeight: 500, // やや太めに
-                            padding: '16px 8px', // パディングを増やす
-                            textAlign: 'right', // 右寄せのまま
-                            paddingRight: '24px' // 右側の余白を増やして全体的に左に寄せる
+                        fontSize: '0.85rem'
                         }}
-                        >
-                        {product.orderCount}
-                        </TableCell>
-                    <TableCell 
+                    >
+                        {product.itemFormalName}
+                    </Typography>
+                    )}
+                </TableCell>
+                <TableCell 
+                    align="right"
+                    sx={{ 
+                    fontSize: '1.5rem',
+                    fontWeight: 500,
+                    padding: '16px 8px',
+                    textAlign: 'right',
+                    paddingRight: '24px',
+                    width: '20%' // 幅を固定
+                    }}
+                >
+                    {product.orderCount}
+                </TableCell>
+                <TableCell 
                     align="center" 
                     onClick={(e) => e.stopPropagation()}
-                    sx={{ padding: '8px' }} // パディングを調整
-                    > 
+                    sx={{ 
+                    padding: '8px',
+                    width: '20%' // 幅を固定
+                    }}
+                > 
+                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                     <Checkbox
-                        checked={completedStoreIds?.includes(storeNumber)||selectedProductIds.includes(product.id)}
+                        checked={completedStoreIds?.includes(storeNumber) || selectedProductIds.includes(product.id)}
                         onChange={() => handleProductSelect(product.id)}
                         sx={{ 
                         '& .MuiSvgIcon-root': { 
-                            fontSize: 35 // チェックボックスのサイズを大きく
+                            fontSize: 35
                         },
-                        padding: '8px' // チェックボックス自体のパディングも調整
+                        padding: '8px'
                         }}
                     />
-                    </TableCell>
-                    </TableRow>
-                ))}
+                    </Box>
+                </TableCell>
+                </TableRow>
+            ))}
             </TableBody>
-            </Table>
+        </Table>
         </TableContainer>
         )}
 

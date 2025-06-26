@@ -105,6 +105,7 @@ const loadProducts = async () => {
       setLoading(false);
       return;
     }
+    console.log("importResult",resolvedImportId)
 
     const result = await client.models.Order.listOrdersByDeptAndImport({
       date,
@@ -122,6 +123,7 @@ const loadProducts = async () => {
   }); 
     
     const rawOrders = result.data; //加工前の注文データ
+    console.log("rawOrders",rawOrders)
 
     const productMap: { [itemId: string]: Product } = {};
 
@@ -153,7 +155,7 @@ const loadProducts = async () => {
 
     setProducts(Object.values(productMap));
   } catch (err) {
-    setError("エラーです");
+    setError("データ取得中に問題が発生しました。ネットワークを確認するか、再読み込みしてください。");
   } finally{
     setLoading(false); // 読み込み完了
   }
@@ -433,21 +435,24 @@ useEffect(() => {
                         paddingBottom: '1px', // 下線とテキストの間に少し余白を追加
                       }}
                     >
-                      {product.itemName}
+                      {product.itemName || product.itemFormalName || `商品ID: ${product.itemId}`}
                     </Box>
-                    <Typography 
-                      variant="caption" 
-                      color="text.secondary"
-                      sx={{ 
+                    {/* 社内呼称がある場合のみ正式名称をキャプションとして表示 */}
+                    {product.itemName && product.itemFormalName && (
+                      <Typography 
+                        variant="caption" 
+                        color="text.secondary"
+                        sx={{ 
                           display: 'block',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap',
                           fontSize: '0.85rem' // キャプションも大きく
-                      }}
+                        }}
                       >
-                      {product.itemFormalName}
+                        {product.itemFormalName}
                       </Typography>
+                    )}
                   </TableCell>
                   <TableCell
                     align="right"

@@ -76,6 +76,12 @@ export const schema = a.schema({
     sortingPhase: a.string().default('PENDING') // 'PENDING' | 'COMPLETED_NAKANOSHIMA' | 'COMPLETED_JYOETSU' | 'DONE'
   })
   .identifier(['date', 'departmentId', 'importId'])
+  .secondaryIndexes((index) => [ 
+  index("date") //GSI 部門ごとに全部取得したいとき用
+    .sortKeys(["departmentId"])
+    .queryField("listImportIdsByDateAndDept")
+    .name("GSI_ImportWorkStatusDateDept"),
+  ])
   .authorization((allow) => [allow.authenticated()])
   });
 
