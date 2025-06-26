@@ -11,7 +11,8 @@ Typography,
 Checkbox,
 Box,
 Modal,
-Button
+Button,
+CircularProgress
 } from '@mui/material';
 import {  Store } from '../types';
 import { Keypad } from './Keypad';
@@ -44,7 +45,16 @@ error = null,
 boxCounts = {}
 }) => {
 if (loading) {
-    return <Typography>読み込み中...</Typography>;
+  return (
+    <Box
+      display="flex"
+      justifyContent="center"
+      alignItems="center"
+      height="60vh"
+    >
+      <CircularProgress size={60} />
+    </Box>
+  );
 }
 
 if (error) {
@@ -116,58 +126,57 @@ const getStoreBoxCount = (storeId: string): number => {
 const handleInputChange = (value: string) => {
     setInputValue(value);
 };
-  // 箱数更新処理
-const handleQuantityUpdate  = async () => {
-    console.log('handleQuantityUpdate呼び出し', inputValue, selectedStoreId);
-    try {
-        // 代表レコードが存在するか確認
-        const { data: existing } = await boxClient.models.Box.listBoxesByDateAndDept({
-        date: date,
-        departmentId: {
-            eq: departmentId
-        }
-        },
-        {
-            limit: 1000  // 最大1000件取得
-        });
 
-        const filtered = existing.filter(box =>
-        box.storeId === selectedStoreId && box.boxColor === 'green'
-        );
-        // store情報を取得
-        const storeInfo = stores.find(store => store.id === selectedStoreId);
-        const storeName = storeInfo?.storeName || '';
-        const storeTc = storeInfo?.storeTc || '';
-        if (filtered && filtered.length > 0) {
-            // update
-            await boxClient.models.Box.update({
-                date: date,
-                storeId: selectedStoreId,
-                boxColor: 'green',
-                departmentId: departmentId,
-                boxCount: Number(inputValue),
-                storeName,
-                storeTc
-            });
-            console.log('update完了');
-        } else {
-            // create
-            await boxClient.models.Box.create({
-                date: date,
-                storeId: selectedStoreId,
-                boxColor: 'green',
-                departmentId: departmentId,
-                boxCount: Number(inputValue),
-                storeName,
-                storeTc
-            });
-            console.log('create完了');
-        }
-    } catch (error) {
-        console.error('DB登録エラー:', error);
+const [isSaving, setIsSaving] = useState(false);
+
+  // 箱数更新処理
+const handleQuantityUpdate = async () => {
+  setIsSaving(true); // 🔵 保存中表示をON
+  try {
+    const { data: existing } = await boxClient.models.Box.listBoxesByDateAndDept({
+      date: date,
+      departmentId: { eq: departmentId }
+    }, { limit: 1000 });
+
+    const filtered = existing.filter(box =>
+      box.storeId === selectedStoreId && box.boxColor === 'green'
+    );
+
+    const storeInfo = stores.find(store => store.id === selectedStoreId);
+    const storeName = storeInfo?.storeName || '';
+    const storeTc = storeInfo?.storeTc || '';
+
+    if (filtered && filtered.length > 0) {
+      await boxClient.models.Box.update({
+        date,
+        storeId: selectedStoreId,
+        boxColor: 'green',
+        departmentId,
+        boxCount: Number(inputValue),
+        storeName,
+        storeTc
+      });
+    } else {
+      await boxClient.models.Box.create({
+        date,
+        storeId: selectedStoreId,
+        boxColor: 'green',
+        departmentId,
+        boxCount: Number(inputValue),
+        storeName,
+        storeTc
+      });
     }
+
     handleCloseModal();
+  } catch (error) {
+    console.error('DB登録エラー:', error);
+    alert('登録に失敗しました。通信状態をご確認ください。');
+  } finally {
+    setIsSaving(false); // 🔴 保存中表示をOFF
+  }
 };
+
 
 
 const handleColorChange = (color: BoxColor) => {
@@ -324,6 +333,13 @@ return (
                 selectedColor={selectedColor}
                 onColorChange={handleColorChange}
                 />
+                
+    {isSaving && (
+      <Box mt={2} display="flex" justifyContent="center">
+        <Typography sx={{ mr: 2 }}>保存中...</Typography>
+        <CircularProgress />
+      </Box>
+    )}
             </div>
             <Box mt={3} display="flex" justifyContent="flex-end">
                 <Button onClick={handleCloseModal} variant="outlined">
