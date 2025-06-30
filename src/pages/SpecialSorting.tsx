@@ -494,7 +494,7 @@ return (
         {error}
         </Alert>
     )}
-
+ 
     {/* メインコンテンツ - テーブル */}
     {phase === "DONE" ? (
   <Typography
