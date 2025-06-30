@@ -478,7 +478,7 @@ if (loading && orders.length === 0) {
 
 
 return (
-    <Container maxWidth="md" sx={{ pt: 2, pb: 1, overflowY: 'auto', maxHeight: '100vh' }}>
+    <Container maxWidth="md" sx={{ pt: 2, pb: 1 }}>
     {/* ヘッダー */}
     <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h5" component="h1" gutterBottom sx={{ mt: 1, mb: 2 }}>
@@ -505,7 +505,8 @@ return (
   </Typography>
 ) : (
     <>
-    <TableContainer component={Paper} sx={{ mb: 4 }}>
+    <TableContainer component={Paper} sx={{ mb: 4, maxHeight: '60vh', overflowY: 'auto' }}>
+
     <Table>
         <TableHead>
         <TableRow sx={{ bgcolor: 'primary.main' }}>
